@@ -1,5 +1,3 @@
-# Domain Api
+# Domain API
 
-Until I can think of a better name ;)
-
-This will be an API for managing domain names. 
+A generic API for interfacing with domain registries
