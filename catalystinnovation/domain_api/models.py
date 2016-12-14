@@ -1,3 +1,19 @@
 from django.db import models
 
-# Create your models here.
+class Person(models.Model):
+
+    """Person object in db"""
+    first_name = models.CharField(max_length=200)
+    surname = models.CharField(max_length=200)
+    email = models.CharField(max_length=200)
+    emai2 = models.CharField(max_length=200, blank=True)
+    emai3 = models.CharField(max_length=200, blank=True)
+    house_number = models.CharField(max_length=10)
+    street1 = models.CharField(max_length=200)
+    street2 = models.CharField(max_length=200, blank=True)
+    street3 = models.CharField(max_length=200, blank=True)
+    city = models.CharField(max_length=200)
+    suburb = models.CharField(max_length=200, blank=True)
+    state = models.CharField(max_length=200, blank=True)
+    postcode = models.CharField(max_length=20)
+    country = models.CharField(max_length=200)
