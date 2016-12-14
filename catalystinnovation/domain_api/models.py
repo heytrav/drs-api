@@ -17,3 +17,16 @@ class Person(models.Model):
     state = models.CharField(max_length=200, blank=True)
     postcode = models.CharField(max_length=20)
     country = models.CharField(max_length=200)
+
+class TopLevelDomain(models.Model):
+
+    """Domain ending model"""
+    zone = models.CharField(max_length=100)
+    description = models.TextField()
+
+class DomainProvider(models.Model):
+
+    """Registries/rars providing top level domain services"""
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    zones = models.ManyToManyField(TopLevelDomain)
