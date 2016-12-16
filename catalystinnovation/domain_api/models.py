@@ -42,8 +42,16 @@ class DomainProvider(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
     # TLDs provided
-    zones = models.ManyToManyField(TopLevelDomain)
 
+
+class TopLevelDomainProvider(models.Model):
+    """Match a provider with a TLD."""
+
+    zone = models.ForeignKey(TopLevelDomain)
+    provider = models.ForeignKey(DomainProvider)
+    anniversary_notification_period_days = models.IntegerField()
+    renewal_period = models.IntegerField()
+    grace_period_days = models.IntegerField()
 
 class Domain(models.Model):
 
