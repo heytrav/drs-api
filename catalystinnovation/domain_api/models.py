@@ -17,7 +17,7 @@ class Identity(models.Model):
         return self.surname + ', ' + self.first_name
 
 
-class PersonalDetails(models.Model):
+class PersonalDetail(models.Model):
 
     """Person object in db"""
 
@@ -43,6 +43,44 @@ class PersonalDetails(models.Model):
 
         """
         return self.identity.surname + ', ' + self.identity.first_name
+
+class ContactType(models.Model):
+    """Types of registry contacts."""
+    name = models.CharField(max_length=50)
+    description = models.TextField()
+
+class RegistrantHandle(models.Model):
+    """
+    Registry identifier for a registrant contact.
+
+    This type of contact can only be a registrant for a domain.
+    """
+    person = models.ForeignKey(PersonalDetail)
+    provider = models.ForeignKey(DomainProvider)
+    created = models.DateField(auto_now_add=True)
+    updated = models.DateField(auto_now=True)
+
+class ContactHandle(models.Model):
+
+    """
+    Registry identifier for a contact handle.
+
+    This type of contact
+
+    - admin
+    - tech
+    - billing
+    - zone?
+
+    There may be other types.
+    """
+    person = models.ForeignKey(PersonalDetail)
+    contact_type = models.ForeignKey(ContactType)
+    provider = models.ForeignKey(DomainProvider)
+    created = models.DateField(auto_now_add=True)
+    updated = models.DateField(auto_now=True)
+
+
 
 class TopLevelDomain(models.Model):
 
@@ -119,6 +157,8 @@ class RegisteredDomain(models.Model):
     """
     domain = models.ForeignKey(Domain)
     tld_provider = models.ForeignKey(TopLevelDomainProvider)
+    # Need to see if this can be constrained to be just a registrant.
+    registrant = models.ForeignKey(RegistrantHandle)
     active = models.NullBooleanField(unique=True)
     auto_renew = models.BooleanField(default=True)
     registration_period = models.IntegerField()
@@ -137,4 +177,12 @@ class RegisteredDomain(models.Model):
         """
         return self.domain.name + "." + self.tld_provider.zone.zone
 
-
+class DomainHandles(models.Model):
+    """
+    Contacts associated with a domain. A domain can have several contact handles
+    (depending on the registry).
+    """
+    registered_domain = models.ForeignKey(RegisteredDomain)
+    contact_handle = models.ForeignKey(ContactHandle)
+    created = models.DateField(auto_now_add=True)
+    active = models.BooleanField(default=False)

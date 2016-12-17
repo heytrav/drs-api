@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (
     Identity,
-    PersonalDetails,
+    PersonalDetail,
     TopLevelDomain,
     DomainProvider,
     TopLevelDomainProvider,
@@ -25,14 +25,20 @@ class DomainProviderAdmin(admin.ModelAdmin):
     ]
     inlines = [TopLevelDomainProviderInline]
 
+class PersonalDetailsInline(admin.StackedInline):
+    model = PersonalDetail
+    extra = 2
+
+class IdentityAdmin(admin.ModelAdmin):
+    inlines = [PersonalDetailsInline]
 
 
 
 
 
 
-admin.site.register(Identity)
-admin.site.register(PersonalDetails)
+
+admin.site.register(Identity, IdentityAdmin)
 admin.site.register(TopLevelDomain)
 admin.site.register(DomainProvider, DomainProviderAdmin)
 admin.site.register(Domain)
