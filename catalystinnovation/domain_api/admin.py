@@ -10,6 +10,10 @@ from .models import (
 )
 
 
+class TopLevelDomainProviderInline(admin.TabularInline):
+    model = TopLevelDomainProvider
+    extra = 3
+
 class DomainProviderAdmin(admin.ModelAdmin):
 
     """Admin for domain providers."""
@@ -18,13 +22,10 @@ class DomainProviderAdmin(admin.ModelAdmin):
         (None, {'fields': ['name']}),
         ('Description', {'fields': ['description']})
     ]
+    inlines = [TopLevelDomainProviderInline]
 
 
 
-
-class TopLevelDomainProviderAdmin(admin.ModelAdmin):
-
-    """Admin for top level domain providers."""
 
 
 
@@ -32,5 +33,5 @@ class TopLevelDomainProviderAdmin(admin.ModelAdmin):
 admin.site.register(Person)
 admin.site.register(TopLevelDomain)
 admin.site.register(DomainProvider, DomainProviderAdmin)
-admin.site.register(TopLevelDomainProvider)
 admin.site.register(Domain)
+admin.site.register(RegisteredDomain)
