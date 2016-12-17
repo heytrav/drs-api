@@ -7,7 +7,11 @@ from .models import (
     DomainProvider,
     TopLevelDomainProvider,
     Domain,
-    RegisteredDomain
+    RegisteredDomain,
+    RegistrantHandle,
+    ContactHandle,
+    DomainRegistrant,
+    DomainHandles,
 )
 
 
@@ -34,12 +38,12 @@ class IdentityAdmin(admin.ModelAdmin):
 
 
 
-
-
-
-
 admin.site.register(Identity, IdentityAdmin)
 admin.site.register(TopLevelDomain)
 admin.site.register(DomainProvider, DomainProviderAdmin)
 admin.site.register(Domain)
 admin.site.register(RegisteredDomain)
+admin.site.register(RegistrantHandle)
+admin.site.register(ContactHandle)
+admin.site.register(DomainRegistrant)
+admin.site.register(DomainHandles)

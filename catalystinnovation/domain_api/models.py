@@ -2,7 +2,9 @@ from django.db import models
 
 class Identity(models.Model):
 
-    """Identity object in db"""
+    """
+    Identity object in db.
+    """
     first_name = models.CharField(max_length=200)
     surname = models.CharField(max_length=200)
     middle_name = models.CharField(max_length=200, blank=True)
@@ -17,8 +19,9 @@ class Identity(models.Model):
 
 
 class PersonalDetail(models.Model):
-
-    """Person object in db"""
+    """
+    Person object in db.
+    """
 
     identity = models.ForeignKey(Identity)
     email = models.CharField(max_length=200)
@@ -45,13 +48,14 @@ class PersonalDetail(models.Model):
 
 
 class ContactType(models.Model):
-    """Types of registry contacts."""
+    """
+    Types of registry contacts.
+    """
     name = models.CharField(max_length=50)
     description = models.TextField()
 
 
 class TopLevelDomain(models.Model):
-
     """Domain ending model
 
     Note: for *reasons*, TLDs will be called *zones* inside the application.
@@ -72,8 +76,9 @@ class TopLevelDomain(models.Model):
 
 
 class DomainProvider(models.Model):
-
-    """Registries/rars providing top level domain services"""
+    """
+    Registries/rars providing top level domain services
+    """
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField()
 
@@ -100,7 +105,6 @@ class RegistrantHandle(models.Model):
 
 
 class ContactHandle(models.Model):
-
     """
     Registry identifier for a contact handle.
 
@@ -123,7 +127,9 @@ class ContactHandle(models.Model):
 
 
 class TopLevelDomainProvider(models.Model):
-    """Match a provider with a TLD."""
+    """
+    Match a provider with a TLD.
+    """
 
     zone = models.ForeignKey(TopLevelDomain)
     provider = models.ForeignKey(DomainProvider)
@@ -140,8 +146,9 @@ class TopLevelDomainProvider(models.Model):
 
 
 class Domain(models.Model):
-
-    """Represent a domain"""
+    """
+    Represent a domain.
+    """
     # The part of a domain name before the tld
     name = models.CharField(max_length=200, unique=True)
     # punyencoded version of the name field. For ascii domains this will
@@ -157,7 +164,6 @@ class Domain(models.Model):
 
 
 class RegisteredDomain(models.Model):
-
     """
     Represent a registered domain name.
 
