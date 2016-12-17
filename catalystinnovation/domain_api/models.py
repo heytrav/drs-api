@@ -6,8 +6,7 @@ class Identity(models.Model):
     first_name = models.CharField(max_length=200)
     surname = models.CharField(max_length=200)
     middle_name = models.CharField(max_length=200, blank=True)
-    username = models.CharField(max_length=100)
-
+    username = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         """String representation
@@ -44,42 +43,11 @@ class PersonalDetail(models.Model):
         """
         return self.identity.surname + ', ' + self.identity.first_name
 
+
 class ContactType(models.Model):
     """Types of registry contacts."""
     name = models.CharField(max_length=50)
     description = models.TextField()
-
-class RegistrantHandle(models.Model):
-    """
-    Registry identifier for a registrant contact.
-
-    This type of contact can only be a registrant for a domain.
-    """
-    person = models.ForeignKey(PersonalDetail)
-    provider = models.ForeignKey(DomainProvider)
-    created = models.DateField(auto_now_add=True)
-    updated = models.DateField(auto_now=True)
-
-class ContactHandle(models.Model):
-
-    """
-    Registry identifier for a contact handle.
-
-    This type of contact
-
-    - admin
-    - tech
-    - billing
-    - zone?
-
-    There may be other types.
-    """
-    person = models.ForeignKey(PersonalDetail)
-    contact_type = models.ForeignKey(ContactType)
-    provider = models.ForeignKey(DomainProvider)
-    created = models.DateField(auto_now_add=True)
-    updated = models.DateField(auto_now=True)
-
 
 
 class TopLevelDomain(models.Model):
@@ -102,6 +70,7 @@ class TopLevelDomain(models.Model):
         """
         return self.zone
 
+
 class DomainProvider(models.Model):
 
     """Registries/rars providing top level domain services"""
@@ -116,14 +85,51 @@ class DomainProvider(models.Model):
         return self.name
 
 
+class RegistrantHandle(models.Model):
+    """
+    Registry identifier for a registrant contact.
+
+    This type of contact can only be a registrant for a domain.
+    """
+    person = models.ForeignKey(PersonalDetail)
+    provider = models.ForeignKey(DomainProvider)
+    # Id from provider
+    handle = models.CharField(max_length=200)
+    created = models.DateField(auto_now_add=True)
+    updated = models.DateField(auto_now=True)
+
+
+class ContactHandle(models.Model):
+
+    """
+    Registry identifier for a contact handle.
+
+    This type of contact
+
+    - admin
+    - tech
+    - billing
+    - zone?
+
+    There may be other types.
+    """
+    person = models.ForeignKey(PersonalDetail)
+    contact_type = models.ForeignKey(ContactType)
+    provider = models.ForeignKey(DomainProvider)
+    # Id from provider
+    handle = models.CharField(max_length=200)
+    created = models.DateField(auto_now_add=True)
+    updated = models.DateField(auto_now=True)
+
+
 class TopLevelDomainProvider(models.Model):
     """Match a provider with a TLD."""
 
     zone = models.ForeignKey(TopLevelDomain)
     provider = models.ForeignKey(DomainProvider)
     anniversary_notification_period_days = models.IntegerField()
-    renewal_period = models.IntegerField()
-    grace_period_days = models.IntegerField()
+    renewal_period = models.IntegerField(default=30)
+    grace_period_days = models.IntegerField(default=30)
 
     def __str__(self):
         """String representation
@@ -132,11 +138,14 @@ class TopLevelDomainProvider(models.Model):
         """
         return self.zone.zone + " " + self.provider.name
 
+
 class Domain(models.Model):
 
     """Represent a domain"""
     # The part of a domain name before the tld
     name = models.CharField(max_length=200, unique=True)
+    # punyencoded version of the name field. For ascii domains this will
+    # be identical to name.
     idn = models.CharField(max_length=300, unique=True)
 
     def __str__(self):
@@ -146,20 +155,22 @@ class Domain(models.Model):
         """
         return self.name
 
+
 class RegisteredDomain(models.Model):
 
     """
     Represent a registered domain name.
 
-    A registered domain is a combined domain + TopLevelDomainProvider
+    A registered domain is a combined Domain + TopLevelDomainProvider
     object as it may be possible to register the same tld from multiple sources.
     Providers may have their own unique rules around renewal period and notifications.
     """
     domain = models.ForeignKey(Domain)
+    # Needed to enforce unique constraint
+    tld = models.ForeignKey(TopLevelDomain)
     tld_provider = models.ForeignKey(TopLevelDomainProvider)
     # Need to see if this can be constrained to be just a registrant.
-    registrant = models.ForeignKey(RegistrantHandle)
-    active = models.NullBooleanField(unique=True)
+    active = models.NullBooleanField(null=True)
     auto_renew = models.BooleanField(default=True)
     registration_period = models.IntegerField()
     # This will need to be a meta field that is calculated based on the
@@ -170,12 +181,25 @@ class RegisteredDomain(models.Model):
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
 
+    class Meta:
+        unique_together = ('domain', 'tld', 'active')
 
     def __str__(self):
-        """Represent a registered domain (i.e. name.tld)
-
-        """
+        """Represent a registered domain (i.e. name.tld)."""
         return self.domain.name + "." + self.tld_provider.zone.zone
+
+
+class DomainRegistrant(models.Model):
+    """
+    Registrant associated with a domain. A domain can typically have only one.
+    """
+    registered_domain = models.ForeignKey(RegisteredDomain)
+    registrant = models.ForeignKey(RegistrantHandle)
+    active = models.NullBooleanField(null=True)
+    created = models.DateField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('registered_domain', 'registrant', 'active')
 
 class DomainHandles(models.Model):
     """
@@ -184,5 +208,8 @@ class DomainHandles(models.Model):
     """
     registered_domain = models.ForeignKey(RegisteredDomain)
     contact_handle = models.ForeignKey(ContactHandle)
+    active = models.NullBooleanField(null=True)
     created = models.DateField(auto_now_add=True)
-    active = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('registered_domain', 'contact_handle', 'active')
