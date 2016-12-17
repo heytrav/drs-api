@@ -1,11 +1,27 @@
 from django.db import models
 
-class Person(models.Model):
+class Identity(models.Model):
 
-    """Person object in db"""
+    """Identity object in db"""
     first_name = models.CharField(max_length=200)
     surname = models.CharField(max_length=200)
     middle_name = models.CharField(max_length=200, blank=True)
+    username = models.CharField(max_length=100)
+
+
+    def __str__(self):
+        """String representation
+        :returns: TODO
+
+        """
+        return self.surname + ', ' + self.first_name
+
+
+class PersonalDetails(models.Model):
+
+    """Person object in db"""
+
+    identity = models.ForeignKey(Identity)
     email = models.CharField(max_length=200)
     email2 = models.CharField(max_length=200, blank=True)
     email3 = models.CharField(max_length=200, blank=True)
@@ -26,8 +42,7 @@ class Person(models.Model):
         :returns: TODO
 
         """
-        return self.surname + ', ' + self.first_name
-
+        return self.identity.surname + ', ' + self.identity.first_name
 
 class TopLevelDomain(models.Model):
 

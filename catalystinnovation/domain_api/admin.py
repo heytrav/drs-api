@@ -1,7 +1,8 @@
 from django.contrib import admin
 
 from .models import (
-    Person,
+    Identity,
+    PersonalDetails,
     TopLevelDomain,
     DomainProvider,
     TopLevelDomainProvider,
@@ -30,7 +31,8 @@ class DomainProviderAdmin(admin.ModelAdmin):
 
 
 
-admin.site.register(Person)
+admin.site.register(Identity)
+admin.site.register(PersonalDetails)
 admin.site.register(TopLevelDomain)
 admin.site.register(DomainProvider, DomainProviderAdmin)
 admin.site.register(Domain)
