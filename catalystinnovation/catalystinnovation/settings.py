@@ -26,7 +26,8 @@ SECRET_KEY = '-gd#qi9!+)u+!65m)m^ad)yq2b5)jbny)(&8lzp-m5$+2z%78%'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '192.168.99.1'
+    '192.168.99.1',
+    '0.0.0.0'
 ]
 
 
@@ -128,3 +129,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
