@@ -16,15 +16,14 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib.auth.models import User
 from django.contrib import admin
-from rest_framework import routers, serializers, viewsets
+from rest_framework import routers
+from catalystinnovation.quickstart import views
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
 
 router = routers.DefaultRouter()
-router.register(r'users', UserViewSet)
+router.register(r'users', views.UserViewSet)
+router.register(r'groups', views.GroupViewSet)
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
