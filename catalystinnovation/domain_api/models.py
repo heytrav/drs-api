@@ -9,6 +9,9 @@ class Identity(models.Model):
     surname = models.CharField(max_length=200)
     middle_name = models.CharField(max_length=200, blank=True)
     username = models.CharField(max_length=100, unique=True)
+    owner = models.ForeignKey('auth.User',
+                              related_name='identities',
+                              on_delete=models.CASCADE)
 
     def __str__(self):
         """String representation
