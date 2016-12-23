@@ -1,18 +1,11 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 from domain_api import views
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'identities', views.IdentityViewSet)
+router.register(r'users', views.UserViewSet)
 
 urlpatterns = [
-    url(r'^$', views.api_root),
-    url(r'^identities/$',
-        views.IdentityList.as_view(),
-        name='identity-list'),
-    url(r'^identities/(?P<pk>[0-9]+)/$',
-        views.IdentityDetail.as_view(),
-        name='identity-detail'),
-    url(r'^users/$',
-        views.UserList.as_view(),
-        name='user-list'),
-    url(r'^users/(?P<pk>[0-9]+)/$',
-        views.UserDetail.as_view(),
-        name='user-detail'),
+    url(r'^', include(router.urls)),
 ]
