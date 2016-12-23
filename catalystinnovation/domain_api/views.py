@@ -22,7 +22,7 @@ def api_root(request, format=None):
     """
     return Response({
         'users': reverse('user-list', request=request, format=format),
-        'identites': reverse('identities-list', request=request, format=format),
+        'identites': reverse('identity-list', request=request, format=format),
     })
 
 
