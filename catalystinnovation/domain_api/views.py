@@ -69,7 +69,7 @@ class PersonalDetailViewSet(viewsets.ModelViewSet):
     """Docstring for PersonalDetailViewSet. """
     queryset = PersonalDetail.objects.all()
     serializer_class = PersonalDetailSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
