@@ -1,14 +1,14 @@
+import logging
 from django.contrib.auth.models import User
 from domain_api.permissions import IsOwnerOrReadOnly
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, mixins, generics, permissions, viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from domain_api.models import (
-    Identity,
     PersonalDetail,
     ContactType,
     TopLevelDomain,
@@ -23,7 +23,6 @@ from domain_api.models import (
     TopLevelDomainProvider
 )
 from domain_api.serializers import (
-    IdentitySerializer,
     UserSerializer,
     PersonalDetailSerializer,
     ContactTypeSerializer,
@@ -33,23 +32,27 @@ from domain_api.serializers import (
     DomainProviderSerializer,
     RegistrantHandleSerializer,
     DomainSerializer,
-    RegisteredDomainSerializer
+    RegisteredDomainSerializer,
+    CheckDomainResponseSerializer,
 )
 
 
-class IdentityViewSet(viewsets.ModelViewSet):
+logger = logging.getLogger(__name__)
+
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def check_domain(request, domain, format=None):
+    """
+    Query EPP with a checkDomain request.
+    :returns: JSON response indicating whether domain is available.
 
     """
-    This viewset automatically provides `list`, `create`, `retrieve`,
-    `update` and `destroy` actions.
-    """
-    queryset = Identity.objects.all()
-    serializer_class = IdentitySerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
-                          IsOwnerOrReadOnly,)
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+    logger.debug("Received request for domain: ", domain)
+    response_data = {"result": [{"domain": domain, "available": True}]}
+    serializer = CheckDomainResponseSerializer(data=response_data)
+    if serializer.is_valid():
+        return Response(serializer.data)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -78,7 +81,7 @@ class ContactTypeViewSet(viewsets.ModelViewSet):
     """
     queryset = ContactType.objects.all()
     serializer_class = ContactTypeSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -88,7 +91,7 @@ class TopLevelDomainViewSet(viewsets.ModelViewSet):
 
     queryset = TopLevelDomain.objects.all()
     serializer_class = TopLevelDomainSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -98,7 +101,7 @@ class DomainProviderViewSet(viewsets.ModelViewSet):
 
     queryset = DomainProvider.objects.all()
     serializer_class = DomainProviderSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -108,7 +111,7 @@ class RegistrantHandleViewSet(viewsets.ModelViewSet):
 
     queryset = RegistrantHandle.objects.all()
     serializer_class = RegistrantHandleSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -118,7 +121,7 @@ class ContactHandleViewSet(viewsets.ModelViewSet):
 
     queryset = ContactHandle.objects.all()
     serializer_class = ContactHandleSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -128,7 +131,7 @@ class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
 
     queryset = TopLevelDomainProvider.objects.all()
     serializer_class = TopLevelDomainProviderSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -138,7 +141,7 @@ class RegistrantHandleViewSet(viewsets.ModelViewSet):
 
     queryset = RegistrantHandle.objects.all()
     serializer_class = RegistrantHandleSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -148,7 +151,7 @@ class ContactHandleViewSet(viewsets.ModelViewSet):
 
     queryset = ContactHandle.objects.all()
     serializer_class = ContactHandleSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -158,7 +161,7 @@ class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
 
     queryset = TopLevelDomainProvider.objects.all()
     serializer_class = TopLevelDomainProviderSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -168,7 +171,7 @@ class DomainViewSet(viewsets.ModelViewSet):
 
     queryset = Domain.objects.all()
     serializer_class = DomainSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -178,7 +181,7 @@ class RegisteredDomainViewSet(viewsets.ModelViewSet):
 
     queryset = RegisteredDomain.objects.all()
     serializer_class = RegisteredDomainSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

@@ -4,7 +4,6 @@ from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r'users', views.UserViewSet)
-router.register(r'identities', views.IdentityViewSet)
 router.register(r'personal-details', views.PersonalDetailViewSet)
 router.register(r'contact-types', views.ContactTypeViewSet)
 router.register(r'contact-handles', views.ContactHandleViewSet)
@@ -17,4 +16,5 @@ router.register(r'registered-domains', views.RegisteredDomainViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),
+    url(r'^checkDomain/(?P<domain>.*)/$', views.check_domain),
 ]

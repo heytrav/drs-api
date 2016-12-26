@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from domain_api.models import (
-    Identity,
     PersonalDetail,
     TopLevelDomain,
     ContactType,
@@ -21,24 +20,15 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     """
     Serialize users.
     """
-    identities = serializers.HyperlinkedRelatedField(
+    personal_details = serializers.HyperlinkedRelatedField(
         many=True,
-        view_name="identity-detail",
+        view_name="personal-details",
         read_only=True
     )
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'identities')
-
-
-class IdentitySerializer(serializers.HyperlinkedModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
-
-    class Meta:
-        model = Identity
-        fields = ('id', 'first_name', 'surname',
-                  'middle_name', 'username', 'owner',)
+        fields = ('id', 'username', 'personal_details')
 
 
 class PersonalDetailSerializer(serializers.HyperlinkedModelSerializer):
@@ -50,7 +40,7 @@ class PersonalDetailSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = PersonalDetail
-        fields = ('identity', 'email', 'email2', 'email3',
+        fields = ('first_name', 'surname', 'middle_name', 'email', 'email2', 'email3',
                   'house_number', 'street1', 'street2', 'street3',
                   'city', 'suburb', 'state', 'postcode', 'country',
                   'created', 'updated', 'owner')
@@ -149,3 +139,11 @@ class DomainHandlesSerializer(serializers.HyperlinkedModelSerializer):
         model = DomainHandles
         fields = ('registered_domain', 'contact_handle', 'active',
                   'created', 'owner')
+
+class DomainAvailabilitySerializer(serializers.Serializer):
+    domain = serializers.CharField(required=True, allow_blank=False)
+    available = serializers.BooleanField(required=True)
+
+class CheckDomainResponseSerializer(serializers.Serializer):
+    result = DomainAvailabilitySerializer(many=True)
+

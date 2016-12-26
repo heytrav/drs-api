@@ -22,7 +22,10 @@ class PersonalDetail(models.Model):
     Person object in db.
     """
 
-    identity = models.ForeignKey(Identity)
+
+    first_name = models.CharField(max_length=200)
+    surname = models.CharField(max_length=200)
+    middle_name = models.CharField(max_length=200, blank=True)
     email = models.CharField(max_length=200)
     email2 = models.CharField(max_length=200, blank=True)
     email3 = models.CharField(max_length=200, blank=True)
