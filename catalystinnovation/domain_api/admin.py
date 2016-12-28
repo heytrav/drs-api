@@ -30,11 +30,8 @@ class DomainProviderAdmin(admin.ModelAdmin):
     inlines = [TopLevelDomainProviderInline]
 
 
-class PersonalDetailsInline(admin.StackedInline):
-    model = PersonalDetail
-    extra = 2
 
-
+admin.site.register(PersonalDetail)
 admin.site.register(TopLevelDomain)
 admin.site.register(DomainProvider, DomainProviderAdmin)
 admin.site.register(Domain)

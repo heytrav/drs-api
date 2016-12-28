@@ -55,6 +55,7 @@ def check_domain(request, domain, format=None):
         return Response(serializer.data)
 
 
+
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
     """
@@ -73,6 +74,7 @@ class PersonalDetailViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
 
 class ContactTypeViewSet(viewsets.ModelViewSet):
 

@@ -21,7 +21,7 @@ schema_view = get_schema_view(title='Domain API')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^', include('domain_api.urls')),
+    url(r'^domain-api/', include('domain_api.urls')),
     url(r'^api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
     url('^schema/$', schema_view),

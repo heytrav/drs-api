@@ -15,6 +15,6 @@ router.register(r'registrant-handles', views.RegistrantHandleViewSet)
 router.register(r'registered-domains', views.RegisteredDomainViewSet)
 
 urlpatterns = [
-    url(r'^', include(router.urls)),
+    url(r'^admin/', include(router.urls)),
     url(r'^checkDomain/(?P<domain>.*)/$', views.check_domain),
 ]
