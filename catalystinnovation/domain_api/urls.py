@@ -3,8 +3,7 @@ from domain_api import views
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r'users', views.UserViewSet)
-router.register(r'personal-details', views.PersonalDetailViewSet)
+router.register(r'personal-detail', views.PersonalDetailViewSet, "personal")
 router.register(r'contact-types', views.ContactTypeViewSet)
 router.register(r'contact-handles', views.ContactHandleViewSet)
 router.register(r'tlds', views.TopLevelDomainViewSet)
@@ -13,8 +12,11 @@ router.register(r'domain-providers', views.DomainProviderViewSet)
 router.register(r'domains', views.DomainViewSet)
 router.register(r'registrant-handles', views.RegistrantHandleViewSet)
 router.register(r'registered-domains', views.RegisteredDomainViewSet)
+router.register(r'domain-registrant', views.DomainRegistrantViewSet)
+router.register(r'domain-handle', views.DomainHandleViewSet)
+router.register(r'users', views.UserViewSet)
 
 urlpatterns = [
-    url(r'^admin/', include(router.urls)),
+    url(r'^', include(router.urls, namespace='domain_api')),
     url(r'^checkDomain/(?P<domain>.*)/$', views.check_domain),
 ]

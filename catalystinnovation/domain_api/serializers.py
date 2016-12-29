@@ -15,39 +15,44 @@ from domain_api.models import (
 )
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
-
-    """
-    Serialize users.
-    """
-    personal_details = serializers.HyperlinkedRelatedField(
-        many=True,
-        view_name="personal-details",
-        read_only=True
-    )
-
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'personal_details')
-
-
 class PersonalDetailSerializer(serializers.HyperlinkedModelSerializer):
 
     """
     Serializer for PersonalDetails
     """
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
         model = PersonalDetail
         fields = ('first_name', 'surname', 'middle_name', 'email', 'email2', 'email3',
                   'house_number', 'street1', 'street2', 'street3',
                   'city', 'suburb', 'state', 'postcode', 'country',
-                  'created', 'updated', 'owner')
+                  'created', 'updated', 'owner',)
+
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    """
+    Serialize users.
+    """
+
+    class Meta:
+        model = User
+        fields = ('id', 'username')
+
 
 
 class ContactTypeSerializer(serializers.HyperlinkedModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
         model = ContactType
@@ -59,7 +64,11 @@ class TopLevelDomainSerializer(serializers.HyperlinkedModelSerializer):
     """
     Serialize top level domains
     """
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
         model = TopLevelDomain
@@ -72,7 +81,11 @@ class DomainProviderSerializer(serializers.HyperlinkedModelSerializer):
     """
     Serializer for domain providers.
     """
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
         model = DomainProvider
@@ -80,7 +93,21 @@ class DomainProviderSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class RegistrantHandleSerializer(serializers.HyperlinkedModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    person = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:personaldetail-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    provider=serializers.HyperlinkedRelatedField(
+        view_name="domain_api:domainprovider-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
         model = RegistrantHandle
@@ -88,7 +115,26 @@ class RegistrantHandleSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class ContactHandleSerializer(serializers.HyperlinkedModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    person = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:personaldetail-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    contact_type = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:contacttype-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    provider=serializers.HyperlinkedRelatedField(
+        view_name="domain_api:domainprovider-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
         model = ContactHandle
@@ -97,16 +143,35 @@ class ContactHandleSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    provider = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:domainprovider-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    zone = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:topleveldomain-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
         model = TopLevelDomainProvider
-        fields = ('zone', 'provider', 'anniversary_notification_period_days',
+        fields = ( 'zone', 'provider', 'anniversary_notification_period_days',
                   'renewal_period', 'grace_period_days', 'owner')
 
 
+
 class DomainSerializer(serializers.HyperlinkedModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
         model = Domain
@@ -114,7 +179,26 @@ class DomainSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    domain = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:domain-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    tld = serializers.HyperlinkedRelatedField(
+        view_name="topleveldomain-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    tld_provider = serializers.HyperlinkedRelatedField(
+        view_name="topleveldomainprovider-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
         model = RegisteredDomain
@@ -124,7 +208,21 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class DomainRegistrantSerializer(serializers.HyperlinkedModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    registered_domain = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:registereddomain-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    registrant = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:registranthandle-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
         model = DomainRegistrant
@@ -133,7 +231,21 @@ class DomainRegistrantSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class DomainHandlesSerializer(serializers.HyperlinkedModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    registered_domain = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:registereddomain-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    contact_handle = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:contacthandle-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
         model = DomainHandles

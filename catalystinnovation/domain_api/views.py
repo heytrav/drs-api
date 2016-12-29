@@ -34,6 +34,8 @@ from domain_api.serializers import (
     DomainSerializer,
     RegisteredDomainSerializer,
     CheckDomainResponseSerializer,
+    DomainRegistrantSerializer,
+    DomainHandlesSerializer,
 )
 
 
@@ -56,6 +58,16 @@ def check_domain(request, domain, format=None):
 
 
 
+class PersonalDetailViewSet(viewsets.ModelViewSet):
+
+    queryset = PersonalDetail.objects.all()
+    serializer_class = PersonalDetailSerializer
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
     """
@@ -65,17 +77,6 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserSerializer
 
 
-class PersonalDetailViewSet(viewsets.ModelViewSet):
-
-    """Docstring for PersonalDetailViewSet. """
-    queryset = PersonalDetail.objects.all()
-    serializer_class = PersonalDetailSerializer
-    permission_classes = (permissions.IsAdminUser,)
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-
 class ContactTypeViewSet(viewsets.ModelViewSet):
 
     """
@@ -83,7 +84,7 @@ class ContactTypeViewSet(viewsets.ModelViewSet):
     """
     queryset = ContactType.objects.all()
     serializer_class = ContactTypeSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -93,7 +94,7 @@ class TopLevelDomainViewSet(viewsets.ModelViewSet):
 
     queryset = TopLevelDomain.objects.all()
     serializer_class = TopLevelDomainSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -103,7 +104,7 @@ class DomainProviderViewSet(viewsets.ModelViewSet):
 
     queryset = DomainProvider.objects.all()
     serializer_class = DomainProviderSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -113,7 +114,37 @@ class RegistrantHandleViewSet(viewsets.ModelViewSet):
 
     queryset = RegistrantHandle.objects.all()
     serializer_class = RegistrantHandleSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class ContactHandleViewSet(viewsets.ModelViewSet):
+
+    queryset = ContactHandle.objects.all()
+    serializer_class = ContactHandleSerializer
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
+
+    queryset = TopLevelDomainProvider.objects.all()
+    serializer_class = TopLevelDomainProviderSerializer
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class RegistrantHandleViewSet(viewsets.ModelViewSet):
+
+    queryset = RegistrantHandle.objects.all()
+    serializer_class = RegistrantHandleSerializer
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -133,37 +164,7 @@ class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
 
     queryset = TopLevelDomainProvider.objects.all()
     serializer_class = TopLevelDomainProviderSerializer
-    permission_classes = (permissions.IsAdminUser,)
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-
-class RegistrantHandleViewSet(viewsets.ModelViewSet):
-
-    queryset = RegistrantHandle.objects.all()
-    serializer_class = RegistrantHandleSerializer
-    permission_classes = (permissions.IsAdminUser,)
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-
-class ContactHandleViewSet(viewsets.ModelViewSet):
-
-    queryset = ContactHandle.objects.all()
-    serializer_class = ContactHandleSerializer
-    permission_classes = (permissions.IsAdminUser,)
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-
-class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
-
-    queryset = TopLevelDomainProvider.objects.all()
-    serializer_class = TopLevelDomainProviderSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -173,7 +174,7 @@ class DomainViewSet(viewsets.ModelViewSet):
 
     queryset = Domain.objects.all()
     serializer_class = DomainSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -183,7 +184,27 @@ class RegisteredDomainViewSet(viewsets.ModelViewSet):
 
     queryset = RegisteredDomain.objects.all()
     serializer_class = RegisteredDomainSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class DomainRegistrantViewSet(viewsets.ModelViewSet):
+
+    queryset = DomainRegistrant.objects.all()
+    serializer_class = DomainRegistrantSerializer
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class DomainHandleViewSet(viewsets.ModelViewSet):
+
+    queryset = DomainHandles.objects.all()
+    serializer_class = DomainRegistrantSerializer
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
