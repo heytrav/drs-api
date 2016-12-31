@@ -6,7 +6,6 @@ class PersonalDetail(models.Model):
     Person object in db.
     """
 
-
     first_name = models.CharField(max_length=200)
     surname = models.CharField(max_length=200)
     middle_name = models.CharField(max_length=200, blank=True)
