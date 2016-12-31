@@ -1,4 +1,6 @@
 import logging
+import requests
+import json
 from django.contrib.auth.models import User
 from domain_api.permissions import IsOwnerOrReadOnly
 from django.http import Http404
@@ -54,9 +56,19 @@ def check_domain(request, domain, format=None):
     :returns: JSON response indicating whether domain is available.
 
     """
-    logger.debug("Received request for domain: ", domain)
-    response_data = {"result": [{"domain": domain, "available": True}]}
-    serializer = CheckDomainResponseSerializer(data=response_data)
+    request_data = {"domain": domain}
+    response = requests.post('http://centralnic:3000/command/centralnic-test/checkDomain',
+                             headers={"Content-type": "application/json"},
+                             data=json.dumps(request_data))
+
+    response_data = response.json()
+    available = response_data["data"]["domain:chkData"]["domain:cd"]["domain:name"]["avail"]
+    logger.error("Got response data %s" % available)
+    is_available = False
+    if available and available == 1:
+        is_available = True
+    availability = {'result': {"domain": domain, "available": is_available}}
+    serializer = CheckDomainResponseSerializer(data=json.dumps(availability))
     if serializer.is_valid():
         return Response(serializer.data)
 
@@ -65,7 +77,8 @@ def check_domain(request, domain, format=None):
 class PersonalDetailViewSet(viewsets.ModelViewSet):
 
     serializer_class = PersonalDetailSerializer
-    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
