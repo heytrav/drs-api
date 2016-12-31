@@ -65,10 +65,10 @@ def check_domain(request, domain, format=None):
     available = response_data["data"]["domain:chkData"]["domain:cd"]["domain:name"]["avail"]
     logger.error("Got response data %s" % available)
     is_available = False
-    if available and available == 1:
+    if available and (available == 1 or available == "1") :
         is_available = True
-    availability = {'result': {"domain": domain, "available": is_available}}
-    serializer = CheckDomainResponseSerializer(data=json.dumps(availability))
+    availability = {"result": [{"domain": domain, "available": is_available}]}
+    serializer = CheckDomainResponseSerializer(data=availability)
     if serializer.is_valid():
         return Response(serializer.data)
 
