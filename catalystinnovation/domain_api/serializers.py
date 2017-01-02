@@ -33,7 +33,7 @@ class PersonalDetailSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = PersonalDetail
         fields = ('url', 'first_name', 'surname', 'middle_name', 'email', 'email2', 'email3',
-                  'house_number', 'street1', 'street2', 'street3',
+                  'telephone', 'fax', 'company', 'house_number', 'street1', 'street2', 'street3',
                   'city', 'suburb', 'state', 'postcode', 'country',
                   'created', 'updated', 'owner',)
 
@@ -150,11 +150,6 @@ class ContactHandleSerializer(serializers.HyperlinkedModelSerializer):
         lookup_field="pk",
         read_only=True
     )
-    contact_type = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:contacttype-detail",
-        lookup_field="pk",
-        read_only=True
-    )
     provider = serializers.HyperlinkedRelatedField(
         view_name="domain_api:domainprovider-detail",
         lookup_field="pk",
@@ -163,7 +158,7 @@ class ContactHandleSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = ContactHandle
-        fields = ('url', 'person', 'contact_type', 'provider', 'handle',
+        fields = ('url', 'person', 'provider', 'handle',
                   'created', 'updated', 'owner')
 
 
@@ -287,10 +282,15 @@ class DomainHandlesSerializer(serializers.HyperlinkedModelSerializer):
         lookup_field="pk",
         read_only=True
     )
+    contact_type = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:contacttype-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
         model = DomainHandles
-        fields = ('registered_domain', 'contact_handle', 'active',
+        fields = ('registered_domain', 'contact_type', 'contact_handle', 'active',
                   'created', 'owner')
 
 class DomainAvailabilitySerializer(serializers.Serializer):

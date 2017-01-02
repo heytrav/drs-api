@@ -100,18 +100,8 @@ class RegistrantHandle(models.Model):
 class ContactHandle(models.Model):
     """
     Registry identifier for a contact handle.
-
-    This type of contact
-
-    - admin
-    - tech
-    - billing
-    - zone?
-
-    There may be other types.
     """
     person = models.ForeignKey(PersonalDetail)
-    contact_type = models.ForeignKey(ContactType)
     provider = models.ForeignKey(DomainProvider)
     # Id from provider
     handle = models.CharField(max_length=200)
@@ -214,6 +204,7 @@ class DomainHandles(models.Model):
     """
     registered_domain = models.ForeignKey(RegisteredDomain)
     contact_handle = models.ForeignKey(ContactHandle)
+    contact_type = models.ForeignKey(ContactType)
     active = models.NullBooleanField(null=True)
     created = models.DateField(auto_now_add=True)
     owner = models.ForeignKey('auth.User',
@@ -221,4 +212,4 @@ class DomainHandles(models.Model):
                               on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ('registered_domain', 'contact_handle', 'active')
+        unique_together = ('registered_domain', 'contact_type', 'contact_handle', 'active')
