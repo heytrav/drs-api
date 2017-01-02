@@ -1,6 +1,7 @@
 import logging
 import requests
 import json
+import time
 from django.contrib.auth.models import User
 from domain_api.permissions import IsOwnerOrReadOnly
 from django.http import Http404
@@ -62,15 +63,92 @@ def check_domain(request, domain, format=None):
                              data=json.dumps(request_data))
 
     response_data = response.json()
-    available = response_data["data"]["domain:chkData"]["domain:cd"]["domain:name"]["avail"]
-    logger.error("Got response data %s" % available)
-    is_available = False
-    if available and (available == 1 or available == "1") :
-        is_available = True
-    availability = {"result": [{"domain": domain, "available": is_available}]}
-    serializer = CheckDomainResponseSerializer(data=availability)
-    if serializer.is_valid():
+    try:
+        available = response_data["data"]["domain:chkData"]["domain:cd"]["domain:name"]["avail"]
+        logger.error("Got response data %s" % available)
+        is_available = False
+        if available and (available == 1 or available == "1") :
+            is_available = True
+        availability = {"result": [{"domain": domain, "available": is_available}]}
+        serializer = CheckDomainResponseSerializer(data=availability)
+        if serializer.is_valid():
+            return Response(serializer.data)
+    except KeyError:
+        raise
+
+@api_view(['GET', 'POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def registry_contact(request, registry, person_id=None):
+    """TODO: Docstring for registry_contact.
+
+    :registry: TODO
+    :person: TODO
+    :returns: TODO
+
+    """
+
+    if request.method == 'GET':
+        try:
+            if request.user.is_staff:
+                contacts = ContactHandle.objects.all().filter(person__pk=person_id)
+            else:
+                contacts = ContactHandle.objects.get(person__pk=person_id, person__owner=request.user)
+            serializer = ContactHandleSerializer(contacts, many=True, context={"request": request})
+            return Response(serializer.data)
+        except ContactHandle.DoesNotExist:
+            raise Http404
+    elif request.method == 'POST':
+
+        #if person_id is not None:
+            #try:
+                #if request.user.is_staff:
+                    #person = PersonalDetail.objects.get(pk=person_id)
+                #else:
+                    #person = PersonalDetail.objects.get(pk=person_id, owner=request.user)
+            #except PersonalDetail.DoesNotExist:
+                #raise Http404
+        #else:
+        data = request.data
+        serializer = PersonalDetailSerializer(data=data)
+        if serializer.is_valid():
+            person = serializer.save(owner=request.user)
+        else:
+            raise Exception("Unable to save person.")
+        handle = "api-test-" + str(person.id)
+        street = [person.street1, person.street2, person.street3]
+        postal_info = {
+            "name": person.first_name + " " + person.surname,
+            "org": person.company,
+            "type": "int",
+            "addr" : {
+                "street": street,
+                "city": person.city,
+                "sp": person.state,
+                "pc": person.postcode,
+                "cc": person.country
+            }
+        }
+        contact_info = {
+            "id": handle,
+            "voice": person.telephone,
+            "fax": person.fax,
+            "email": person.email,
+            "postalInfo": postal_info
+        }
+        response = requests.post('http://centralnic:3000/command/centralnic-test/createContact',
+                                headers={"Content-type": "application/json"},
+                                data=json.dumps(contact_info))
+
+        # Raise an error if this didn't work
+        response.raise_for_status()
+        provider = DomainProvider.objects.get(name='CentralNic')
+        contact_handle = person.contacthandle_set.create(handle=handle,
+                                                         provider=provider,
+                                                         owner=request.user)
+        serializer = ContactHandleSerializer(contact_handle, context={'request': request})
+
         return Response(serializer.data)
+
 
 
 
