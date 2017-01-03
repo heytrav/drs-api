@@ -1,4 +1,5 @@
 from django.db import models
+import uuid
 
 
 class PersonalDetail(models.Model):
@@ -71,6 +72,7 @@ class DomainProvider(models.Model):
     Registries/rars providing top level domain services
     """
     name = models.CharField(max_length=100, unique=True)
+    slug = models.CharField(max_length=100, unique=True)
     description = models.TextField()
     owner = models.ForeignKey('auth.User',
                               related_name='domain_providers',

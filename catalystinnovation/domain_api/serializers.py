@@ -105,7 +105,7 @@ class DomainProviderSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = DomainProvider
-        fields = ('name', 'description', 'owner', 'url')
+        fields = ('name', 'description', 'owner', 'slug', 'url')
 
 
 class RegistrantHandleSerializer(serializers.HyperlinkedModelSerializer):
