@@ -42,11 +42,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    #'django_logging',
+    'django_logging',
 ]
 
-MIDDLEWARE = [
-    #'django_logging.middleware.DjangoLoggingMiddleware',
+MIDDLEWARE_CLASSES = [
+    'django_logging.middleware.DjangoLoggingMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -106,12 +106,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-#DJANGO_LOGGING = {
-    #"CONSOLE_LOG": True,
-    #"LOGLEVEL": "debug",
+DJANGO_LOGGING = {
+    "CONSOLE_LOG": True,
+    "LOGLEVEL": os.environ.get("DJANGO_LOG_LEVEL", "INFO"),
+    "CONTENT_JSON_ONLY": True
     #"ELASTICSEARCH_ENABLED": True,
 
-#}
+}
 
 
 # Internationalization
@@ -137,26 +138,4 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
-}
-
-LOGGING = {
-    "version": 1,
-    "formatters": {
-        "json": {
-            "()": "json_log_formatter.JSONFormatter",
-        }
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "json",
-        }
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-        }
-
-    }
 }
