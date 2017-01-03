@@ -1,7 +1,6 @@
 import logging
 import requests
 import json
-import time
 from django.contrib.auth.models import User
 from domain_api.permissions import IsOwnerOrReadOnly
 from django.http import Http404
@@ -78,21 +77,22 @@ def check_domain(request, domain, format=None):
 
 @api_view(['GET', 'POST'])
 @permission_classes((permissions.IsAuthenticated,))
-def registry_contact(request, registry, person_id=None):
+def registry_contact(request, registry):
     """TODO: Docstring for registry_contact.
 
-    :registry: TODO
-    :person: TODO
-    :returns: TODO
+    :registry: Registry to add this contact for
+    :person_id: Optional person object
+    :returns: A contact object
 
     """
 
+    logger.debug("Request for registry contact")
     if request.method == 'GET':
         try:
             if request.user.is_staff:
-                contacts = ContactHandle.objects.all().filter(person__pk=person_id)
+                contacts = ContactHandle.objects.filter(provider__slug=registry)
             else:
-                contacts = ContactHandle.objects.get(person__pk=person_id, person__owner=request.user)
+                contacts = ContactHandle.objects.filter(provider__slug=registry, person__owner=request.user)
             serializer = ContactHandleSerializer(contacts, many=True, context={"request": request})
             return Response(serializer.data)
         except ContactHandle.DoesNotExist:
@@ -100,6 +100,7 @@ def registry_contact(request, registry, person_id=None):
     elif request.method == 'POST':
 
         data = request.data
+        logger.debug(data)
         serializer = PersonalDetailSerializer(data=data)
         if serializer.is_valid():
             person = serializer.save(owner=request.user)
@@ -132,7 +133,7 @@ def registry_contact(request, registry, person_id=None):
 
         # Raise an error if this didn't work
         response.raise_for_status()
-        provider = DomainProvider.objects.get(name='CentralNic')
+        provider = DomainProvider.objects.get(slug=registry)
         contact_handle = person.contacthandle_set.create(handle=handle,
                                                          provider=provider,
                                                          owner=request.user)

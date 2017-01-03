@@ -19,5 +19,5 @@ router.register(r'users', views.UserViewSet)
 urlpatterns = [
     url(r'^', include(router.urls, namespace='domain_api')),
     url(r'^checkDomain/(?P<domain>.*)/$', views.check_domain),
-    url(r'^registryContact/(?P<registry>.*)/(?P<person_id>.*)/$', views.registry_contact),
+    url(r'^registryContact/(?P<registry>.*)/$', views.registry_contact),
 ]
