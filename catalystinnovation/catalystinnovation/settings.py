@@ -42,10 +42,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'django_logging',
+    #'django_logging',
 ]
 
 MIDDLEWARE = [
+    #'django_logging.middleware.DjangoLoggingMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -53,7 +54,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #'django_logging.middleware.DjangoLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'catalystinnovation.urls'
@@ -107,7 +107,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 #DJANGO_LOGGING = {
-    #"ELASTICSEARCH_ENABLED": True
+    #"CONSOLE_LOG": True,
+    #"LOGLEVEL": "debug",
+    #"ELASTICSEARCH_ENABLED": True,
+
 #}
 
 
@@ -134,4 +137,26 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
+}
+
+LOGGING = {
+    "version": 1,
+    "formatters": {
+        "json": {
+            "()": "json_log_formatter.JSONFormatter",
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        }
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+        }
+
+    }
 }
