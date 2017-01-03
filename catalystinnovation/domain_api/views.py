@@ -99,15 +99,6 @@ def registry_contact(request, registry, person_id=None):
             raise Http404
     elif request.method == 'POST':
 
-        #if person_id is not None:
-            #try:
-                #if request.user.is_staff:
-                    #person = PersonalDetail.objects.get(pk=person_id)
-                #else:
-                    #person = PersonalDetail.objects.get(pk=person_id, owner=request.user)
-            #except PersonalDetail.DoesNotExist:
-                #raise Http404
-        #else:
         data = request.data
         serializer = PersonalDetailSerializer(data=data)
         if serializer.is_valid():
