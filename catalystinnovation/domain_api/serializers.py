@@ -119,7 +119,7 @@ class RegistrantHandleSerializer(serializers.HyperlinkedModelSerializer):
         lookup_field="pk"
     )
     person = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:personaldetail-detail",
+        view_name="domain_api:personal-detail",
         lookup_field="pk",
         read_only=True
     )
@@ -222,21 +222,31 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
         read_only=True
     )
     tld = serializers.HyperlinkedRelatedField(
-        view_name="topleveldomain-detail",
+        view_name="domain_api:topleveldomain-detail",
         lookup_field="pk",
         read_only=True
     )
     tld_provider = serializers.HyperlinkedRelatedField(
-        view_name="topleveldomainprovider-detail",
+        view_name="domain_api:topleveldomainprovider-detail",
         lookup_field="pk",
         read_only=True
     )
 
+    registrant = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:domainregistrant-detail",
+        many=True,
+        read_only=True
+    )
+    contact_handles = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:domainhandles-detail",
+        many=True,
+        read_only=True
+    )
     class Meta:
         model = RegisteredDomain
         fields = ('domain', 'tld', 'tld_provider', 'active', 'auto_renew',
                   'registration_period', 'anniversary', 'created',
-                  'updated', 'owner','url')
+                  'updated','registrant', 'contact_handles', 'owner','url')
 
 
 class DomainRegistrantSerializer(serializers.HyperlinkedModelSerializer):
@@ -293,10 +303,13 @@ class DomainHandlesSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('registered_domain', 'contact_type', 'contact_handle', 'active',
                   'created', 'owner')
 
+
 class DomainAvailabilitySerializer(serializers.Serializer):
     domain = serializers.CharField(required=True, allow_blank=False)
     available = serializers.BooleanField(required=True)
 
+
 class CheckDomainResponseSerializer(serializers.Serializer):
     result = DomainAvailabilitySerializer(many=True)
+
 

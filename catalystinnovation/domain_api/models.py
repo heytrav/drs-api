@@ -25,8 +25,8 @@ class PersonalDetail(models.Model):
     state = models.CharField(max_length=200, blank=True)
     postcode = models.CharField(max_length=20)
     country = models.CharField(max_length=200)
-    created = models.DateField(auto_now_add=True)
-    updated = models.DateField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey('auth.User',
                               related_name='personal_details',
                               on_delete=models.CASCADE)
@@ -57,8 +57,8 @@ class TopLevelDomain(models.Model):
     # Internationalised syntax: xn--*
     idn_zone = models.CharField(max_length=100, unique=True)
     description = models.TextField()
-    created = models.DateField(auto_now_add=True)
-    updated = models.DateField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey('auth.User',
                               related_name='top_level_domains',
                               on_delete=models.CASCADE)
@@ -92,8 +92,8 @@ class RegistrantHandle(models.Model):
     provider = models.ForeignKey(DomainProvider)
     # Id from provider
     handle = models.CharField(max_length=200)
-    created = models.DateField(auto_now_add=True)
-    updated = models.DateField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey('auth.User',
                               related_name='registrant_handles',
                               on_delete=models.CASCADE)
@@ -107,8 +107,8 @@ class ContactHandle(models.Model):
     provider = models.ForeignKey(DomainProvider)
     # Id from provider
     handle = models.CharField(max_length=200)
-    created = models.DateField(auto_now_add=True)
-    updated = models.DateField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey('auth.User',
                               related_name='contact_handles',
                               on_delete=models.CASCADE)
@@ -169,9 +169,9 @@ class RegisteredDomain(models.Model):
     # registration period and whatever the notification buffer is for a
     # provider. The aim is to notify a customer ahead of time that their domain
     # is about to renew/expire.
-    anniversary = models.DateField()
-    created = models.DateField(auto_now_add=True)
-    updated = models.DateField(auto_now=True)
+    anniversary = models.DateTimeField()
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey('auth.User',
                               related_name='registered_domains',
                               on_delete=models.CASCADE)
@@ -188,10 +188,11 @@ class DomainRegistrant(models.Model):
     """
     Registrant associated with a domain. A domain can typically have only one.
     """
-    registered_domain = models.ForeignKey(RegisteredDomain)
+    registered_domain = models.ForeignKey(RegisteredDomain,
+                                          related_name="registrant")
     registrant = models.ForeignKey(RegistrantHandle)
     active = models.NullBooleanField(null=True)
-    created = models.DateField(auto_now_add=True)
+    created = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey('auth.User',
                               related_name='domain_registrants',
                               on_delete=models.CASCADE)
@@ -199,16 +200,18 @@ class DomainRegistrant(models.Model):
     class Meta:
         unique_together = ('registered_domain', 'registrant', 'active')
 
+
 class DomainHandles(models.Model):
     """
     Contacts associated with a domain. A domain can have several contact handles
     (depending on the registry).
     """
-    registered_domain = models.ForeignKey(RegisteredDomain)
+    registered_domain = models.ForeignKey(RegisteredDomain,
+                                          related_name='contact_handles')
     contact_handle = models.ForeignKey(ContactHandle)
     contact_type = models.ForeignKey(ContactType)
     active = models.NullBooleanField(null=True)
-    created = models.DateField(auto_now_add=True)
+    created = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey('auth.User',
                               related_name='domain_handles',
                               on_delete=models.CASCADE)
