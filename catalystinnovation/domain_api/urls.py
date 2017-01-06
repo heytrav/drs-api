@@ -24,4 +24,5 @@ urlpatterns = [
     url(r'^registrant/(?P<registry>.*)/$', views.registrant),
     url(r'^registrant/(?P<registry>.*)/(?P<person_id>\d+)/$', views.registrant),
     url(r'^registerDomain/$', views.register_domain),
+    url(r'^infoDomain/(?P<domain>.*)/$', views.info_domain),
 ]

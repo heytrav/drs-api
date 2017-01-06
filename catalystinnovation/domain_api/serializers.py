@@ -143,7 +143,8 @@ class ContactHandleSerializer(serializers.HyperlinkedModelSerializer):
     )
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:contacthandle-detail",
-        lookup_field="pk"
+        lookup_field="pk",
+        read_only=True
     )
     person = serializers.HyperlinkedRelatedField(
         view_name="domain_api:personal-detail",
@@ -231,7 +232,6 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
         lookup_field="pk",
         read_only=True
     )
-
     registrant = serializers.HyperlinkedRelatedField(
         view_name="domain_api:domainregistrant-detail",
         many=True,
@@ -313,3 +313,25 @@ class CheckDomainResponseSerializer(serializers.Serializer):
     result = DomainAvailabilitySerializer(many=True)
 
 
+class HandleTypeSerializer(serializers.Serializer):
+    handle = serializers.CharField(required=True, allow_blank=False)
+    contact_type = serializers.CharField(required=True, allow_blank=False)
+
+
+class NsHostObjectListSerializer(serializers.ListField):
+    child = serializers.CharField()
+
+
+class HandleSetSerializer(serializers.ListField):
+    child = HandleTypeSerializer()
+
+
+class InfoDomainSerializer(serializers.Serializer):
+    domain = serializers.CharField(required=True, allow_blank=False)
+    contacts = HandleSetSerializer()
+    registrant = serializers.CharField(required=True, allow_blank=False)
+    roid = serializers.CharField()
+    ns = NsHostObjectListSerializer(required=True)
+    status = serializers.DictField(child=serializers.CharField())
+    auth_info = serializers.CharField(required=False)
+    roid = serializers.CharField(required=False)

@@ -39,6 +39,7 @@ from domain_api.serializers import (
     CheckDomainResponseSerializer,
     DomainRegistrantSerializer,
     DomainHandlesSerializer,
+    InfoDomainSerializer,
 )
 from domain_api.filters import (
     IsOwnerFilterBackend,
@@ -72,6 +73,61 @@ def check_domain(request, domain, format=None):
             return Response(serializer.data)
     except KeyError:
         raise
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def info_domain(request, domain, format=None):
+    """
+    Query EPP with a infoDomain request.
+    :returns: JSON response with details about a domain
+
+    """
+    request_data = {"domain": domain}
+    response = requests.post(
+        'http://centralnic:3000/command/centralnic-test/infoDomain',
+        headers={"Content-type": "application/json"},
+        data=json.dumps(request_data)
+    )
+
+    response.raise_for_status()
+    epp_response = response.json()
+    try:
+        if int(epp_response["result"]["code"]) >= 2000:
+            log.error(epp_response)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        log.error(ErrorLogObject(request, e))
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    try:
+        response_data = epp_response["data"]["domain:infData"]
+        for contact in response_data["domain:contact"]:
+            if '$t' in contact:
+                contact["handle"] = contact["$t"]
+                contact["contact_type"] = contact["type"]
+                del contact["type"]
+                del contact["$t"]
+        return_data = {
+            "domain": response_data["domain:name"],
+            "status": response_data["domain:status"],
+            "registrant": response_data["domain:registrant"],
+            "contacts": response_data["domain:contact"],
+            "ns": response_data["domain:ns"]["domain:hostObj"],
+        }
+        if request.user.is_staff:
+            return_data["auth_info"] = response_data["domain:authInfo"]["domain:pw"]
+            return_data["roid"] = response_data["domain:roid"]
+        log.info(return_data)
+        serializer = InfoDomainSerializer(data=return_data)
+        if serializer.is_valid():
+            return Response(serializer.data)
+        else:
+            log.error(serializer.errors)
+    except Exception as e:
+        log.error(ErrorLogObject(request, e))
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 @api_view(['GET', 'POST'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -225,6 +281,10 @@ def register_domain(request):
     tech = ContactHandle.objects.get(pk=data['tech'])
     domain = data["domain"]
     tlds = TopLevelDomain.objects.all()
+
+    # Figure out what the tld is and split the submitted domain name into
+    # the domain "name" and tld (zone). Also make sure to split away any
+    # possible subdomains.
     probable_tld = None
     length = 0
     domain_name = None

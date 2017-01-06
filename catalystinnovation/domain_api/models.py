@@ -91,7 +91,7 @@ class RegistrantHandle(models.Model):
     person = models.ForeignKey(PersonalDetail)
     provider = models.ForeignKey(DomainProvider)
     # Id from provider
-    handle = models.CharField(max_length=200)
+    handle = models.CharField(max_length=200, unique=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey('auth.User',
@@ -106,7 +106,7 @@ class ContactHandle(models.Model):
     person = models.ForeignKey(PersonalDetail)
     provider = models.ForeignKey(DomainProvider)
     # Id from provider
-    handle = models.CharField(max_length=200)
+    handle = models.CharField(max_length=200, unique=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey('auth.User',
