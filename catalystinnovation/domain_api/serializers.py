@@ -217,16 +217,22 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
         view_name="domain_api:registereddomain-detail",
         lookup_field="pk"
     )
-    domain = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:domain-detail",
-        lookup_field="pk",
-        read_only=True
-    )
-    tld = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:topleveldomain-detail",
-        lookup_field="pk",
-        read_only=True
-    )
+    domain = serializers.SlugRelatedField(many=False,
+                                          read_only=True,
+                                          slug_field='name')
+    #domain = serializers.HyperlinkedRelatedField(
+        #view_name="domain_api:domain-detail",
+        #lookup_field="pk",
+        #read_only=True
+    #)
+    tld = serializers.SlugRelatedField(many=False,
+                                       read_only=True,
+                                       slug_field='zone')
+    #tld = serializers.HyperlinkedRelatedField(
+        #view_name="domain_api:topleveldomain-detail",
+        #lookup_field="pk",
+        #read_only=True
+    #)
     tld_provider = serializers.HyperlinkedRelatedField(
         view_name="domain_api:topleveldomainprovider-detail",
         lookup_field="pk",
