@@ -1,4 +1,5 @@
 from django_logging import log, ErrorLogObject
+from django.shortcuts import get_object_or_404
 import requests
 import json
 from encodings import idna
@@ -55,10 +56,8 @@ def check_domain(request, domain, format=None):
     :returns: JSON response indicating whether domain is available.
 
     """
-    request_data = {"domain": domain}
-    response = requests.post('http://centralnic:3000/command/centralnic-test/checkDomain',
-                             headers={"Content-type": "application/json"},
-                             data=json.dumps(request_data))
+    response = requests.get('http://centralnic:3000/checkDomain/' + domain,
+                             headers={"Content-type": "application/json"})
 
     response_data = response.json()
     try:
@@ -82,11 +81,9 @@ def info_domain(request, domain, format=None):
     :returns: JSON response with details about a domain
 
     """
-    request_data = {"domain": domain}
-    response = requests.post(
-        'http://centralnic:3000/command/centralnic-test/infoDomain',
+    response = requests.get(
+        'http://centralnic:3000/infoDomain/' + domain,
         headers={"Content-type": "application/json"},
-        data=json.dumps(request_data)
     )
 
     response.raise_for_status()
@@ -131,7 +128,7 @@ def info_domain(request, domain, format=None):
 
 @api_view(['GET', 'POST'])
 @permission_classes((permissions.IsAuthenticated,))
-def registry_contact(request, registry, person_id=None):
+def registry_contact(request, registry):
     """
     Create or view contacts for a particular registry.
 
@@ -142,6 +139,7 @@ def registry_contact(request, registry, person_id=None):
     """
 
     log.debug("Request for registry contact")
+    provider = get_object_or_404(DomainProvider.objects.all(), slug=registry)
     if request.method == 'GET':
         try:
             if request.user.is_staff:
@@ -156,11 +154,15 @@ def registry_contact(request, registry, person_id=None):
 
         data = request.data
         log.debug(data)
-        serializer = PersonalDetailSerializer(data=data)
-        if serializer.is_valid():
-            person = serializer.save(owner=request.user)
+        person = None
+        if "person" in data:
+            person = get_object_or_404(PersonalDetail.objects.all(), pk=data["person"])
         else:
-            raise Exception("Unable to save person.")
+            serializer = PersonalDetailSerializer(data=data)
+            if serializer.is_valid():
+                person = serializer.save(owner=request.user)
+            else:
+                raise Exception("Unable to save person.")
         handle = "api-test-" + str(person.id)
         street = [person.street1, person.street2, person.street3]
         postal_info = {
@@ -182,13 +184,12 @@ def registry_contact(request, registry, person_id=None):
             "email": person.email,
             "postalInfo": postal_info
         }
-        response = requests.post('http://centralnic:3000/command/centralnic-test/createContact',
+        response = requests.post('http://centralnic:3000/createContact',
                                 headers={"Content-type": "application/json"},
                                 data=json.dumps(contact_info))
 
         # Raise an error if this didn't work
         response.raise_for_status()
-        provider = DomainProvider.objects.get(slug=registry)
         contact_handle = person.contacthandle_set.create(handle=handle,
                                                          provider=provider,
                                                          owner=request.user)
@@ -199,7 +200,7 @@ def registry_contact(request, registry, person_id=None):
 
 @api_view(['GET', 'POST'])
 @permission_classes((permissions.IsAuthenticated,))
-def registrant(request, registry, person_id=None):
+def registrant(request, registry):
     """
     Create or view a registrant for a particular registry.
 
@@ -210,6 +211,7 @@ def registrant(request, registry, person_id=None):
     """
 
     log.debug("Request for registrant")
+    provider = get_object_or_404(DomainProvider.objects.all(), slug=registry)
     if request.method == 'GET':
         try:
             if request.user.is_staff:
@@ -221,14 +223,17 @@ def registrant(request, registry, person_id=None):
         except RegistrantHandle.DoesNotExist:
             raise Http404
     elif request.method == 'POST':
-
         data = request.data
         log.debug(data)
-        serializer = PersonalDetailSerializer(data=data)
-        if serializer.is_valid():
-            person = serializer.save(owner=request.user)
+        person = None
+        if "person" in data:
+            person = get_object_or_404(PersonalDetail.objects.all(), pk=data["person"])
         else:
-            raise Exception("Unable to save person.")
+            serializer = PersonalDetailSerializer(data=data)
+            if serializer.is_valid():
+                person = serializer.save(owner=request.user)
+            else:
+                raise Exception("Unable to save person.")
         handle = "api-test-" + str(person.id)
         street = [person.street1, person.street2, person.street3]
         postal_info = {
@@ -250,13 +255,12 @@ def registrant(request, registry, person_id=None):
             "email": person.email,
             "postalInfo": postal_info
         }
-        response = requests.post('http://centralnic:3000/command/centralnic-test/createContact',
+        response = requests.post('http://centralnic:3000/createContact',
                                  headers={"Content-type": "application/json"},
                                  data=json.dumps(contact_info))
 
         # Raise an error if this didn't work
         response.raise_for_status()
-        provider = DomainProvider.objects.get(slug=registry)
         contact_handle = person.registranthandle_set.create(handle=handle,
                                                             provider=provider,
                                                             owner=request.user)
@@ -332,7 +336,7 @@ def register_domain(request):
         ]
     }
     log.info(epp_request)
-    response = requests.post('http://centralnic:3000/command/centralnic-test/createDomain',
+    response = requests.post('http://centralnic:3000/createDomain',
                             headers={"Content-type": "application/json"},
                             data=json.dumps(epp_request))
 
@@ -353,20 +357,21 @@ def register_domain(request):
                                              owner=request.user,
                                              active=True)
         registered_domain.save()
+        log.debug({"result": "Registered domain: %s" % registered_domain.id})
         admin_contact_type = ContactType.objects.get(name='admin')
         tech_contact_type = ContactType.objects.get(name='tech')
-        registered_domain.domainregistrant_set.create(
+        registered_domain.registrant.create(
             registrant=registrant,
             active=True,
             owner=request.user
         )
-        registered_domain.domainhandles_set.create(
+        registered_domain.contact_handles.create(
             contact_handle=admin,
             active=True,
             contact_type=admin_contact_type,
             owner=request.user
         )
-        registered_domain.domainhandles_set.create(
+        registered_domain.contact_handles.create(
             contact_handle=tech,
             active=True,
             contact_type=tech_contact_type,
