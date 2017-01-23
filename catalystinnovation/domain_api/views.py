@@ -1,4 +1,5 @@
 from django_logging import log, ErrorLogObject
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 import requests
 import json
@@ -138,7 +139,6 @@ def registry_contact(request, registry):
 
     """
 
-    log.debug("Request for registry contact")
     provider = get_object_or_404(DomainProvider.objects.all(), slug=registry)
     if request.method == 'GET':
         try:
@@ -234,36 +234,46 @@ def registrant(request, registry):
                 person = serializer.save(owner=request.user)
             else:
                 raise Exception("Unable to save person.")
-        handle = "api-test-" + str(person.id)
-        street = [person.street1, person.street2, person.street3]
-        postal_info = {
-            "name": person.first_name + " " + person.surname,
-            "org": person.company,
-            "type": "int",
-            "addr" : {
-                "street": street,
-                "city": person.city,
-                "sp": person.state,
-                "pc": person.postcode,
-                "cc": person.country
+        handle = "reg-" +  str(person.id)
+        try:
+            contact_handle = person.registranthandle_set.create(handle=handle,
+                                                                provider=provider,
+                                                                owner=request.user)
+            street = [person.street1, person.street2, person.street3]
+            postal_info = {
+                "name": person.first_name + " " + person.surname,
+                "org": person.company,
+                "type": "int",
+                "addr" : {
+                    "street": street,
+                    "city": person.city,
+                    "sp": person.state,
+                    "pc": person.postcode,
+                    "cc": person.country
+                }
             }
-        }
-        contact_info = {
-            "id": handle,
-            "voice": person.telephone,
-            "fax": person.fax,
-            "email": person.email,
-            "postalInfo": postal_info
-        }
-        response = requests.post('http://centralnic:3000/createContact',
-                                 headers={"Content-type": "application/json"},
-                                 data=json.dumps(contact_info))
+            contact_info = {
+                "id": handle,
+                "voice": person.telephone,
+                "fax": person.fax,
+                "email": person.email,
+                "postalInfo": postal_info
+            }
+            response = requests.post('http://centralnic:3000/createContact',
+                                    headers={"Content-type": "application/json"},
+                                    data=json.dumps(contact_info))
 
-        # Raise an error if this didn't work
-        response.raise_for_status()
-        contact_handle = person.registranthandle_set.create(handle=handle,
-                                                            provider=provider,
-                                                            owner=request.user)
+            # Raise an error if this didn't work
+            response.raise_for_status()
+            response_data = response.json()
+            result_code = response_data["result"]["code"]
+            if int(result_code) >= 2000:
+                log.error(response_data["result"])
+                contact_handle.delete()
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except IntegrityError as e:
+            log.error(e)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = RegistrantHandleSerializer(contact_handle, context={'request': request})
 
         return Response(serializer.data)
