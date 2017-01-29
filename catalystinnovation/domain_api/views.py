@@ -1,3 +1,4 @@
+import os
 from django_logging import log, ErrorLogObject
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
@@ -41,20 +42,29 @@ from domain_api.serializers import (
 from domain_api.filters import (
     IsPersonFilterBackend
 )
+from .utilities.rpc_client import EppRpcClient
 
+rabbit_host = os.environ.get('RABBIT_PORT_5672_TCP_ADDR')
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
-def check_domain(request, domain, format=None):
+def check_domain(request, registry, domain, format=None):
     """
     Query EPP with a checkDomain request.
     :returns: JSON response indicating whether domain is available.
 
     """
+<<<<<<< HEAD
     response = requests.get('http://centralnic:3000/checkDomain/' + domain,
                             headers={"Content-type": "application/json"})
 
     response_data = response.json()
+=======
+    rpc_client = EppRpcClient(host=rabbit_host)
+    data = {"command": "checkDomain", "domain": domain}
+    response_data = rpc_client.call('epp', registry, json.dumps(data))
+    log.debug(response_data)
+>>>>>>> Switch to rabbitmq for interaction with EPP service
     try:
         available = response_data["data"]["domain:chkData"]["domain:cd"]["domain:name"]["avail"]
         log.error("Got response data %s" % available)
@@ -78,19 +88,16 @@ def check_domain(request, domain, format=None):
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
-def info_domain(request, domain, format=None):
+def info_domain(request, registry, domain, format=None):
     """
     Query EPP with a infoDomain request.
     :returns: JSON response with details about a domain
 
     """
-    response = requests.get(
-        'http://centralnic:3000/infoDomain/' + domain,
-        headers={"Content-type": "application/json"},
-    )
-
-    response.raise_for_status()
-    epp_response = response.json()
+    rpc_client = EppRpcClient(host=rabbit_host)
+    data = {"command": "infoDomain", "domain": domain}
+    epp_response = rpc_client.call('epp', registry, json.dumps(data))
+    log.debug(epp_response)
     try:
         if int(epp_response["result"]["code"]) >= 2000:
             log.error(epp_response)
@@ -162,16 +169,24 @@ def registry_contact(request, registry):
         data = request.data
         log.debug(data)
         person = None
+        queryset = PersonalDetail.objects.filter(owner=request.user)
+        if request.user.is_staff:
+            queryset = PersonalDetail.objects.all()
         if "person" in data:
+<<<<<<< HEAD
             person = get_object_or_404(PersonalDetail.objects.all(),
                                        pk=data["person"])
+=======
+            person = get_object_or_404(queryset, pk=data["person"])
+>>>>>>> Switch to rabbitmq for interaction with EPP service
         else:
             serializer = PersonalDetailSerializer(data=data)
             if serializer.is_valid():
                 person = serializer.save(owner=request.user)
             else:
                 raise Exception("Unable to save person.")
-        handle = "api-test-" + str(person.id)
+        #  Hacky way to generate a handle
+        handle = "-".join(["test", "api", str(person.id), str(ContactHandle.objects.count() + 1)])
         street = [person.street1, person.street2, person.street3]
         postal_info = {
             "name": person.first_name + " " + person.surname,
@@ -192,12 +207,25 @@ def registry_contact(request, registry):
             "email": person.email,
             "postalInfo": postal_info
         }
+<<<<<<< HEAD
         response = requests.post('http://centralnic:3000/createContact',
                                  headers={"Content-type": "application/json"},
                                  data=json.dumps(contact_info))
+=======
+        rpc_client = EppRpcClient(host=rabbit_host)
+        contact_info['command'] = 'createContact'
+        epp_response = rpc_client.call('epp', registry, json.dumps(contact_info))
+        try:
+            if int(epp_response["result"]["code"]) >= 2000:
+                log.error(epp_response)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            log.error(ErrorLogObject(request, e))
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            log.debug(epp_response)
+>>>>>>> Switch to rabbitmq for interaction with EPP service
 
         # Raise an error if this didn't work
-        response.raise_for_status()
         contact_handle = person.contacthandle_set.create(handle=handle,
                                                          provider=provider,
                                                          owner=request.user)
@@ -244,9 +272,12 @@ def registrant(request, registry):
         data = request.data
         log.debug(data)
         person = None
+        queryset = PersonalDetail.objects.filter(owner=request.user)
+        if request.user.is_staff:
+            queryset = PersonalDetail.objects.all()
         if "person" in data:
             person = get_object_or_404(
-                PersonalDetail.objects.all(),
+                queryset,
                 pk=data["person"]
             )
         else:
@@ -255,7 +286,8 @@ def registrant(request, registry):
                 person = serializer.save(owner=request.user)
             else:
                 raise Exception("Unable to save person.")
-        handle = "reg-" + str(person.id)
+        # hacky way to generate a registrant id
+        handle = "-".join(["test", "reg", str(person.id), str(RegistrantHandle.objects.count() + 1)])
         try:
             contact_handle = person.registranthandle_set.create(
                 handle=handle,
@@ -276,25 +308,24 @@ def registrant(request, registry):
                 }
             }
             contact_info = {
+                "command": "createContact",
                 "id": handle,
                 "voice": person.telephone,
                 "fax": person.fax,
                 "email": person.email,
                 "postalInfo": postal_info
             }
-            response = requests.post(
-                'http://centralnic:3000/createContact',
-                headers={"Content-type": "application/json"},
-                data=json.dumps(contact_info))
-
-            # Raise an error if this didn't work
-            response.raise_for_status()
-            response_data = response.json()
-            result_code = response_data["result"]["code"]
-            if int(result_code) >= 2000:
-                log.error(response_data["result"])
-                contact_handle.delete()
+            rpc_client = EppRpcClient(host=rabbit_host)
+            contact_info['command'] = 'createContact'
+            epp_response = rpc_client.call('epp', registry, json.dumps(contact_info))
+            try:
+                if int(epp_response["result"]["code"]) >= 2000:
+                    log.error(epp_response)
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                log.error(ErrorLogObject(request, e))
                 return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                log.debug(epp_response)
         except IntegrityError as e:
             log.error(e)
             return Response(status=status.HTTP_400_BAD_REQUEST)

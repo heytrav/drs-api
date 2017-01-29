@@ -5,6 +5,7 @@ MAINTAINER Travis Holton <wtholton at gmail dot com>
 
 RUN apt-get update && apt-get -y install \
       language-pack-en-base \
+      libncurses5-dev \
       python3-nose2 \
       python3-pip \
       python3.5 \
