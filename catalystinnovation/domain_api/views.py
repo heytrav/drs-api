@@ -44,7 +44,7 @@ from domain_api.filters import (
 )
 from .utilities.rpc_client import EppRpcClient
 
-rabbit_host = os.environ.get('RABBIT_PORT_5672_TCP_ADDR')
+rabbit_host = os.environ.get('RABBIT_HOST')
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
