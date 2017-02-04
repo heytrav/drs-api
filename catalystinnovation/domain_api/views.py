@@ -499,20 +499,6 @@ class RegisteredDomainViewSet(viewsets.ModelViewSet):
     serializer_class = RegisteredDomainSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-    def get_queryset(self):
-        """
-        Filter registered domains on request user.
-        :returns: Set of RegisteredDomain objects filtered by customer
-
-        """
-        user = self.request.user
-        if user.is_staff:
-            return RegisteredDomain.objects.all()
-        return RegisteredDomain.objects.filter(domain__owner=user)
-
 
 class DomainRegistrantViewSet(viewsets.ModelViewSet):
 
