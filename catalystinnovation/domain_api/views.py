@@ -5,19 +5,14 @@ import requests
 import json
 from encodings import idna
 from django.contrib.auth.models import User
-from domain_api.permissions import IsOwnerOrReadOnly
 from django.http import Http404
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status, mixins, generics, permissions, viewsets
+from rest_framework import status, permissions, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.reverse import reverse
 from domain_api.models import (
     PersonalDetail,
     ContactType,
     TopLevelDomain,
-    TopLevelDomainProvider,
     DomainProvider,
     RegistrantHandle,
     ContactHandle,
@@ -44,7 +39,6 @@ from domain_api.serializers import (
     InfoDomainSerializer,
 )
 from domain_api.filters import (
-    IsOwnerFilterBackend,
     IsPersonFilterBackend
 )
 
@@ -58,21 +52,29 @@ def check_domain(request, domain, format=None):
 
     """
     response = requests.get('http://centralnic:3000/checkDomain/' + domain,
-                             headers={"Content-type": "application/json"})
+                            headers={"Content-type": "application/json"})
 
     response_data = response.json()
     try:
         available = response_data["data"]["domain:chkData"]["domain:cd"]["domain:name"]["avail"]
         log.error("Got response data %s" % available)
         is_available = False
-        if available and (available == 1 or available == "1") :
+        if available and (available == 1 or available == "1"):
             is_available = True
-        availability = {"result": [{"domain": domain, "available": is_available}]}
+        availability = {
+            "result": [
+                {
+                    "domain": domain,
+                    "available": is_available
+                }
+            ]
+        }
         serializer = CheckDomainResponseSerializer(data=availability)
         if serializer.is_valid():
             return Response(serializer.data)
     except KeyError:
         raise
+
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -145,8 +147,13 @@ def registry_contact(request, registry):
             if request.user.is_staff:
                 contacts = ContactHandle.objects.filter(provider__slug=registry)
             else:
-                contacts = ContactHandle.objects.filter(provider__slug=registry, person__owner=request.user)
-            serializer = ContactHandleSerializer(contacts, many=True, context={"request": request})
+                contacts = ContactHandle.objects.filter(
+                    provider__slug=registry,
+                    person__owner=request.user
+                )
+            serializer = ContactHandleSerializer(contacts,
+                                                 many=True,
+                                                 context={"request": request})
             return Response(serializer.data)
         except ContactHandle.DoesNotExist:
             raise Http404
@@ -156,7 +163,8 @@ def registry_contact(request, registry):
         log.debug(data)
         person = None
         if "person" in data:
-            person = get_object_or_404(PersonalDetail.objects.all(), pk=data["person"])
+            person = get_object_or_404(PersonalDetail.objects.all(),
+                                       pk=data["person"])
         else:
             serializer = PersonalDetailSerializer(data=data)
             if serializer.is_valid():
@@ -169,7 +177,7 @@ def registry_contact(request, registry):
             "name": person.first_name + " " + person.surname,
             "org": person.company,
             "type": "int",
-            "addr" : {
+            "addr": {
                 "street": street,
                 "city": person.city,
                 "sp": person.state,
@@ -185,15 +193,16 @@ def registry_contact(request, registry):
             "postalInfo": postal_info
         }
         response = requests.post('http://centralnic:3000/createContact',
-                                headers={"Content-type": "application/json"},
-                                data=json.dumps(contact_info))
+                                 headers={"Content-type": "application/json"},
+                                 data=json.dumps(contact_info))
 
         # Raise an error if this didn't work
         response.raise_for_status()
         contact_handle = person.contacthandle_set.create(handle=handle,
                                                          provider=provider,
                                                          owner=request.user)
-        serializer = ContactHandleSerializer(contact_handle, context={'request': request})
+        serializer = ContactHandleSerializer(contact_handle,
+                                             context={'request': request})
 
         return Response(serializer.data)
 
@@ -215,10 +224,19 @@ def registrant(request, registry):
     if request.method == 'GET':
         try:
             if request.user.is_staff:
-                contacts = RegistrantHandle.objects.filter(provider__slug=registry)
+                contacts = RegistrantHandle.objects.filter(
+                    provider__slug=registry
+                )
             else:
-                contacts = RegistrantHandle.objects.filter(provider__slug=registry, person__owner=request.user)
-            serializer = RegistrantHandleSerializer(contacts, many=True, context={"request": request})
+                contacts = RegistrantHandle.objects.filter(
+                    provider__slug=registry,
+                    person__owner=request.user
+                )
+            serializer = RegistrantHandleSerializer(
+                contacts,
+                many=True,
+                context={"request": request}
+            )
             return Response(serializer.data)
         except RegistrantHandle.DoesNotExist:
             raise Http404
@@ -227,24 +245,29 @@ def registrant(request, registry):
         log.debug(data)
         person = None
         if "person" in data:
-            person = get_object_or_404(PersonalDetail.objects.all(), pk=data["person"])
+            person = get_object_or_404(
+                PersonalDetail.objects.all(),
+                pk=data["person"]
+            )
         else:
             serializer = PersonalDetailSerializer(data=data)
             if serializer.is_valid():
                 person = serializer.save(owner=request.user)
             else:
                 raise Exception("Unable to save person.")
-        handle = "reg-" +  str(person.id)
+        handle = "reg-" + str(person.id)
         try:
-            contact_handle = person.registranthandle_set.create(handle=handle,
-                                                                provider=provider,
-                                                                owner=request.user)
+            contact_handle = person.registranthandle_set.create(
+                handle=handle,
+                provider=provider,
+                owner=request.user
+            )
             street = [person.street1, person.street2, person.street3]
             postal_info = {
                 "name": person.first_name + " " + person.surname,
                 "org": person.company,
                 "type": "int",
-                "addr" : {
+                "addr": {
                     "street": street,
                     "city": person.city,
                     "sp": person.state,
@@ -259,9 +282,10 @@ def registrant(request, registry):
                 "email": person.email,
                 "postalInfo": postal_info
             }
-            response = requests.post('http://centralnic:3000/createContact',
-                                    headers={"Content-type": "application/json"},
-                                    data=json.dumps(contact_info))
+            response = requests.post(
+                'http://centralnic:3000/createContact',
+                headers={"Content-type": "application/json"},
+                data=json.dumps(contact_info))
 
             # Raise an error if this didn't work
             response.raise_for_status()
@@ -397,7 +421,6 @@ def register_domain(request):
 
 
 
-
 class PersonalDetailViewSet(viewsets.ModelViewSet):
 
     serializer_class = PersonalDetailSerializer
@@ -417,7 +440,6 @@ class PersonalDetailViewSet(viewsets.ModelViewSet):
         if user.is_staff:
             return PersonalDetail.objects.all()
         return PersonalDetail.objects.filter(owner=user)
-
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -504,7 +526,6 @@ class DomainRegistrantViewSet(viewsets.ModelViewSet):
 
     serializer_class = DomainRegistrantSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
-
 
     def get_queryset(self):
         """

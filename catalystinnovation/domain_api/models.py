@@ -24,6 +24,7 @@ class PersonalDetail(models.Model):
     suburb = models.CharField(max_length=200, blank=True)
     state = models.CharField(max_length=200, blank=True)
     postcode = models.CharField(max_length=20)
+    # Must be a 2 letter country code.
     country = models.CharField(max_length=2)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
