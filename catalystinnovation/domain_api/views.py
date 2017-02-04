@@ -2,8 +2,7 @@ import os
 from django_logging import log, ErrorLogObject
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
-import requests
-import json
+# Remove this
 from encodings import idna
 from django.contrib.auth.models import User
 from django.http import Http404
@@ -43,6 +42,7 @@ from domain_api.filters import (
     IsPersonFilterBackend
 )
 from .utilities.rpc_client import EppRpcClient
+from .exceptions import EppError
 
 rabbit_host = os.environ.get('RABBIT_HOST')
 
@@ -54,22 +54,14 @@ def check_domain(request, registry, domain, format=None):
     :returns: JSON response indicating whether domain is available.
 
     """
-<<<<<<< HEAD
-    response = requests.get('http://centralnic:3000/checkDomain/' + domain,
-                            headers={"Content-type": "application/json"})
-
-    response_data = response.json()
-=======
-    rpc_client = EppRpcClient(host=rabbit_host)
-    data = {"command": "checkDomain", "domain": domain}
-    response_data = rpc_client.call('epp', registry, json.dumps(data))
-    log.debug(response_data)
->>>>>>> Switch to rabbitmq for interaction with EPP service
     try:
-        available = response_data["data"]["domain:chkData"]["domain:cd"]["domain:name"]["avail"]
-        log.error("Got response data %s" % available)
+        rpc_client = EppRpcClient(host=rabbit_host)
+        data = {"command": "checkDomain", "domain": domain}
+        response_data = rpc_client.call(registry, 'checkDomain', data)
+        log.debug(response_data)
+        available = response_data["domain:chkData"]["domain:cd"]["domain:name"]["avail"]
         is_available = False
-        if available and (available == 1 or available == "1"):
+        if available and int(available) == 1:
             is_available = True
         availability = {
             "result": [
@@ -82,6 +74,9 @@ def check_domain(request, registry, domain, format=None):
         serializer = CheckDomainResponseSerializer(data=availability)
         if serializer.is_valid():
             return Response(serializer.data)
+    except EppError as epp_e:
+        logger.error(ErrorLogObject(epp_e))
+        return Response(status=status.HTTP_400_BAD_REQUEST)
     except KeyError:
         raise
 
@@ -173,12 +168,7 @@ def registry_contact(request, registry):
         if request.user.is_staff:
             queryset = PersonalDetail.objects.all()
         if "person" in data:
-<<<<<<< HEAD
-            person = get_object_or_404(PersonalDetail.objects.all(),
-                                       pk=data["person"])
-=======
             person = get_object_or_404(queryset, pk=data["person"])
->>>>>>> Switch to rabbitmq for interaction with EPP service
         else:
             serializer = PersonalDetailSerializer(data=data)
             if serializer.is_valid():
@@ -207,11 +197,6 @@ def registry_contact(request, registry):
             "email": person.email,
             "postalInfo": postal_info
         }
-<<<<<<< HEAD
-        response = requests.post('http://centralnic:3000/createContact',
-                                 headers={"Content-type": "application/json"},
-                                 data=json.dumps(contact_info))
-=======
         rpc_client = EppRpcClient(host=rabbit_host)
         contact_info['command'] = 'createContact'
         epp_response = rpc_client.call('epp', registry, json.dumps(contact_info))
@@ -223,7 +208,6 @@ def registry_contact(request, registry):
             log.error(ErrorLogObject(request, e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             log.debug(epp_response)
->>>>>>> Switch to rabbitmq for interaction with EPP service
 
         # Raise an error if this didn't work
         contact_handle = person.contacthandle_set.create(handle=handle,

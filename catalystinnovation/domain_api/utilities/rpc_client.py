@@ -3,6 +3,8 @@ import pika
 import uuid
 import json
 
+from ..exceptions import EppError
+
 class EppRpcClient(object):
     """
     This is based on the rpc client example in
@@ -16,13 +18,16 @@ class EppRpcClient(object):
                  port=5672,
                  login='guest',
                  password='guest',
-                 vhost="/"):
+                 vhost="/",
+                 exchange="epp"):
         credentials = pika.PlainCredentials(login, password)
+
 
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host, port, vhost, credentials)
         )
 
+        self.exchange = exchange
         self.channel = self.connection.channel()
 
         result = self.channel.queue_declare(exclusive=True)
@@ -35,16 +40,20 @@ class EppRpcClient(object):
         if self.corr_id == props.correlation_id:
             self.response = body
 
-    def call(self, exchange, routing_key, data):
+    def call(self, routing_key, command, data):
+        epp_command = {"command": command, "data": data}
         self.response = None
         self.corr_id = str(uuid.uuid4())
-        self.channel.basic_publish(exchange=exchange,
+        self.channel.basic_publish(exchange=self.exchange,
                                    routing_key=routing_key,
                                    properties=pika.BasicProperties(
                                          reply_to = self.callback_queue,
                                          correlation_id = self.corr_id,
                                          ),
-                                   body=data)
+                                   body=json.dumps(epp_command))
         while self.response is None:
             self.connection.process_data_events()
-        return json.loads(self.response.decode("utf-8"))
+        response_data = json.loads(self.response.decode("utf-8"))
+        if int(response_data["result"]["code"]) >= 2000:
+            raise EppError(response_data["result"]["msg"])
+        return response_data["data"]
