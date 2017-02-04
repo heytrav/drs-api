@@ -41,9 +41,6 @@ class ContactType(models.Model):
     """
     name = models.CharField(max_length=50)
     description = models.TextField()
-    owner = models.ForeignKey('auth.User',
-                              related_name='contact_types',
-                              on_delete=models.CASCADE)
 
 
 class TopLevelDomain(models.Model):
@@ -59,9 +56,6 @@ class TopLevelDomain(models.Model):
     description = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    owner = models.ForeignKey('auth.User',
-                              related_name='top_level_domains',
-                              on_delete=models.CASCADE)
 
     def __str__(self):
         return self.zone
@@ -74,9 +68,6 @@ class DomainProvider(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.CharField(max_length=100, unique=True)
     description = models.TextField()
-    owner = models.ForeignKey('auth.User',
-                              related_name='domain_providers',
-                              on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
@@ -94,9 +85,6 @@ class RegistrantHandle(models.Model):
     handle = models.CharField(max_length=200, unique=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    owner = models.ForeignKey('auth.User',
-                              related_name='registrant_handles',
-                              on_delete=models.CASCADE)
 
 
 class ContactHandle(models.Model):
@@ -109,10 +97,6 @@ class ContactHandle(models.Model):
     handle = models.CharField(max_length=200, unique=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    owner = models.ForeignKey('auth.User',
-                              related_name='contact_handles',
-                              on_delete=models.CASCADE)
-
 
 class TopLevelDomainProvider(models.Model):
     """
@@ -124,9 +108,6 @@ class TopLevelDomainProvider(models.Model):
     anniversary_notification_period_days = models.IntegerField()
     renewal_period = models.IntegerField(default=30)
     grace_period_days = models.IntegerField(default=30)
-    owner = models.ForeignKey('auth.User',
-                              related_name='top_level_domain_providers',
-                              on_delete=models.CASCADE)
 
     def __str__(self):
         return self.zone.zone + " " + self.provider.name
@@ -141,9 +122,6 @@ class Domain(models.Model):
     # punyencoded version of the name field. For ascii domains this will
     # be identical to name.
     idn = models.CharField(max_length=300, unique=True)
-    owner = models.ForeignKey('auth.User',
-                              related_name='domains',
-                              on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
@@ -172,15 +150,14 @@ class RegisteredDomain(models.Model):
     anniversary = models.DateTimeField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    owner = models.ForeignKey('auth.User',
-                              related_name='registered_domains',
-                              on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('domain', 'tld', 'active')
 
     def __str__(self):
-        """Represent a registered domain (i.e. name.tld)."""
+        """
+        Represent a registered domain (i.e. name.tld).
+        """
         return self.domain.name + "." + self.tld_provider.zone.zone
 
 
@@ -193,9 +170,6 @@ class DomainRegistrant(models.Model):
     registrant = models.ForeignKey(RegistrantHandle)
     active = models.NullBooleanField(null=True)
     created = models.DateTimeField(auto_now_add=True)
-    owner = models.ForeignKey('auth.User',
-                              related_name='domain_registrants',
-                              on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('registered_domain', 'registrant', 'active')
@@ -212,9 +186,6 @@ class DomainHandles(models.Model):
     contact_type = models.ForeignKey(ContactType)
     active = models.NullBooleanField(null=True)
     created = models.DateTimeField(auto_now_add=True)
-    owner = models.ForeignKey('auth.User',
-                              related_name='domain_handles',
-                              on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('registered_domain', 'contact_type', 'contact_handle', 'active')

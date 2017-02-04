@@ -439,9 +439,6 @@ class ContactTypeViewSet(viewsets.ModelViewSet):
     serializer_class = ContactTypeSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
 
 class TopLevelDomainViewSet(viewsets.ModelViewSet):
 
@@ -449,18 +446,12 @@ class TopLevelDomainViewSet(viewsets.ModelViewSet):
     serializer_class = TopLevelDomainSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
 
 class DomainProviderViewSet(viewsets.ModelViewSet):
 
     queryset = DomainProvider.objects.all()
     serializer_class = DomainProviderSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
 
 
 class ContactHandleViewSet(viewsets.ModelViewSet):
@@ -471,9 +462,6 @@ class ContactHandleViewSet(viewsets.ModelViewSet):
     queryset = ContactHandle.objects.all()
     filter_backends = (IsPersonFilterBackend,)
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
 
 class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
 
@@ -481,21 +469,16 @@ class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
     serializer_class = TopLevelDomainProviderSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
 
 class RegistrantHandleViewSet(viewsets.ModelViewSet):
 
     serializer_class = RegistrantHandleSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
     def get_queryset(self):
         """
-        Override to make sure that this only returns personal details that belong to logged in user.
+        Override to make sure that this only returns personal details that
+        belong to logged in user.
         :returns: Filtered set of personal detail objects.
 
         """
@@ -505,34 +488,10 @@ class RegistrantHandleViewSet(viewsets.ModelViewSet):
         return RegistrantHandle.objects.filter(person__owner=user)
 
 
-class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
-
-    queryset = TopLevelDomainProvider.objects.all()
-    serializer_class = TopLevelDomainProviderSerializer
-    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-
 class DomainViewSet(viewsets.ModelViewSet):
 
     serializer_class = DomainSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-    def get_queryset(self):
-        """
-        Filter the queryset for the logged in user.
-        :returns: Domain objects filtered by user.
-
-        """
-        user = self.request.user
-        if user.is_staff:
-            return Domain.objects.all()
-        return Domain.objects.filter(owner=user)
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class RegisteredDomainViewSet(viewsets.ModelViewSet):
@@ -560,8 +519,6 @@ class DomainRegistrantViewSet(viewsets.ModelViewSet):
     serializer_class = DomainRegistrantSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
 
     def get_queryset(self):
         """
@@ -579,9 +536,6 @@ class DomainHandleViewSet(viewsets.ModelViewSet):
 
     serializer_class = DomainHandlesSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
 
     def get_queryset(self):
         """
