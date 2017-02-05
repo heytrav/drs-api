@@ -43,9 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_logging',
-    'django_nose',
 ]
-TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 MIDDLEWARE_CLASSES = [
     'django_logging.middleware.DjangoLoggingMiddleware',
