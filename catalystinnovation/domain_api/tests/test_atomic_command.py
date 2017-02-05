@@ -20,7 +20,6 @@ class TestCheckDomain(TestCase):
             password="secret"
         )
 
-
     def login_client(self):
         """
         Log user in to API.
