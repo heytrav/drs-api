@@ -1,2 +1,2 @@
 # tests
-from test_atomic_command import *
+from .test_atomic_command import *
