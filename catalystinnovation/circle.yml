@@ -1,3 +1,0 @@
-test:
-  override:
-    - python manage.py test domain_api
