@@ -1,9 +1,13 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from domain_api.views import EppRpcClient
+import domain_api
 from ..exceptions import EppError
 
+class MockRpcClient(domain_api.views.EppRpcClient):
+    def __init__(self, host=None):
+        pass
 
 class TestCheckDomain(TestCase):
 
@@ -28,6 +32,8 @@ class TestCheckDomain(TestCase):
         """
         self.client.login(username="testcustomer", password="secret")
 
+
+    @patch('domain_api.views.EppRpcClient', new=MockRpcClient)
     def test_epp_error(self):
         """
         An epp error should result in a 400 bad request
@@ -36,7 +42,7 @@ class TestCheckDomain(TestCase):
 
         with patch.object(EppRpcClient, 'call', side_effect=EppError("FAIL")):
             response = self.client.get(
-                '/domain-api/check-domain/test-registry/whatever.tld'
+                '/domain-api/check-domain/test-registry/whatever.tld/'
             )
             self.assertEqual(response.status_code,
                              400,

@@ -75,7 +75,6 @@ def check_domain(request, registry, domain, format=None):
         if serializer.is_valid():
             return Response(serializer.data)
     except EppError as epp_e:
-        logger.error(ErrorLogObject(epp_e))
         return Response(status=status.HTTP_400_BAD_REQUEST)
     except KeyError:
         raise
