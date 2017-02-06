@@ -42,6 +42,7 @@ from domain_api.filters import (
     IsPersonFilterBackend
 )
 from .utilities.rpc_client import EppRpcClient
+from .epp.queries import Domain
 from .exceptions import EppError
 
 rabbit_host = os.environ.get('RABBIT_HOST')
@@ -55,29 +56,15 @@ def check_domain(request, registry, domain, format=None):
 
     """
     try:
-        rpc_client = EppRpcClient(host=rabbit_host)
-        data = {"command": "checkDomain", "domain": domain}
-        response_data = rpc_client.call(registry, 'checkDomain', data)
-        log.debug(response_data)
-        available = response_data["domain:chkData"]["domain:cd"]["domain:name"]["avail"]
-        is_available = False
-        if available and int(available) == 1:
-            is_available = True
-        availability = {
-            "result": [
-                {
-                    "domain": domain,
-                    "available": is_available
-                }
-            ]
-        }
+        query = Domain()
+        availability = query.check_domain(registry, domain)
         serializer = CheckDomainResponseSerializer(data=availability)
         if serializer.is_valid():
             return Response(serializer.data)
     except EppError as epp_e:
         return Response(status=status.HTTP_400_BAD_REQUEST)
     except KeyError:
-        raise
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])

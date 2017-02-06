@@ -1,12 +1,12 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from unittest.mock import patch, MagicMock
-from domain_api.views import EppRpcClient
+from domain_api.epp.queries import EppRpcClient
 import domain_api
 import json
 from ..exceptions import EppError
 
-class MockRpcClient(domain_api.views.EppRpcClient):
+class MockRpcClient(domain_api.epp.queries.EppRpcClient):
     def __init__(self, host=None):
         pass
 
@@ -34,10 +34,10 @@ class TestCheckDomain(TestCase):
         self.client.login(username="testcustomer", password="secret")
 
 
-    @patch('domain_api.views.EppRpcClient', new=MockRpcClient)
+    @patch('domain_api.epp.queries.EppRpcClient', new=MockRpcClient)
     def test_epp_error(self):
         """
-        An epp error should result in a 400 bad request
+        An epp error should result in a 400 bad request.
         """
         self.login_client()
 
@@ -49,11 +49,10 @@ class TestCheckDomain(TestCase):
                              400,
                              "EPP error caused a 400 bad request.")
 
-    @patch('domain_api.views.EppRpcClient', new=MockRpcClient)
+    @patch('domain_api.epp.queries.EppRpcClient', new=MockRpcClient)
     def test_check_domain_response(self):
         """
-        EPP result returns serialized json response
-
+        EPP result returns serialized json response.
         """
         self.login_client()
         return_data = {
