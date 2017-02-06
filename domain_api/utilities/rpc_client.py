@@ -21,12 +21,9 @@ class EppRpcClient(object):
                  vhost="/",
                  exchange="epp"):
         credentials = pika.PlainCredentials(login, password)
-
-
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host, port, vhost, credentials)
         )
-
         self.exchange = exchange
         self.channel = self.connection.channel()
 

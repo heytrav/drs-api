@@ -63,7 +63,8 @@ def check_domain(request, registry, domain, format=None):
             return Response(serializer.data)
     except EppError as epp_e:
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    except KeyError:
+    except KeyError as ke:
+        log.error(ErrorLogObject(ke))
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
