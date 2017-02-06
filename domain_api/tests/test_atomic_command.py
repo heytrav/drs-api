@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from unittest.mock import patch, MagicMock
 from domain_api.views import EppRpcClient
 import domain_api
+import json
 from ..exceptions import EppError
 
 class MockRpcClient(domain_api.views.EppRpcClient):
@@ -47,3 +48,30 @@ class TestCheckDomain(TestCase):
             self.assertEqual(response.status_code,
                              400,
                              "EPP error caused a 400 bad request.")
+
+    @patch('domain_api.views.EppRpcClient', new=MockRpcClient)
+    def test_check_domain_response(self):
+        """
+        EPP result returns serialized json response
+
+        """
+        self.login_client()
+        return_data = {
+            "domain:chkData":{
+                "domain:cd": {
+                    "domain:name": {
+                        "avail": 1
+                    }
+                }
+            }
+        }
+        with patch.object(EppRpcClient, 'call', return_value=return_data):
+            response = self.client.get(
+                '/domain-api/check-domain/test-registry/whatever.tld/'
+            )
+            self.assertEqual(response.status_code,
+                             200,
+                             "Epp returned normally")
+            data = json.loads(response.content)
+            self.assertTrue(data["result"][0]["available"],
+                            "Serialised a check_domain response")
