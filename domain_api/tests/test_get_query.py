@@ -59,7 +59,8 @@ class TestCheckDomain(TestCase):
             "domain:chkData":{
                 "domain:cd": {
                     "domain:name": {
-                        "avail": 1
+                        "avail": 1,
+                        "$t": "whatever.tld"
                     }
                 }
             }
