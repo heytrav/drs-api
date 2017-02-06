@@ -41,8 +41,8 @@ class Domain(object):
         """
         Send a check domain request to the registry.
 
-        :*args: TODO
-        :returns: TODO
+        :*args: one or more domain names
+        :returns: dict with set of results indicating availability
 
         """
         data = {"domain": [*args]}

@@ -1,6 +1,6 @@
 from django.test import TestCase
 from unittest.mock import patch, MagicMock
-from domain_api.epp.queries import EppRpcClient
+from domain_api.epp.queries import EppRpcClient, Domain
 from ..exceptions import EppError
 
 
@@ -9,8 +9,13 @@ class MockRpcClient(domain_api.epp.queries.EppRpcClient):
         pass
 
 
+
 class TestCheckDomain(TestCase):
 
     """
     Test processing of check domain.
     """
+
+    @patch('domain_api.epp.queries.EppRpcClient', new=MockRpcClient)
+    def test_bulk_check_domain(self):
+        self.assertFail()
