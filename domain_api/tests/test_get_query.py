@@ -1,4 +1,3 @@
-from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from unittest.mock import patch, MagicMock
 from domain_api.epp.queries import EppRpcClient
@@ -6,32 +5,20 @@ import domain_api
 import json
 from ..exceptions import EppError
 
+from .test_api_interaction import TestApiClient
+
 class MockRpcClient(domain_api.epp.queries.EppRpcClient):
     def __init__(self, host=None):
         pass
 
-class TestCheckDomain(TestCase):
+class TestCheckDomain(TestApiClient):
 
     def setUp(self):
         """
         Set up test suite
-        :returns: TODO
 
         """
-        self.client = Client()
-        self.user = User.objects.create_user(
-            username="testcustomer",
-            email="testcustomer@test.com",
-            password="secret"
-        )
-
-    def login_client(self):
-        """
-        Log user in to API.
-
-        :returns: logged in session
-        """
-        self.client.login(username="testcustomer", password="secret")
+        super().setUp()
 
 
     @patch('domain_api.epp.queries.EppRpcClient', new=MockRpcClient)
@@ -75,3 +62,50 @@ class TestCheckDomain(TestCase):
             data = json.loads(response.content)
             self.assertTrue(data["result"][0]["available"],
                             "Serialised a check_domain response")
+
+
+class TestInfoDomain(TestApiClient):
+
+    """
+    Test info domain functionality
+    """
+    def setUp(self):
+        """
+        Set up test suite
+        """
+        super().setUp()
+
+
+    @patch('domain_api.epp.queries.EppRpcClient', new=MockRpcClient)
+    def test_info_domain_response(self):
+        """
+        Test processing of info domain response
+        """
+        self.login_client()
+        return_value = {
+            "domain:infData": {
+                "domain:name": "whatever.tld",
+                "domain:status": "ok",
+                "domain:registrant": "R1234",
+                "domain:ns": {
+                    "domain:hostObj": "ns1.nameserver.com"
+                },
+                "domain:contact": [
+                    {
+                        "$t": "A1234",
+                        "type": "admin",
+                    },
+                    {
+                        "$t": "T1234",
+                        "type": "tech",
+                    }
+                ]
+            }
+        }
+        with patch.object(EppRpcClient, 'call', return_value=return_value):
+            response = self.client.get(
+                '/domain-api/info-domain/test-registry/whatever.tld/'
+            )
+            self.assertEqual(response.status_code,
+                             200,
+                             "Epp returned normally")

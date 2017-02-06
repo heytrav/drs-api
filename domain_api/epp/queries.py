@@ -60,3 +60,35 @@ class Domain(object):
             "result": results
         }
         return availability
+
+    def info(self, registry, domain, is_staff=False):
+        """
+        Get info for a domain
+
+        :registry: str registry to query
+        :domain: str domain name to query
+        :returns: dict with info about domain
+
+        """
+        data = {"domain": domain}
+        response_data = self.rpc_client.call(registry, 'infoDomain', data)
+        info_data = response_data["domain:infData"]
+        for contact in info_data["domain:contact"]:
+            if '$t' in contact:
+                contact["handle"] = contact["$t"]
+                contact["contact_type"] = contact["type"]
+                del contact["type"]
+                del contact["$t"]
+        return_data = {
+            "domain": info_data["domain:name"],
+            "status": info_data["domain:status"],
+            "registrant": info_data["domain:registrant"],
+            "contacts": info_data["domain:contact"],
+            "ns": info_data["domain:ns"]["domain:hostObj"],
+        }
+        if is_staff:
+            return_data["auth_info"] = info_data["domain:authInfo"]["domain:pw"]
+            return_data["roid"] = info_data["domain:roid"]
+        log.info(return_data)
+        return return_data
+

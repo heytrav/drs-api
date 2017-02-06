@@ -77,46 +77,22 @@ def info_domain(request, registry, domain, format=None):
     :returns: JSON response with details about a domain
 
     """
-    rpc_client = EppRpcClient(host=rabbit_host)
-    data = {"command": "infoDomain", "domain": domain}
-    epp_response = rpc_client.call('epp', registry, json.dumps(data))
-    log.debug(epp_response)
     try:
-        if int(epp_response["result"]["code"]) >= 2000:
-            log.error(epp_response)
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        log.error(ErrorLogObject(request, e))
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    try:
-        response_data = epp_response["data"]["domain:infData"]
-        for contact in response_data["domain:contact"]:
-            if '$t' in contact:
-                contact["handle"] = contact["$t"]
-                contact["contact_type"] = contact["type"]
-                del contact["type"]
-                del contact["$t"]
-        return_data = {
-            "domain": response_data["domain:name"],
-            "status": response_data["domain:status"],
-            "registrant": response_data["domain:registrant"],
-            "contacts": response_data["domain:contact"],
-            "ns": response_data["domain:ns"]["domain:hostObj"],
-        }
-        if request.user.is_staff:
-            return_data["auth_info"] = response_data["domain:authInfo"]["domain:pw"]
-            return_data["roid"] = response_data["domain:roid"]
-        log.info(return_data)
-        serializer = InfoDomainSerializer(data=return_data)
-        if serializer.is_valid():
-            return Response(serializer.data)
-        else:
-            log.error(serializer.errors)
+       query = Domain()
+       info = query.info(registry, domain, is_staff=request.user.is_staff)
+       serializer = InfoDomainSerializer(data=info)
+       log.info(info)
+       if serializer.is_valid():
+           return Response(serializer.data)
+       else:
+           return Response(status=status.HTTP_204_NO_CONTENT)
+    except EppError as epp_e:
+        log.error(ErrorLogObject(request, epp_e))
+        return Response(status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         log.error(ErrorLogObject(request, e))
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET', 'POST'])
