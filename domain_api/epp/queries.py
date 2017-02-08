@@ -48,6 +48,7 @@ class Domain(object):
         data = {"domain": [*args]}
         log.debug(data)
         response_data = self.rpc_client.call(registry, 'checkDomain', data)
+        log.debug({"response data": response_data})
         check_data = response_data["domain:chkData"]["domain:cd"]
         results = []
         if isinstance(check_data, list):
@@ -79,12 +80,16 @@ class Domain(object):
                 contact["contact_type"] = contact["type"]
                 del contact["type"]
                 del contact["$t"]
+        nameservers = []
+        for ns in info_data["domain:ns"]:
+            host = ns["domain:hostObj"]
+            nameservers.append(host)
         return_data = {
             "domain": info_data["domain:name"],
-            "status": info_data["domain:status"],
+            "status": { "status": info_data["domain:status"]},
             "registrant": info_data["domain:registrant"],
             "contacts": info_data["domain:contact"],
-            "ns": info_data["domain:ns"]["domain:hostObj"],
+            "ns": nameservers,
         }
         if is_staff:
             return_data["auth_info"] = info_data["domain:authInfo"]["domain:pw"]

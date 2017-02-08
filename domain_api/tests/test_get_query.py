@@ -39,7 +39,7 @@ class TestCheckDomain(TestApiClient):
     @patch('domain_api.epp.queries.EppRpcClient', new=MockRpcClient)
     def test_check_domain_response(self):
         """
-        EPP result returns serialized json response.
+        EPP check domain result returns serialized json response.
         """
         self.login_client()
         return_data = {
@@ -87,9 +87,15 @@ class TestInfoDomain(TestApiClient):
                 "domain:name": "whatever.tld",
                 "domain:status": "ok",
                 "domain:registrant": "R1234",
-                "domain:ns": {
-                    "domain:hostObj": "ns1.nameserver.com"
-                },
+                "domain:ns": [
+                    {
+                        "domain:hostObj": "ns1.nameserver.com"
+                    },
+                    {
+                        "domain:hostObj": "ns2.nameserver.com"
+                    }
+                ]
+                ,
                 "domain:contact": [
                     {
                         "$t": "A1234",
