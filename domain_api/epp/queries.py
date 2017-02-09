@@ -130,7 +130,6 @@ class Contact(EppEntity):
             processed_postal.append(self.postal_info_item(postal_info))
         return processed_postal
 
-
     def postal_info_item(self, item):
         """
         Process individual postal info item
@@ -159,7 +158,6 @@ class Contact(EppEntity):
             }
         }
 
-
     def info(self, registry, contact):
         """
         Fetch info for a contact
@@ -182,4 +180,5 @@ class Contact(EppEntity):
                 info_data["contact:postalInfo"]
             )
         }
+        log.debug({"processed_info": processed_info_data})
         return processed_info_data
