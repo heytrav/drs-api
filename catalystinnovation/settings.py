@@ -141,3 +141,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
 }
+
+RABBIT_HOST = os.environ.get('RABBIT_HOST')
+RABBIT_PORT = os.environ.get('RABBIT_PORT', 5672)
+RABBIT_USER = os.environ.get('RABBIT_USER', 'guest')
+RABBIT_PASSWORD = os.environ.get('RABBIT_PASSWORD', 'guest')
+RABBIT_VHOST = os.environ.get('RABBIT_VHOST', '/')

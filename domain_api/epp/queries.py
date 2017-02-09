@@ -1,9 +1,22 @@
-import os
 from django_logging import log
 from ..utilities.rpc_client import EppRpcClient
+from catalystinnovation import settings
 
 
-class Domain(object):
+class EppEntity(object):
+
+    """
+    Represent an EPP Entity
+    """
+
+    def __init__(self):
+        """
+        Set up rabbitmq connection.
+        """
+        self.rpc_client = EppRpcClient(host=settings.RABBIT_HOST)
+
+
+class Domain(EppEntity):
 
     """
     Query operations for domains.
@@ -13,13 +26,11 @@ class Domain(object):
         """
         Initialise Domain object.
         """
-        rabbit_host = os.environ.get('RABBIT_HOST')
-
-        self.rpc_client = EppRpcClient(host=rabbit_host)
-
+        super().__init__()
 
     def process_availability_item(self, check_data):
-        """TODO: Docstring for process_availability_.
+        """
+        Process check domain items.
 
         :check_data: TODO
         :returns: TODO
@@ -36,7 +47,6 @@ class Domain(object):
             response["reason"] = check_data["domain:reason"]
         return response
 
-
     def check_domain(self, registry, *args):
         """
         Send a check domain request to the registry.
@@ -45,7 +55,7 @@ class Domain(object):
         :returns: dict with set of results indicating availability
 
         """
-        data = {"domain": [*args]}
+        data = {"domain": [args]}
         log.debug(data)
         response_data = self.rpc_client.call(registry, 'checkDomain', data)
         log.debug({"response data": response_data})
@@ -86,7 +96,7 @@ class Domain(object):
             nameservers.append(host)
         return_data = {
             "domain": info_data["domain:name"],
-            "status": { "status": info_data["domain:status"]},
+            "status": {"status": info_data["domain:status"]},
             "registrant": info_data["domain:registrant"],
             "contacts": info_data["domain:contact"],
             "ns": nameservers,
@@ -97,3 +107,79 @@ class Domain(object):
         log.info(return_data)
         return return_data
 
+
+class Contact(EppEntity):
+
+    """
+    Contact EPP operations.
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def process_postal_info(self, postal_info):
+        """
+        Process postal info part of info contact response
+        :returns: list of postal info objects
+
+        """
+        processed_postal = []
+        if isinstance(postal_info, list):
+            processed_postal += [self.postal_info_item(i) for i in postal_info]
+        else:
+            processed_postal.append(self.postal_info_item(postal_info))
+        return processed_postal
+
+
+    def postal_info_item(self, item):
+        """
+        Process individual postal info item
+
+        :item: dict containing raw EPP postalInfo data
+        :returns: dict containing info with namespaces removed
+
+        """
+        addr = item["contact:addr"]
+        contact_street = []
+        raw_street = addr["contact:street"]
+        if isinstance(raw_street, list):
+            contact_street += raw_street
+        else:
+            contact_street.append(raw_street)
+        return {
+            "name": item["contact:name"],
+            "org": item.get("contact:org", ""),
+            "type": item["type"],
+            "addr": {
+                "street": contact_street,
+                "cc": addr["contact:cc"],
+                "sp": addr["contact:sp"],
+                "city": addr["contact:city"],
+                "pc": addr["contact:pc"]
+            }
+        }
+
+
+    def info(self, registry, contact):
+        """
+        Fetch info for a contact
+
+        :registry: Registry to query
+        :contact: ID of contact
+        :returns: dict of contact information
+
+        """
+        data = {"contact": contact}
+        response_data = self.rpc_client.call(registry, 'infoContact', data)
+        log.debug(response_data)
+        info_data = response_data["contact:infData"]
+
+        processed_info_data = {
+            "email": info_data["contact:email"],
+            "fax": info_data.get("contact:fax", ""),
+            "id": info_data["contact:id"],
+            "postal_info": self.process_postal_info(
+                info_data["contact:postalInfo"]
+            )
+        }
+        return processed_info_data

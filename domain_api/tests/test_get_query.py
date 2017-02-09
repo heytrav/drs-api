@@ -1,5 +1,4 @@
-from django.contrib.auth.models import User
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from domain_api.epp.queries import EppRpcClient
 import domain_api
 import json
@@ -7,9 +6,11 @@ from ..exceptions import EppError
 
 from .test_api_interaction import TestApiClient
 
+
 class MockRpcClient(domain_api.epp.queries.EppRpcClient):
     def __init__(self, host=None):
         pass
+
 
 class TestCheckDomain(TestApiClient):
 
@@ -19,7 +20,6 @@ class TestCheckDomain(TestApiClient):
 
         """
         super().setUp()
-
 
     @patch('domain_api.epp.queries.EppRpcClient', new=MockRpcClient)
     def test_epp_error(self):
@@ -43,7 +43,7 @@ class TestCheckDomain(TestApiClient):
         """
         self.login_client()
         return_data = {
-            "domain:chkData":{
+            "domain:chkData": {
                 "domain:cd": {
                     "domain:name": {
                         "avail": 1,
@@ -59,7 +59,7 @@ class TestCheckDomain(TestApiClient):
             self.assertEqual(response.status_code,
                              200,
                              "Epp returned normally")
-            data = json.loads(response.content)
+            data = json.loads(response.content.decode('utf-8'))
             self.assertTrue(data["result"][0]["available"],
                             "Serialised a check_domain response")
 
@@ -74,7 +74,6 @@ class TestInfoDomain(TestApiClient):
         Set up test suite
         """
         super().setUp()
-
 
     @patch('domain_api.epp.queries.EppRpcClient', new=MockRpcClient)
     def test_info_domain_response(self):
@@ -94,8 +93,7 @@ class TestInfoDomain(TestApiClient):
                     {
                         "domain:hostObj": "ns2.nameserver.com"
                     }
-                ]
-                ,
+                ],
                 "domain:contact": [
                     {
                         "$t": "A1234",
