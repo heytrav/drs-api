@@ -86,3 +86,9 @@ class TestInfoContact(TestCase):
             self.assertIn('email',
                           info_data,
                           "Response from info request contains email")
+            self.assertEqual(info_data["id"],
+                             "reg-20",
+                             "contact id is expected value")
+            self.assertIsInstance(info_data["postal_info"],
+                                  list,
+                                  "Postal Info is a list")
