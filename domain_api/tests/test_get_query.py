@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from domain_api.epp.queries import EppRpcClient
+from domain_api.epp.entity import EppRpcClient
 import domain_api
 import json
 from ..exceptions import EppError
@@ -7,7 +7,7 @@ from ..exceptions import EppError
 from .test_api_interaction import TestApiClient
 
 
-class MockRpcClient(domain_api.epp.queries.EppRpcClient):
+class MockRpcClient(domain_api.epp.entity.EppRpcClient):
     def __init__(self, host=None):
         pass
 
@@ -21,7 +21,7 @@ class TestCheckDomain(TestApiClient):
         """
         super().setUp()
 
-    @patch('domain_api.epp.queries.EppRpcClient', new=MockRpcClient)
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_epp_error(self):
         """
         An epp error should result in a 400 bad request.
@@ -36,7 +36,7 @@ class TestCheckDomain(TestApiClient):
                              400,
                              "EPP error caused a 400 bad request.")
 
-    @patch('domain_api.epp.queries.EppRpcClient', new=MockRpcClient)
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_check_domain_response(self):
         """
         EPP check domain result returns serialized json response.
@@ -75,7 +75,7 @@ class TestInfoDomain(TestApiClient):
         """
         super().setUp()
 
-    @patch('domain_api.epp.queries.EppRpcClient', new=MockRpcClient)
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_info_domain_response(self):
         """
         Test processing of info domain response

@@ -1,11 +1,12 @@
 from django.test import TestCase
 from unittest.mock import patch, MagicMock
-from domain_api.epp.queries import EppRpcClient, Domain, Contact
+from domain_api.epp.queries import Domain, Contact
+from domain_api.epp.entity import EppRpcClient
 from ..exceptions import EppError
 import domain_api
 
 
-class MockRpcClient(domain_api.epp.queries.EppRpcClient):
+class MockRpcClient(domain_api.epp.entity.EppRpcClient):
     def __init__(self, host=None):
         pass
 
@@ -17,7 +18,7 @@ class TestCheckDomain(TestCase):
     Test processing of check domain.
     """
 
-    @patch('domain_api.epp.queries.EppRpcClient', new=MockRpcClient)
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_bulk_check_domain(self):
         self.assertTrue(True)
 
@@ -28,7 +29,7 @@ class TestInfoContact(TestCase):
     Test processing info contact.
     """
 
-    @patch('domain_api.epp.queries.EppRpcClient', new=MockRpcClient)
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_info_domain(self):
         """
         Test info domain processing.
