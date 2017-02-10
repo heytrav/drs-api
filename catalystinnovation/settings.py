@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_logging',
     'django_nose',
+    'rest_framework_swagger',
 ]
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 

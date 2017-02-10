@@ -45,6 +45,7 @@ from .utilities.rpc_client import EppRpcClient
 from .epp.queries import Domain
 from .epp.actions.contact import Contact
 from .exceptions import EppError
+from domain_api.entity_management.contacts import ContactHandleFactory
 
 rabbit_host = os.environ.get('RABBIT_HOST')
 
@@ -98,16 +99,13 @@ def info_domain(request, registry, domain, format=None):
 
 @api_view(['POST'])
 @permission_classes((permissions.IsAdminUser,))
-def registry_contact(request, registry):
+def registry_contact(request, registry, contact_type="contact"):
     """
     Create or view contacts for a particular registry.
 
     :registry: Registry to add this contact for
-    :person_id: Optional person object
     :returns: A contact object
-
     """
-
     provider = get_object_or_404(DomainProvider.objects.all(), slug=registry)
 
     data = request.data
@@ -121,47 +119,20 @@ def registry_contact(request, registry):
         if serializer.is_valid():
             person = serializer.save(owner=request.user)
         else:
-            raise Exception("Unable to save person.")
-    #  Hacky way to generate a handle
-    handle = "-".join(["test", "api", str(person.id), str(ContactHandle.objects.count() + 1)])
-    street = [person.street1, person.street2, person.street3]
-    postal_info = {
-        "name": person.first_name + " " + person.surname,
-        "org": person.company,
-        "type": "int",
-        "addr": {
-            "street": street,
-            "city": person.city,
-            "sp": person.state,
-            "pc": person.postcode,
-            "cc": person.country
-        }
-    }
-    contact_info = {
-        "id": handle,
-        "voice": person.telephone,
-        "fax": person.fax,
-        "email": person.email,
-        "postalInfo": postal_info
-    }
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     try:
-        contact = Contact()
-        response = contact.create(registry, contact_info)
-        log.info(response)
+        factory = ContactHandleFactory(provider,
+                                       contact_type,
+                                       context={"request": request})
+        serializer = factory.create_registry_contact(person)
+        return Response(serializer.data)
     except EppError as epp_e:
         log.error(ErrorLogObject(request, epp_e))
         return Response(status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         log.error(ErrorLogObject(request, e))
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    contact_handle = person.contacthandle_set.create(handle=handle,
-                                                     provider=provider,
-                                                     owner=request.user)
-    serializer = ContactHandleSerializer(contact_handle,
-                                         context={'request': request})
-
-    return Response(serializer.data)
 
 
 @api_view(['GET', 'POST'])
@@ -480,6 +451,8 @@ class RegisteredDomainViewSet(viewsets.ModelViewSet):
 
     serializer_class = RegisteredDomainSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+    queryset = RegisteredDomain.objects.all()
+
 
 
 class DomainRegistrantViewSet(viewsets.ModelViewSet):
