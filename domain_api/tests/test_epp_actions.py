@@ -58,4 +58,3 @@ class TestCreateContact(TestCase):
             self.assertRegex(response_data["create_date"],
                              re.compile(r'\d{4}-\d{2}-\d{2}'),
                              "Contact has a create date.")
-
