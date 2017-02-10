@@ -22,6 +22,5 @@ urlpatterns = [
     url(r'^info-domain/(?P<registry>[^\/]+)/(?P<domain>.*)/$', views.info_domain),
     url(r'^registry-contact/$', views.registry_contact),
     url(r'^registry-contact/(?P<registry>.*)/(?P<contact_type>.*)/$', views.registry_contact),
-    url(r'^registrant/(?P<registry>.*)/$', views.registrant),
     url(r'^register-domain/(?P<registry>[^\/]+)/$', views.register_domain),
 ]
