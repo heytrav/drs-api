@@ -27,6 +27,14 @@ class DomainManager(object):
         self.domain = domain
         self.tld = tld
 
+    def create(self):
+        """
+        Register a domain
+        :returns: TODO
+
+        """
+        pass
+
 
 class CentralNic(DomainManager):
 
@@ -51,7 +59,6 @@ class DomainManagerFactory(object):
     def __init__(self):
         """
         Set up factory.
-
         """
         self.tlds = TopLevelDomain.objects.all()
 

@@ -5,11 +5,13 @@ class EppError(Exception):
     """
     pass
 
+
 class UnsupportedTld(Exception):
     """
     Not a TLD we support (yet)
     """
     pass
+
 
 class InvalidTld(Exception):
 
@@ -17,6 +19,7 @@ class InvalidTld(Exception):
     Invalid TLD
     """
     pass
+
 
 class NoTldManager(Exception):
     pass
