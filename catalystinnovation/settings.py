@@ -143,8 +143,8 @@ REST_FRAMEWORK = {
     ]
 }
 
-RABBIT_HOST = os.environ.get('RABBITMQ_HOST')
-RABBIT_PORT = os.environ.get('RABBITMQ_PORT', 5672)
-RABBIT_USER = os.environ.get('RABBITMQ_DEFAULT_USER', 'guest')
-RABBIT_PASSWORD = os.environ.get('RABBITMQ_DEFAULT_PASS', 'guest')
-RABBIT_VHOST = os.environ.get('RABBITMQ_DEFAULT_VHOST', '/')
+RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST')
+RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', 5672)
+RABBITMQ_USER = os.environ.get('RABBITMQ_DEFAULT_USER', 'guest')
+RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_DEFAULT_PASS', 'guest')
+RABBITMQ_VHOST = os.environ.get('RABBITMQ_DEFAULT_VHOST', '/')

@@ -59,7 +59,7 @@ class ContactHandleFactory(object):
         :returns: string
 
         """
-        obj_id = 0
+        obj_id = None
         if self.contact_type == "contact":
             obj_id = ContactHandle.objects.count() + 1
         elif self.contact_type == "registrant":

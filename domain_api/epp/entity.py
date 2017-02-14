@@ -12,4 +12,4 @@ class EppEntity(object):
         """
         Set up rabbitmq connection.
         """
-        self.rpc_client = EppRpcClient(host=settings.RABBIT_HOST)
+        self.rpc_client = EppRpcClient(host=settings.RABBITMQ_HOST)

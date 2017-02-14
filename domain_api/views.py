@@ -46,8 +46,8 @@ from .epp.queries import Domain
 from .epp.actions.contact import Contact
 from .exceptions import EppError
 from domain_api.entity_management.contacts import ContactHandleFactory
-
-rabbit_host = os.environ.get('RABBIT_HOST')
+from catalystinnovation import settings
+rabbit_host = settings.RABBITMQ_HOST
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -122,10 +122,10 @@ def registry_contact(request, registry, contact_type="contact"):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        factory = ContactHandleFactory(provider,
+        contact_factory = ContactHandleFactory(provider,
                                        contact_type,
                                        context={"request": request})
-        serializer = factory.create_registry_contact(person)
+        serializer = contact_factory.create_registry_contact(person)
         return Response(serializer.data)
     except EppError as epp_e:
         log.error(ErrorLogObject(request, epp_e))
@@ -296,6 +296,9 @@ class ContactTypeViewSet(viewsets.ModelViewSet):
 
 
 class TopLevelDomainViewSet(viewsets.ModelViewSet):
+    """
+    Set of top level domains.
+    """
 
     queryset = TopLevelDomain.objects.all()
     serializer_class = TopLevelDomainSerializer
@@ -303,6 +306,9 @@ class TopLevelDomainViewSet(viewsets.ModelViewSet):
 
 
 class DomainProviderViewSet(viewsets.ModelViewSet):
+    """
+    Set of tld providers.
+    """
 
     queryset = DomainProvider.objects.all()
     serializer_class = DomainProviderSerializer
@@ -310,6 +316,9 @@ class DomainProviderViewSet(viewsets.ModelViewSet):
 
 
 class ContactHandleViewSet(viewsets.ModelViewSet):
+    """
+    Contact handles.
+    """
 
     serializer_class = ContactHandleSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,
@@ -322,7 +331,7 @@ class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
 
     queryset = TopLevelDomainProvider.objects.all()
     serializer_class = TopLevelDomainProviderSerializer
-    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class RegistrantHandleViewSet(viewsets.ModelViewSet):
