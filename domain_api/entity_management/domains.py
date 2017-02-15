@@ -1,5 +1,6 @@
 from django_logging import log
 from ..models import (
+    ContactType,
     ContactHandle,
     RegistrantHandle,
     Domain,
@@ -27,13 +28,47 @@ class DomainManager(object):
         self.domain = domain
         self.tld = tld
 
-    def create(self):
+    def get_registrant_handle(self, arg1):
+        """TODO: Docstring for get_registrant_handle.
+
+        :arg1: TODO
+        :returns: TODO
+
+        """
+        pass
+
+    def create_domain(self, data):
         """
         Register a domain
         :returns: TODO
 
         """
-        pass
+        domain = data["domain"]
+        registrant = RegistrantHandle.objects.get(pk=data['registrant'])
+        contacts = data.get('contacts', [])
+        admin = ContactHandle.objects.get(pk=data['admin'])
+        tech = ContactHandle.objects.get(pk=data['tech'])
+        try:
+            domain_obj = Domain.objects.get(name=self.domain)
+        except Domain.DoesNotExist:
+            domain_obj = Domain(
+                name=self.domain,
+                idn=idna.ToASCII(self.domain)
+            )
+            domain_obj.save()
+        epp_request = {
+            "name": domain,
+            "registrant": registrant.handle,
+            "contact": [
+                {"admin": admin.handle},
+                {"tech": tech.handle}
+            ],
+            "ns": [
+                "ns1.hexonet.net",
+                "ns2.hexonet.net"
+            ]
+        }
+        log.info(epp_request)
 
 
 class CentralNic(DomainManager):

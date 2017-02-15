@@ -44,8 +44,14 @@ from domain_api.filters import (
 from .utilities.rpc_client import EppRpcClient
 from .epp.queries import Domain
 from .epp.actions.contact import Contact
-from .exceptions import EppError
+from .exceptions import (
+    EppError,
+    UnsupportedTld,
+    NoTldManager,
+    InvalidTld
+)
 from domain_api.entity_management.contacts import ContactHandleFactory
+from .entity_management.domains import DomainManagerFactory
 from catalystinnovation import settings
 rabbit_host = settings.RABBITMQ_HOST
 
@@ -147,48 +153,24 @@ def register_domain(request):
 
     """
     data = request.data
-    registrant = RegistrantHandle.objects.get(pk=data['registrant'])
-    admin = ContactHandle.objects.get(pk=data['admin'])
-    tech = ContactHandle.objects.get(pk=data['tech'])
-    domain = data["domain"]
-    tlds = TopLevelDomain.objects.all()
+    factory = DomainManagerFactory()
+    try:
+        # Determine at which registry we will create the domain.
+        registry = factory.get_manager(data["domain"])
+        registry.create_domain(data)
 
-    # Figure out what the tld is and split the submitted domain name into
-    # the domain "name" and tld (zone). Also make sure to split away any
-    # possible subdomains.
-    probable_tld = None
-    length = 0
-    domain_name = None
-    for tld in tlds:
-        zone = "." + tld.zone
-        endindex = - (len(zone))
-        if zone == domain[endindex:] and len(zone) > length:
-            probable_tld = tld
-            length = len(zone)
-            # Get the actual domain name. Make sure it doesn't have
-            # any subdomain prefixed
-            domain_name = domain[:endindex].split(".")[-1]
-    # Some possible error scenarios
-    if probable_tld is None:
-        log.error("Unsupported tld in domain %s" % domain)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    if domain_name is None or len(domain_name) == 0:
-        log.error("Probably an invalid domain name %s" % domain)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    try:
-        # See if this TLD is provided by one of our registries.
-        tld_provider = TopLevelDomainProvider.objects.get(zone=probable_tld)
-    except TopLevelDomainProvider.DoesNotExist as e:
+    except InvalidTld as e:
         log.error(ErrorLogObject(request, e))
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    register_zone = probable_tld.zone
-    try:
-        domain_obj = Domain.objects.get(name=domain_name)
-    except Domain.DoesNotExist:
-        domain_obj = Domain(name=domain_name,
-               idn=idna.ToASCII(domain_name),
-               owner=request.user)
-        domain_obj.save()
+        return Response(e, status=status.HTTP_400_BAD_REQUEST)
+    except  UnsupportedTld as e:
+        log.error(ErrorLogObject(request, e))
+        return Response(e, status=status.HTTP_400_BAD_REQUEST)
+    except NoTldManager as e:
+        log.error(ErrorLogObject(request, e))
+        return Response(e, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        log.error(ErrorLogObject(request, e))
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     epp_request = {
         "name": data["domain"],
