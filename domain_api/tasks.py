@@ -6,4 +6,4 @@ from django_logging import log, ErrorLogObject
 @shared_task
 def add(x, y):
     log.debug({"request":{"x": x, "y": y}})
-    return {"result": int(x) + int(y)}
+    return int(x) + int(y)
