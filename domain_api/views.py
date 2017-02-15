@@ -1,3 +1,4 @@
+from __future__ import absolute_import, unicode_literals
 import os
 from django_logging import log, ErrorLogObject
 from django.db import IntegrityError
@@ -53,7 +54,15 @@ from .exceptions import (
 from domain_api.entity_management.contacts import ContactHandleFactory
 from .entity_management.domains import DomainManagerFactory
 from application import settings
-rabbit_host = settings.RABBITMQ_HOST
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def add_something(request, first, second):
+    from .tasks import add
+    result = add.delay(first, second)
+    response = result.get(timeout=10)
+    log.debug({"result": response})
+    return Response(response)
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -61,7 +70,6 @@ def check_domain(request, registry, domain, format=None):
     """
     Query EPP with a checkDomain request.
     :returns: JSON response indicating whether domain is available.
-
     """
     try:
         query = Domain()

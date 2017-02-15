@@ -21,7 +21,7 @@ schema_view = get_swagger_view(title='Domain API')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^domain-api/', include('domain_api.urls')),
+    url(r'^v1/', include('domain_api.urls')),
     url(r'^api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
     url('^schema/$', schema_view),

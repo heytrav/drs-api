@@ -1,3 +1,4 @@
+from __future__ import absolute_import, unicode_literals
 """
 Django settings for catalystinnovation project.
 
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
     'django_logging',
     'django_nose',
     'rest_framework_swagger',
+    'django_celery_results',
 ]
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
@@ -148,3 +150,10 @@ RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', 5672)
 RABBITMQ_USER = os.environ.get('RABBITMQ_DEFAULT_USER', 'guest')
 RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_DEFAULT_PASS', 'guest')
 RABBITMQ_VHOST = os.environ.get('RABBITMQ_DEFAULT_VHOST', '/')
+CELERY_BROKER_URL = 'amqp://' + RABBITMQ_USER + ':' + RABBITMQ_PASSWORD + '@' + RABBITMQ_HOST + '/' + RABBITMQ_VHOST
+#CELERY_RESULT_BACKEND = 'rpc://'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CELERY_ENABLE_UTC = True
+#CELERY_RESULT_BACKEND = 'django-db'

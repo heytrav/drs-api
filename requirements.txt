@@ -5,6 +5,7 @@ celery==4.0.2
 coreapi==2.1.1
 coreschema==0.0.4
 Django==1.10.5
+django-celery-results==1.0.1
 django-filter==1.0.1
 django-logging-json==1.5.3
 django-nose==1.4.4
