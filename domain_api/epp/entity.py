@@ -1,5 +1,5 @@
 from ..utilities.rpc_client import EppRpcClient
-from catalystinnovation import settings
+from application import settings
 
 
 class EppEntity(object):

@@ -52,7 +52,7 @@ from .exceptions import (
 )
 from domain_api.entity_management.contacts import ContactHandleFactory
 from .entity_management.domains import DomainManagerFactory
-from catalystinnovation import settings
+from application import settings
 rabbit_host = settings.RABBITMQ_HOST
 
 @api_view(['GET'])
