@@ -23,5 +23,4 @@ urlpatterns = [
     url(r'^registry-contact/$', views.registry_contact),
     url(r'^registry-contact/(?P<registry>.*)/(?P<contact_type>.*)/$', views.registry_contact),
     url(r'^register-domain/(?P<registry>[^\/]+)/$', views.register_domain),
-    url('^add/(?P<first>[^\/]+)/(?P<second>.*)/$', views.add_something),
 ]

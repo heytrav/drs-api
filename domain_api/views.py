@@ -54,15 +54,8 @@ from .exceptions import (
 from domain_api.entity_management.contacts import ContactHandleFactory
 from .entity_management.domains import DomainManagerFactory
 from application import settings
+from .utilities.domain import parse_domain
 
-@api_view(['GET'])
-@permission_classes((permissions.IsAuthenticated,))
-def add_something(request, first, second):
-    from .tasks import add
-    result = add.delay(first, second)
-    response = result.get(timeout=10)
-    log.debug({"result": response})
-    return Response(response)
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -137,8 +130,8 @@ def registry_contact(request, registry, contact_type="contact"):
 
     try:
         contact_factory = ContactHandleFactory(provider,
-                                       contact_type,
-                                       context={"request": request})
+                                               contact_type,
+                                               context={"request": request})
         serializer = contact_factory.create_registry_contact(person)
         return Response(serializer.data)
     except EppError as epp_e:
@@ -158,9 +151,20 @@ def register_domain(request):
 
     :request: Request object with JSON payload
     :returns: Response from registry
-
     """
     data = request.data
+    parsed_domain = parse_domain(data["domain"])
+    try:
+        # See if this TLD is provided by one of our registries.
+        tld_provider = TopLevelDomainProvider.objects.get(
+            zone=parsed_domain["zone"]
+        )
+        slug = tld_provider.provider.slug
+    except TopLevelDomainProvider.DoesNotExist:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+
     factory = DomainManagerFactory()
     try:
         # Determine at which registry we will create the domain.

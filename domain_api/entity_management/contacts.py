@@ -15,16 +15,33 @@ class ContactHandleFactory(object):
 
     def __init__(self,
                  provider=None,
+                 person=None,
                  contact_type="contact",
                  context=None):
         """
         Initialise factory.
         """
         self.provider = provider
-        self.contact_type = contact_type
         self.context = context
+        self.person = person
+        self.contact_type = contact_type
+        if contact_type == 'contact':
+            self.related_handle_set = person.contacthandle_set
+        elif contact_type == 'registrant':
+            self.related_handle_set = person.registranthandle_set
 
-    def process_handle(self, handle, person):
+    def fetch_existing_handle(self):
+        """
+        Check if the person has an existing handle at a provider and return it
+        if it does.
+        :returns: str registry handle
+
+        """
+        if self.related_handle_set.count() > 0:
+            return self.related_handle_set.first()
+        return None
+
+    def create_local_handle(self, handle):
         """
         Return correct type of serializer for contact type.
 
@@ -33,25 +50,14 @@ class ContactHandleFactory(object):
         :returns: registrant or contact handle object
 
         """
-        if self.contact_type == "contact":
-            contact_handle = person.contacthandle_set.create(
-                handle=handle,
-                provider=self.provider
-            )
-            return ContactHandleSerializer(
-                contact_handle,
-                context=self.context
-            )
-        elif self.contact_type == "registrant":
-            contact_handle = person.registranthandle_set.create(
-                handle=handle,
-                provider=self.provider
-            )
-            return RegistrantHandleSerializer(
-                contact_handle,
-                context=self.context
-            )
-        raise Exception("No matching serializer for contact type.")
+        contact_handle = self.related_handle_set.create(
+            handle=handle,
+            provider=self.provider
+        )
+        return ContactHandleSerializer(
+            contact_handle,
+            context=self.context
+        )
 
     def get_handle_id(self):
         """
@@ -65,9 +71,10 @@ class ContactHandleFactory(object):
         elif self.contact_type == "registrant":
             obj_id = RegistrantHandle.objects.count() + 1
 
-        return "-".join([self.provider.slug[:3], self.contact_type[:3], str(obj_id)])
+        return "-".join([self.provider.slug[:3], self.contact_type[:3],
+                         str(obj_id)])
 
-    def create_registry_contact(self, person):
+    def create_registry_contact(self):
         """
         Create contact at registry and add to registrant handle or
         contact handle.
@@ -77,6 +84,7 @@ class ContactHandleFactory(object):
 
         """
         handle = self.get_handle_id()
+        person = self.person
         street = [person.street1, person.street2, person.street3]
         postal_info = {
             "name": person.first_name + " " + person.surname,
@@ -100,4 +108,4 @@ class ContactHandleFactory(object):
         contact = Contact()
         response = contact.create(self.provider.slug, contact_info)
         log.info(response)
-        return self.process_handle(handle, person)
+        return self.create_local_handle(handle)

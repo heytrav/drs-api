@@ -1,3 +1,9 @@
+from __future__ import absolute_import, unicode_literals
+from celery import chain
+from ..tasks import (
+    check_domain
+    create_registry_contact
+)
 from django_logging import log
 from ..models import (
     ContactType,
@@ -28,22 +34,17 @@ class DomainManager(object):
         self.domain = domain
         self.tld = tld
 
-    def get_registrant_handle(self, arg1):
-        """TODO: Docstring for get_registrant_handle.
-
-        :arg1: TODO
-        :returns: TODO
-
-        """
-        pass
 
     def create_domain(self, data):
         """
         Register a domain
-        :returns: TODO
-
         """
+
         domain = data["domain"]
+        workflow = [
+
+        ]
+
         registrant = RegistrantHandle.objects.get(pk=data['registrant'])
         contacts = data.get('contacts', [])
         admin = ContactHandle.objects.get(pk=data['admin'])
@@ -105,20 +106,7 @@ class DomainManagerFactory(object):
         :returns: a domain manager
         """
         log.debug({"message": "Find manager for domain", "domain": fqdn})
-        probable_tld = None
-        length = 0
-        domain_name = None
-        for tld in self.tlds:
-            zone = "." + tld.zone
-            endindex = - (len(zone))
-            if zone == fqdn[endindex:] and len(zone) > length:
-                probable_tld = tld
-                length = len(zone)
-                # Get the actual domain name. Make sure it doesn't have
-                # any subdomain prefixed
-                domain_name = fqdn[:endindex].split(".")[-1]
-        if domain_name is None or len(domain_name) == 0:
-            raise InvalidTld(fqdn)
+        parsed_domain
         try:
             # See if this TLD is provided by one of our registries.
             tld_provider = TopLevelDomainProvider.objects.get(zone=probable_tld)
