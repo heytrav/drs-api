@@ -1,7 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 from celery import chain
 from ..tasks import (
-    check_domain
+    check_domain,
     create_registry_contact
 )
 from django_logging import log
