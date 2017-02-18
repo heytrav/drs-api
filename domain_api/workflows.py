@@ -1,13 +1,14 @@
 from __future__ import absolute_import, unicode_literals
-from ..tasks import (
+from .tasks import (
     check_domain,
+    silly_add,
     create_registrant,
     create_registry_contact,
     create_domain
 )
 
 from .models import TopLevelDomainProvider, TopLevelDomain
-from ..utilities.domain import parse_domain
+from .utilities.domain import parse_domain
 
 
 class Workflow(object):
@@ -32,15 +33,16 @@ class Workflow(object):
         :returns: chain object for celery
 
         """
-        self.workflow.append(check_domain.s(data["domain"], self.registry))
-        registrant = data["registrant"]
-        # TODO: process nameservers
         epp = {
-            "domain": data["domain"],
+            "name": data["domain"],
             "ns": data["ns"]
         }
+        self.workflow.append(check_domain.s(data["domain"], self.registry))
+        self.workflow.append(silly_add.s(epp))
+        registrant = data["registrant"]
+        # TODO: process nameservers
         self.workflow.append(
-            create_registrant.si(
+            create_registrant.s(
                 epp,
                 registrant,
                 self.registry
@@ -57,7 +59,7 @@ class Workflow(object):
                 )
 
         self.workflow.append(create_domain.s(self.registry))
-        return workflow
+        return self.workflow
 
 
 class CentralNic(Workflow):
@@ -76,7 +78,7 @@ workflow_registries = {
     "centralnic-test": CentralNic
 }
 
-def workflow_factory(self, registry):
+def workflow_factory(registry):
     """
     Return workflow manager for a given registry.
 

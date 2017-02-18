@@ -44,7 +44,7 @@ from .exceptions import (
 )
 from domain_api.entity_management.contacts import ContactHandleFactory
 from domain_api.utilities.domain import parse_domain
-from workflows import workflow_factory
+from .workflows import workflow_factory
 
 
 @api_view(['GET'])
@@ -149,9 +149,10 @@ def register_domain(request):
             zone=parsed_domain["zone"]
         )
         registry = tld_provider.provider.slug
-        workflow_manager = workflow_factory(registry)
+        workflow_manager = workflow_factory(registry)()
+        log.debug({"msg": "About to call workflow_manager.create_domain"})
         workflow = workflow_manager.create_domain(data)
-        response = chain(workflow)().get(timeout=1)
+        response = chain(workflow)().get()
         return Response(response)
     except KeyError as e:
         log.error(ErrorLogObject(request, e))
@@ -161,44 +162,6 @@ def register_domain(request):
     except Exception as e:
         log.error(ErrorLogObject(request, e))
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    #factory = DomainManagerFactory()
-    #try:
-        ## Determine at which registry we will create the domain.
-        #registry = factory.get_manager(data["domain"])
-        #registry.create_domain(data)
-
-    #except InvalidTld as e:
-        #log.error(ErrorLogObject(request, e))
-        #return Response(e, status=status.HTTP_400_BAD_REQUEST)
-    #except  UnsupportedTld as e:
-        #log.error(ErrorLogObject(request, e))
-        #return Response(e, status=status.HTTP_400_BAD_REQUEST)
-    #except NoTldManager as e:
-        #log.error(ErrorLogObject(request, e))
-        #return Response(e, status=status.HTTP_400_BAD_REQUEST)
-    #except Exception as e:
-        #log.error(ErrorLogObject(request, e))
-        #return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    #epp_request = {
-        #"name": data["domain"],
-        #"registrant": registrant.handle,
-        #"contact": [
-            #{"admin": admin.handle},
-            #{"tech": tech.handle}
-        #],
-        #"ns": [
-            #"ns1.hexonet.net",
-            #"ns2.hexonet.net"
-        #]
-    #}
-    #log.info(epp_request)
-    #response = requests.post('http://centralnic:3000/createDomain',
-                            #headers={"Content-type": "application/json"},
-                            #data=json.dumps(epp_request))
-
-    ## Raise an error if this didn't work
-    #response.raise_for_status()
     #try:
         #response_data = response.json()
         #result_code = response_data["result"]["code"]

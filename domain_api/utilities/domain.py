@@ -2,7 +2,7 @@ from ..models import TopLevelDomain
 from ..exceptions import InvalidTld
 
 
-def parse_domsin(fqdn):
+def parse_domain(fqdn):
     """
     Parse a domain into name and tld components.
 

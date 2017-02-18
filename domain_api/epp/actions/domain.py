@@ -26,6 +26,7 @@ class Domain(EppEntity):
         log.debug(
             {
                 "called": "domain_api.epp.actions.domain.create",
+                "registry": registry,
                 "data": data
             }
         )
