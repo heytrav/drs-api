@@ -8,6 +8,7 @@ from rest_framework import status, permissions, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from domain_api.models import (
+    Domain,
     PersonalDetail,
     ContactType,
     TopLevelDomain,
@@ -38,7 +39,7 @@ from domain_api.serializers import (
 from domain_api.filters import (
     IsPersonFilterBackend
 )
-from .epp.queries import Domain as Domain
+from .epp.queries import Domain as DomainQuery
 from .exceptions import (
     EppError,
 )
@@ -55,7 +56,7 @@ def check_domain(request, registry, domain, format=None):
     :returns: JSON response indicating whether domain is available.
     """
     try:
-        query = Domain()
+        query = DomainQuery()
         availability = query.check_domain(registry, domain)
         serializer = CheckDomainResponseSerializer(data=availability)
         if serializer.is_valid():
@@ -77,7 +78,7 @@ def info_domain(request, registry, domain, format=None):
 
     """
     try:
-        query = Domain()
+        query = DomainQuery()
         info = query.info(registry, domain, is_staff=request.user.is_staff)
         serializer = InfoDomainSerializer(data=info)
         log.info(info)
@@ -150,8 +151,10 @@ def register_domain(request):
         )
         registry = tld_provider.provider.slug
         workflow_manager = workflow_factory(registry)()
+
         log.debug({"msg": "About to call workflow_manager.create_domain"})
         workflow = workflow_manager.create_domain(data)
+        # run chained workflow and register the domain
         response = chain(workflow)().get()
         return Response(response)
     except KeyError as e:
@@ -162,49 +165,6 @@ def register_domain(request):
     except Exception as e:
         log.error(ErrorLogObject(request, e))
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    #try:
-        #response_data = response.json()
-        #result_code = response_data["result"]["code"]
-        #if int(result_code) >= 2000:
-            #log.error(response_data["result"]["msg"])
-            #return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        #anniversary_field = response_data["data"]["domain:creData"]["domain:exDate"]
-        #registered_domain = RegisteredDomain(domain=domain_obj,
-                                             #tld=probable_tld,
-                                             #tld_provider=tld_provider,
-                                             #registration_period=1,
-                                             #anniversary=anniversary_field,
-                                             #owner=request.user,
-                                             #active=True)
-        #registered_domain.save()
-        #log.debug({"result": "Registered domain: %s" % registered_domain.id})
-        #admin_contact_type = ContactType.objects.get(name='admin')
-        #tech_contact_type = ContactType.objects.get(name='tech')
-        #registered_domain.registrant.create(
-            #registrant=registrant,
-            #active=True,
-            #owner=request.user
-        #)
-        #registered_domain.contact_handles.create(
-            #contact_handle=admin,
-            #active=True,
-            #contact_type=admin_contact_type,
-            #owner=request.user
-        #)
-        #registered_domain.contact_handles.create(
-            #contact_handle=tech,
-            #active=True,
-            #contact_type=tech_contact_type,
-            #owner=request.user
-        #)
-
-    #except Exception as e:
-        #log.error(ErrorLogObject(request, e))
-        #raise e
-    #log.info(response.json())
-
-    #return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 
 class PersonalDetailViewSet(viewsets.ModelViewSet):
@@ -308,7 +268,8 @@ class RegistrantHandleViewSet(viewsets.ModelViewSet):
 class DomainViewSet(viewsets.ModelViewSet):
 
     serializer_class = DomainSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = Domain.objects.all()
 
 
 class RegisteredDomainViewSet(viewsets.ModelViewSet):

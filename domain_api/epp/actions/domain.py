@@ -33,4 +33,7 @@ class Domain(EppEntity):
         result = self.rpc_client.call(registry, 'createDomain', data)
         log.debug(result)
         create_data = result["domain:creData"]
-        return create_data
+        return {
+            "create_date": create_data["domain:crDate"],
+            "expiration_date": create_data["domain:exDate"]
+        }

@@ -1,14 +1,15 @@
 from __future__ import absolute_import, unicode_literals
 from .tasks import (
     check_domain,
-    silly_add,
     create_registrant,
     create_registry_contact,
-    create_domain
+    create_domain,
+    connect_domain
 )
 
 from .models import TopLevelDomainProvider, TopLevelDomain
 from .utilities.domain import parse_domain
+from django_logging import log, ErrorLogObject
 
 
 class Workflow(object):
@@ -38,27 +39,29 @@ class Workflow(object):
             "ns": data["ns"]
         }
         self.workflow.append(check_domain.s(data["domain"], self.registry))
-        self.workflow.append(silly_add.s(epp))
-        registrant = data["registrant"]
         # TODO: process nameservers
         self.workflow.append(
-            create_registrant.s(
+            create_registrant.si(
                 epp,
-                registrant,
-                self.registry
+                person_id=data["registrant"],
+                registry=self.registry
             )
         )
         for contact in data["contacts"]:
-            for contact_type, person_id in contact.items():
-                self.workflow.append(
-                    create_registry_contact.s(
-                        person_id,
-                        self.registry,
-                        contact_type
-                    )
+            log.debug(contact)
+            contact_type, person_id = contact.popitem()
+            log.debug({"parsed": {"contact_type": contact_type, "person": person_id}})
+            self.workflow.append(
+                create_registry_contact.s(
+                    person_id,
+                    self.registry,
+                    contact_type
                 )
+            )
 
         self.workflow.append(create_domain.s(self.registry))
+        self.workflow.append(connect_domain.s())
+
         return self.workflow
 
 

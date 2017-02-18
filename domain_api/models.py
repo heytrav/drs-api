@@ -40,7 +40,7 @@ class ContactType(models.Model):
     """
     Types of registry contacts.
     """
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     description = models.TextField()
 
 
@@ -148,7 +148,7 @@ class RegisteredDomain(models.Model):
     # registration period and whatever the notification buffer is for a
     # provider. The aim is to notify a customer ahead of time that their domain
     # is about to renew/expire.
-    anniversary = models.DateTimeField()
+    anniversary = models.DateTimeField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
