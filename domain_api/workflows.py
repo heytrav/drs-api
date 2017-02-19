@@ -7,9 +7,7 @@ from .tasks import (
     connect_domain
 )
 
-from .models import TopLevelDomainProvider, TopLevelDomain
-from .utilities.domain import parse_domain
-from django_logging import log, ErrorLogObject
+from django_logging import log
 
 
 class Workflow(object):
@@ -24,7 +22,6 @@ class Workflow(object):
         """
         self.workflow = []
         self.registry = None
-
 
     def create_domain(self, data):
         """
@@ -50,7 +47,8 @@ class Workflow(object):
         for contact in data["contacts"]:
             log.debug(contact)
             (contact_type, person_id), = contact.items()
-            log.debug({"parsed": {"contact_type": contact_type, "person": person_id}})
+            log.debug({"parsed": {"contact_type": contact_type,
+                                  "person": person_id}})
             self.workflow.append(
                 create_registry_contact.s(
                     person_id,
@@ -75,10 +73,10 @@ class CentralNic(Workflow):
         self.registry = 'centralnic-test'
 
 
-
 workflow_registries = {
     "centralnic-test": CentralNic
 }
+
 
 def workflow_factory(registry):
     """

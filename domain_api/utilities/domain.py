@@ -28,4 +28,4 @@ def parse_domain(fqdn):
             domain_name = fqdn[:endindex].split(".")[-1]
     if domain_name is None or len(domain_name) == 0:
         raise InvalidTld(fqdn)
-    return {"domain": domain_name, "zone": probable_tld}
+    return {"domain": domain_name, "zone": probable_tld.zone}
