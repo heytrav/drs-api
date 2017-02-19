@@ -18,8 +18,8 @@ class Domain(EppEntity):
         """
         Process check domain items.
 
-        :check_data: TODO
-        :returns: TODO
+        :check_data: item from a set of check domain results
+        :returns: availability with epp attributes renamed
 
         """
 

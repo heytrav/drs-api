@@ -1,15 +1,13 @@
 from django.test import TestCase
-from unittest.mock import patch, MagicMock
-from domain_api.epp.queries import Domain, Contact
+from unittest.mock import patch
+from domain_api.epp.queries import Contact
 from domain_api.epp.entity import EppRpcClient
-from ..exceptions import EppError
 import domain_api
 
 
 class MockRpcClient(domain_api.epp.entity.EppRpcClient):
     def __init__(self, host=None):
         pass
-
 
 
 class TestCheckDomain(TestCase):
@@ -82,7 +80,9 @@ class TestInfoContact(TestCase):
             }
         }
         contact_query = Contact()
-        with patch.object(EppRpcClient, 'call', return_value=info_contact_response):
+        with patch.object(EppRpcClient,
+                          'call',
+                          return_value=info_contact_response):
             info_data = contact_query.info("test-registry", "test-contact")
             self.assertIn('email',
                           info_data,
