@@ -30,7 +30,7 @@ class TestCheckDomain(TestApiClient):
 
         with patch.object(EppRpcClient, 'call', side_effect=EppError("FAIL")):
             response = self.client.get(
-                '/domain-api/check-domain/test-registry/whatever.tld/'
+                '/v1/check-domain/test-registry/whatever.tld/'
             )
             self.assertEqual(response.status_code,
                              400,
@@ -54,7 +54,7 @@ class TestCheckDomain(TestApiClient):
         }
         with patch.object(EppRpcClient, 'call', return_value=return_data):
             response = self.client.get(
-                '/domain-api/check-domain/test-registry/whatever.tld/'
+                '/v1/check-domain/test-registry/whatever.tld/'
             )
             self.assertEqual(response.status_code,
                              200,
@@ -108,7 +108,7 @@ class TestInfoDomain(TestApiClient):
         }
         with patch.object(EppRpcClient, 'call', return_value=return_value):
             response = self.client.get(
-                '/domain-api/info-domain/test-registry/whatever.tld/'
+                '/v1/info-domain/test-registry/whatever.tld/'
             )
             self.assertEqual(response.status_code,
                              200,

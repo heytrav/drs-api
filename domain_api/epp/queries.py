@@ -78,8 +78,13 @@ class Domain(EppEntity):
                 del contact["$t"]
         nameservers = []
         ns = info_data["domain:ns"]
-        for host in ns["domain:hostObj"]:
-            nameservers.append(host)
+        if isinstance(ns, dict):
+            for host in ns["domain:hostObj"]:
+                nameservers.append(host)
+        elif isinstance(ns, list):
+            for host_obj in ns:
+                nameservers.append(host_obj["domain:hostObj"])
+
         return_data = {
             "domain": info_data["domain:name"],
             "status": {"status": info_data["domain:status"]},
