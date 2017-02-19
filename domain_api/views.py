@@ -85,7 +85,8 @@ def info_domain(request, registry, domain, format=None):
         if serializer.is_valid():
             return Response(serializer.data)
         else:
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
     except EppError as epp_e:
         log.error(ErrorLogObject(request, epp_e))
         return Response(status=status.HTTP_400_BAD_REQUEST)

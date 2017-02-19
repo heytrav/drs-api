@@ -49,7 +49,7 @@ class Workflow(object):
         )
         for contact in data["contacts"]:
             log.debug(contact)
-            contact_type, person_id = contact.popitem()
+            (contact_type, person_id), = contact.items()
             log.debug({"parsed": {"contact_type": contact_type, "person": person_id}})
             self.workflow.append(
                 create_registry_contact.s(
@@ -61,7 +61,6 @@ class Workflow(object):
 
         self.workflow.append(create_domain.s(self.registry))
         self.workflow.append(connect_domain.s())
-
         return self.workflow
 
 

@@ -77,8 +77,8 @@ class Domain(EppEntity):
                 del contact["type"]
                 del contact["$t"]
         nameservers = []
-        for ns in info_data["domain:ns"]:
-            host = ns["domain:hostObj"]
+        ns = info_data["domain:ns"]
+        for host in ns["domain:hostObj"]:
             nameservers.append(host)
         return_data = {
             "domain": info_data["domain:name"],
