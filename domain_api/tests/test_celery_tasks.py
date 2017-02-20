@@ -6,8 +6,6 @@ from ..exceptions import EppError
 from domain_api.epp.entity import EppRpcClient
 from ..models import (
     PersonalDetail,
-    TopLevelDomain,
-    TopLevelDomainProvider,
     DomainProvider,
     ContactHandle,
     RegistrantHandle
