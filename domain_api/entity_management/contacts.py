@@ -1,6 +1,5 @@
 from django_logging import log
 from ..models import ContactHandle, RegistrantHandle
-from ..serializers import ContactHandleSerializer, RegistrantHandleSerializer
 from domain_api.epp.actions.contact import Contact
 
 
@@ -41,23 +40,21 @@ class ContactHandleFactory(object):
             return self.related_handle_set.first()
         return None
 
-    def create_local_handle(self, handle):
+    def create_local_handle(self, eppdata):
         """
         Return correct type of serializer for contact type.
 
-        :handle: Handle for contact
+        :eppdata: Handle for contact
         :person: PersonalDetail object to link to new handle
         :returns: registrant or contact handle object
 
         """
+        handle = eppdata["id"]
         contact_handle = self.related_handle_set.create(
             handle=handle,
             provider=self.provider
         )
-        return ContactHandleSerializer(
-            contact_handle,
-            context=self.context
-        )
+        return contact_handle
 
     def get_handle_id(self):
         """
@@ -108,4 +105,4 @@ class ContactHandleFactory(object):
         contact = Contact()
         response = contact.create(self.provider.slug, contact_info)
         log.info(response)
-        return self.create_local_handle(handle)
+        return self.create_local_handle(response)
