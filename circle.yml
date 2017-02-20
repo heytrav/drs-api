@@ -1,5 +1,10 @@
 machine:
   python:
     version: 3.6.0
+  services:
+    - mysql
   environment:
-    SQLITE_DIR: /tmp
+    MYSQL_DATABASE: circle_test
+    MYSQL_USER: ubuntu
+    MYSQL_HOST: 127.0.0.1
+    MYSQL_PORT: 3306
