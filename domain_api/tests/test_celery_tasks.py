@@ -60,7 +60,7 @@ class TestCheckDomainTask(TestCase):
                 check_domain("somedomain.tld", "test-registry")
 
 
-class DomainOperation(TestCase):
+class ContactOperation(TestCase):
 
     """
     Set up some basic stuff to handle a domain registration.
@@ -93,7 +93,7 @@ class DomainOperation(TestCase):
         )
 
 
-class TestCreateRegistrant(DomainOperation):
+class TestCreateRegistrant(ContactOperation):
 
     """
     Test creation of a regsitrant object.
@@ -117,7 +117,7 @@ class TestCreateRegistrant(DomainOperation):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=create_contact_response):
-            processed_epp = create_registrant(epp, 1, 'provider-one')
+            processed_epp = create_registrant(epp, self.joe_user.id, 'provider-one')
             self.assertIn('registrant',
                           processed_epp,
                           "Registrant added to epp")
@@ -140,10 +140,10 @@ class TestCreateRegistrant(DomainOperation):
                           'call',
                           side_effect=EppError("FAIL")):
             with self.assertRaises(EppError):
-                create_registrant({}, 1, 'provider-one')
+                create_registrant({}, self.joe_user.id, 'provider-one')
 
 
-class TestCreateContact(DomainOperation):
+class TestCreateContact(ContactOperation):
 
     """
     Test creation of a regsitrant object.
@@ -168,7 +168,7 @@ class TestCreateContact(DomainOperation):
                           'call',
                           return_value=create_contact_response):
             processed_epp = create_registry_contact(epp,
-                                                    1,
+                                                    self.joe_user.id,
                                                     'provider-one',
                                                     'tech')
             self.assertIn('contact',
@@ -197,7 +197,10 @@ class TestCreateContact(DomainOperation):
                           'call',
                           side_effect=EppError("FAIL")):
             with self.assertRaises(EppError):
-                create_registry_contact({}, 1, 'provider-one', 'admin')
+                create_registry_contact({},
+                                        self.joe_user.id,
+                                        'provider-one',
+                                        'admin')
 
 
 class TestConnectTask(TestCase):
