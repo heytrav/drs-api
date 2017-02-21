@@ -25,10 +25,10 @@ class DomainProviderAdmin(admin.ModelAdmin):
 
     fieldsets = [
         (None, {'fields': ['name']}),
+        ('Slug', {'fields': ['slug']}),
         ('Description', {'fields': ['description']})
     ]
     inlines = [TopLevelDomainProviderInline]
-
 
 
 admin.site.register(PersonalDetail)
