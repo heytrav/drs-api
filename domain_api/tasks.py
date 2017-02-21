@@ -2,19 +2,19 @@ from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 from django_logging import log, ErrorLogObject
 from .models import (
-    ContactHandle,
+    Contact,
     ContactType,
     Domain,
-    DomainHandles,
+    DomainContacts,
     DomainProvider,
     DomainRegistrant,
     PersonalDetail,
     RegisteredDomain,
-    RegistrantHandle,
+    Registrant,
     TopLevelDomain,
     TopLevelDomainProvider
 )
-from .entity_management.contacts import ContactHandleFactory
+from .entity_management.contacts import ContactFactory
 from .epp.actions.domain import Domain as DomainAction
 from .epp.queries import Domain as DomainQuery
 from .utilities.domain import parse_domain
@@ -55,7 +55,7 @@ def create_registrant(epp, person_id=None, registry=None, force=False):
     try:
         provider = DomainProvider.objects.get(slug=registry)
         person = PersonalDetail.objects.get(pk=person_id)
-        contact_manager = ContactHandleFactory(provider, person, 'registrant')
+        contact_manager = ContactFactory(provider, person, 'registrant')
         contact_handle = contact_manager.fetch_existing_handle()
         if not contact_handle or force:
             contact_handle = contact_manager.create_registry_contact()
@@ -82,7 +82,7 @@ def create_registry_contact(epp, person_id=None, registry=None, contact_type="co
 
     provider = DomainProvider.objects.get(slug=registry)
     person = PersonalDetail.objects.get(pk=person_id)
-    contact_manager = ContactHandleFactory(provider, person, 'contact')
+    contact_manager = ContactFactory(provider, person, 'contact')
     contact_handle = contact_manager.fetch_existing_handle()
     if not contact_handle or force:
         contact_handle = contact_manager.create_registry_contact()
@@ -140,7 +140,7 @@ def connect_domain(create_data):
             active=True
         )
         registered_domain.save()
-        registrant = RegistrantHandle.objects.get(handle=create_data["registrant"])
+        registrant = Registrant.objects.get(handle=create_data["registrant"])
         registered_domain.registrant.create(
             registrant=registrant,
             active=True,
@@ -148,7 +148,7 @@ def connect_domain(create_data):
         for item in create_data["contact"]:
             (con_type, handle), = item.items()
             contact_type = ContactType.objects.get(name=con_type)
-            contact_handle = ContactHandle.objects.get(handle=handle)
+            contact_handle = Contact.objects.get(handle=handle)
             registered_domain.contact_handles.create(
                 contact_handle=contact_handle,
                 contact_type=contact_type,

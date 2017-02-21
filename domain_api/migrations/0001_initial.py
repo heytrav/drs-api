@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='ContactHandle',
+            name='Contact',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('handle', models.CharField(max_length=200, unique=True)),
@@ -42,12 +42,12 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='DomainHandles',
+            name='DomainContacts',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('active', models.NullBooleanField()),
                 ('created', models.DateTimeField(auto_now_add=True)),
-                ('contact_handle', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='domain_api.ContactHandle')),
+                ('contact_handle', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='domain_api.Contact')),
                 ('contact_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='domain_api.ContactType')),
             ],
         ),
@@ -109,7 +109,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='RegistrantHandle',
+            name='Registrant',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('handle', models.CharField(max_length=200, unique=True)),
@@ -159,7 +159,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='domainregistrant',
             name='registrant',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='domain_api.RegistrantHandle'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='domain_api.Registrant'),
         ),
         migrations.AddField(
             model_name='domainhandles',

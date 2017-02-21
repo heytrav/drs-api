@@ -7,8 +7,8 @@ from domain_api.epp.entity import EppRpcClient
 from ..models import (
     PersonalDetail,
     DomainProvider,
-    ContactHandle,
-    RegistrantHandle
+    Contact,
+    Registrant
 )
 import domain_api
 
@@ -128,7 +128,7 @@ class TestCreateRegistrant(ContactOperation):
                 handle='tk429'
             ).first()
             self.assertIsInstance(contact_handle,
-                                  RegistrantHandle,
+                                  Registrant,
                                   'Created expected contact handle')
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
@@ -185,7 +185,7 @@ class TestCreateContact(ContactOperation):
                 handle='tk429'
             ).first()
             self.assertIsInstance(contact_handle,
-                                  ContactHandle,
+                                  Contact,
                                   'Created expected contact handle')
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)

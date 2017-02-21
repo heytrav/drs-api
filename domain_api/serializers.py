@@ -5,13 +5,13 @@ from domain_api.models import (
     TopLevelDomain,
     ContactType,
     DomainProvider,
-    RegistrantHandle,
-    ContactHandle,
+    Registrant,
+    Contact,
     TopLevelDomainProvider,
     Domain,
     RegisteredDomain,
     DomainRegistrant,
-    DomainHandles
+    DomainContacts
 )
 
 
@@ -93,7 +93,7 @@ class DomainProviderSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('name', 'description', 'slug', 'url')
 
 
-class RegistrantHandleSerializer(serializers.HyperlinkedModelSerializer):
+class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:registranthandle-detail",
         lookup_field="pk"
@@ -110,12 +110,12 @@ class RegistrantHandleSerializer(serializers.HyperlinkedModelSerializer):
     )
 
     class Meta:
-        model = RegistrantHandle
+        model = Registrant
         fields = ('person', 'provider', 'handle', 'created', 'updated',
                   'url')
 
 
-class ContactHandleSerializer(serializers.HyperlinkedModelSerializer):
+class ContactSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:contacthandle-detail",
         lookup_field="pk",
@@ -133,7 +133,7 @@ class ContactHandleSerializer(serializers.HyperlinkedModelSerializer):
     )
 
     class Meta:
-        model = ContactHandle
+        model = Contact
         fields = ('url', 'person', 'provider', 'handle',
                   'created', 'updated')
 
@@ -236,7 +236,7 @@ class DomainRegistrantSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('registered_domain', 'registrant', 'active', 'created', 'url')
 
 
-class DomainHandlesSerializer(serializers.HyperlinkedModelSerializer):
+class DomainContactsSerializer(serializers.HyperlinkedModelSerializer):
     registered_domain = serializers.HyperlinkedRelatedField(
         view_name="domain_api:registereddomain-detail",
         lookup_field="pk",
@@ -254,7 +254,7 @@ class DomainHandlesSerializer(serializers.HyperlinkedModelSerializer):
     )
 
     class Meta:
-        model = DomainHandles
+        model = DomainContacts
         fields = ('registered_domain', 'contact_type', 'contact_handle', 'active',
                   'created')
 
