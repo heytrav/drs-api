@@ -7,6 +7,13 @@ class PersonalDetail(models.Model):
     Person object in db.
     """
 
+    INT = 'int'
+    LOC = 'loc'
+    POSTAL_INFO_TYPES =(
+        (INT, 'international'),
+        (LOC, 'local'),
+    )
+
     first_name = models.CharField(max_length=200)
     surname = models.CharField(max_length=200)
     middle_name = models.CharField(max_length=200, blank=True)
@@ -28,6 +35,17 @@ class PersonalDetail(models.Model):
     country = models.CharField(max_length=2)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    postal_info_type = models.CharField(
+        max_length=3,
+        choices=POSTAL_INFO_TYPES,
+        default=LOC
+    )
+    disclose_name = models.BooleanField(default=True)
+    disclose_company = models.BooleanField(default=True)
+    disclose_address = models.BooleanField(default=True)
+    disclose_telephone = models.BooleanField(default=True)
+    disclose_fax = models.BooleanField(default=True)
+    disclose_email = models.BooleanField(default=True)
     project_id = models.ForeignKey('auth.User',
                                    related_name='personal_details',
                                    on_delete=models.CASCADE)

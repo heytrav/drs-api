@@ -17,7 +17,7 @@ from domain_api.models import (
     Contact,
     RegisteredDomain,
     DomainRegistrant,
-    DomainContacts,
+    DomainContact,
     TopLevelDomainProvider
 )
 from domain_api.serializers import (
@@ -295,7 +295,7 @@ class DomainRegistrantViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return DomainRegistrant.objects.all()
-        return DomainRegistrant.objects.filter(registrant__person__owner=user)
+        return DomainRegistrant.objects.filter(registrant__project_id=user)
 
 
 class DomainContactViewSet(viewsets.ModelViewSet):
@@ -312,4 +312,4 @@ class DomainContactViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return DomainContacts.objects.all()
-        return DomainContacts.objects.filter(contact_handle__person__owner=user)
+        return DomainContact.objects.filter(contact__project_id=user)

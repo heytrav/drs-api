@@ -1,6 +1,6 @@
 from django_logging import log
 from ..models import Contact, Registrant
-from domain_api.epp.actions.contact import Contact
+from domain_api.epp.actions.contact import ContactAction
 
 
 class ContactFactory(object):
@@ -25,9 +25,9 @@ class ContactFactory(object):
         self.person = person
         self.contact_type = contact_type
         if contact_type == 'contact':
-            self.related_handle_set = person.contacthandle_set
+            self.related_handle_set = person.contact_set
         elif contact_type == 'registrant':
-            self.related_handle_set = person.registranthandle_set
+            self.related_handle_set = person.registrant_set
 
     def fetch_existing_handle(self):
         """
@@ -36,8 +36,8 @@ class ContactFactory(object):
         :returns: str registry handle
 
         """
-        if self.related_handle_set.count() > 0:
-            return self.related_handle_set.first()
+        if self.related_contact_set.count() > 0:
+            return self.related_contact_set.first()
         return None
 
     def create_local_handle(self, eppdata):
@@ -49,12 +49,12 @@ class ContactFactory(object):
         :returns: registrant or contact handle object
 
         """
-        handle = eppdata["id"]
-        contact_handle = self.related_handle_set.create(
-            handle=handle,
+        contact = eppdata["id"]
+        contact = self.related_contact_set.create(
+            contact=contact,
             provider=self.provider
         )
-        return contact_handle
+        return contact
 
     def get_handle_id(self):
         """
@@ -80,7 +80,7 @@ class ContactFactory(object):
         :returns: serializer object
 
         """
-        handle = self.get_handle_id()
+        contact = self.get_contact_id()
         person = self.person
         street = [person.street1, person.street2, person.street3]
         postal_info = {
@@ -96,13 +96,13 @@ class ContactFactory(object):
             }
         }
         contact_info = {
-            "id": handle,
+            "id": contact,
             "voice": person.telephone,
             "fax": person.fax,
             "email": person.email,
             "postalInfo": postal_info
         }
-        contact = Contact()
+        contact = ContactAction()
         response = contact.create(self.provider.slug, contact_info)
         log.info(response)
-        return self.create_local_handle(response)
+        return self.create_local_contact(response)
