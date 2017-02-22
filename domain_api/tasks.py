@@ -128,11 +128,12 @@ def connect_domain(create_data):
             idn=parsed_domain["domain"]
         )
         tld_provider = TopLevelDomainProvider.objects.get(
-            zone=parsed_domain["zone"]
+            zone__zone=parsed_domain["zone"]
         )
+        tld = TopLevelDomain.objects.get(zone=parsed_domain["zone"])
         registered_domain = RegisteredDomain(
             domain=domain_obj,
-            tld=parsed_domain["zone"],
+            tld=tld,
             tld_provider=tld_provider,
             registration_period=1,
             anniversary=create_data["expiration_date"],

@@ -13,7 +13,7 @@ router.register(r'domain', views.DomainViewSet, "domain")
 router.register(r'registrant', views.RegistrantViewSet, "registrant")
 router.register(r'registered-domain', views.RegisteredDomainViewSet, "registereddomain")
 router.register(r'domain-registrant', views.DomainRegistrantViewSet, "domainregistrant")
-router.register(r'domain-contact', views.DomainContactViewSet, "domainhandles")
+router.register(r'domain-contact', views.DomainContactViewSet, "domaincontact")
 router.register(r'users', views.UserViewSet)
 
 urlpatterns = [

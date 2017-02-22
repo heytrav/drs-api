@@ -148,7 +148,7 @@ def register_domain(request):
     try:
         # See if this TLD is provided by one of our registries.
         tld_provider = TopLevelDomainProvider.objects.get(
-            zone=parsed_domain["zone"]
+            zone__zone=parsed_domain["zone"]
         )
         registry = tld_provider.provider.slug
         workflow_manager = workflow_factory(registry)()

@@ -1,3 +1,4 @@
+import uuid
 from django_logging import log
 from ..models import Contact, Registrant
 from domain_api.epp.actions.contact import Contact as ContactAction
@@ -62,14 +63,7 @@ class ContactFactory(object):
         :returns: string
 
         """
-        obj_id = None
-        if self.contact_type == "contact":
-            obj_id = Contact.objects.count() + 1
-        elif self.contact_type == "registrant":
-            obj_id = Registrant.objects.count() + 1
-
-        return "-".join([self.provider.slug[:3], self.contact_type[:3],
-                         str(obj_id)])
+        return str(uuid.uuid4())[:8]
 
     def create_registry_contact(self):
         """
