@@ -89,7 +89,7 @@ class ContactOperation(TestCase):
             city="Springfield",
             state="State",
             country="US",
-            owner=self.user
+            project_id=self.user
         )
 
 
@@ -124,10 +124,10 @@ class TestCreateRegistrant(ContactOperation):
             self.assertEqual('tk429',
                              processed_epp['registrant'],
                              "Registrant had handle id.")
-            contact = self.joe_user.registranthandle_set.filter(
+            contact = self.joe_user.project_id.registrants.filter(
                 registry_id='tk429'
             ).first()
-            self.assertIsInstance(contact_handle,
+            self.assertIsInstance(contact,
                                   Registrant,
                                   'Created expected contact handle')
 
@@ -181,7 +181,7 @@ class TestCreateContact(ContactOperation):
             self.assertEqual('tech',
                              contact_type,
                              "Added a tech contact to EPP")
-            contact = self.joe_user.contacthandle_set.filter(
+            contact = self.joe_user.project_id.contacts.filter(
                 registry_id='tk429'
             ).first()
             self.assertIsInstance(contact,

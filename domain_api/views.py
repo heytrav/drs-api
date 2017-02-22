@@ -33,7 +33,7 @@ from domain_api.serializers import (
     RegisteredDomainSerializer,
     CheckDomainResponseSerializer,
     DomainRegistrantSerializer,
-    DomainContactsSerializer,
+    DomainContactSerializer,
     InfoDomainSerializer,
 )
 from domain_api.filters import (
@@ -300,7 +300,7 @@ class DomainRegistrantViewSet(viewsets.ModelViewSet):
 
 class DomainContactViewSet(viewsets.ModelViewSet):
 
-    serializer_class = DomainContactsSerializer
+    serializer_class = DomainContactSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def get_queryset(self):
@@ -311,5 +311,5 @@ class DomainContactViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         if user.is_staff:
-            return DomainContacts.objects.all()
+            return DomainContact.objects.all()
         return DomainContact.objects.filter(contact__project_id=user)

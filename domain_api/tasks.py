@@ -5,7 +5,7 @@ from .models import (
     Contact,
     ContactType,
     Domain,
-    DomainContacts,
+    DomainContact,
     DomainProvider,
     DomainRegistrant,
     PersonalDetail,

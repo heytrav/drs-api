@@ -10,7 +10,7 @@ from .models import (
     Registrant,
     Contact,
     DomainRegistrant,
-    DomainContacts,
+    DomainContact,
 )
 
 
@@ -39,4 +39,4 @@ admin.site.register(RegisteredDomain)
 admin.site.register(Registrant)
 admin.site.register(Contact)
 admin.site.register(DomainRegistrant)
-admin.site.register(DomainContacts)
+admin.site.register(DomainContact)

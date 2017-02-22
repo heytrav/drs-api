@@ -1,6 +1,6 @@
 from django_logging import log
 from ..models import Contact, Registrant
-from domain_api.epp.actions.contact import ContactAction
+from domain_api.epp.actions.contact import Contact as ContactAction
 
 
 class ContactFactory(object):
@@ -25,11 +25,11 @@ class ContactFactory(object):
         self.person = person
         self.contact_type = contact_type
         if contact_type == 'contact':
-            self.related_handle_set = person.contact_set
+            self.related_contact_set = person.project_id.contacts
         elif contact_type == 'registrant':
-            self.related_handle_set = person.registrant_set
+            self.related_contact_set = person.project_id.registrants
 
-    def fetch_existing_handle(self):
+    def fetch_existing_contact(self):
         """
         Check if the person has an existing handle at a provider and return it
         if it does.
@@ -40,7 +40,7 @@ class ContactFactory(object):
             return self.related_contact_set.first()
         return None
 
-    def create_local_handle(self, eppdata):
+    def create_local_contact(self, eppdata):
         """
         Return correct type of serializer for contact type.
 
@@ -49,14 +49,14 @@ class ContactFactory(object):
         :returns: registrant or contact handle object
 
         """
-        contact = eppdata["id"]
+        registry_id = eppdata["id"]
         contact = self.related_contact_set.create(
-            contact=contact,
+            registry_id=registry_id,
             provider=self.provider
         )
         return contact
 
-    def get_handle_id(self):
+    def get_registry_id(self):
         """
         Return a generic handle string.
         :returns: string
@@ -80,7 +80,7 @@ class ContactFactory(object):
         :returns: serializer object
 
         """
-        contact = self.get_contact_id()
+        contact = self.get_registry_id()
         person = self.person
         street = [person.street1, person.street2, person.street3]
         postal_info = {

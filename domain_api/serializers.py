@@ -11,7 +11,7 @@ from domain_api.models import (
     Domain,
     RegisteredDomain,
     DomainRegistrant,
-    DomainContacts
+    DomainContact
 )
 
 
@@ -247,7 +247,7 @@ class DomainRegistrantSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('registered_domain', 'registrant', 'active', 'created', 'url')
 
 
-class DomainContactsSerializer(serializers.HyperlinkedModelSerializer):
+class DomainContactSerializer(serializers.HyperlinkedModelSerializer):
     registered_domain = serializers.HyperlinkedRelatedField(
         view_name="domain_api:registereddomain-detail",
         lookup_field="pk",
@@ -265,7 +265,7 @@ class DomainContactsSerializer(serializers.HyperlinkedModelSerializer):
     )
 
     class Meta:
-        model = DomainContacts
+        model = DomainContact
         fields = ('registered_domain', 'contact_type', 'contact', 'active',
                   'created')
 
