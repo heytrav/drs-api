@@ -23,3 +23,7 @@ class InvalidTld(Exception):
 
 class NoTldManager(Exception):
     pass
+
+
+class UnknownContact(Exception):
+    pass

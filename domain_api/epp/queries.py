@@ -1,4 +1,6 @@
 from django_logging import log
+from ..exceptions import UnknownContact
+from ..models import Contact as ContactModel, Registrant as RegistrantModel
 from .entity import EppEntity
 
 
@@ -149,7 +151,7 @@ class Contact(EppEntity):
             }
         }
 
-    def info(self, registry, contact):
+    def info(self, registry_id):
         """
         Fetch info for a contact
 
@@ -158,6 +160,18 @@ class Contact(EppEntity):
         :returns: dict of contact information
 
         """
+        try:
+            contact = ContactModel.objects.get(registry_id=registry_id)
+        except ContactModel.DoesNotExist:
+            try:
+                contact = RegistrantModel.objects.get(registry_id=registry_id)
+            except RegistrantModel.DoesNotExist:
+                log.warn({"contact": registry_id,
+                          "message": "infoContact for unknown contact"})
+                raise UnknownContact("Contact does not exist.")
+
+
+        registry = contact.provider.slug
         data = {"contact": contact}
         response_data = self.rpc_client.call(registry, 'infoContact', data)
         log.debug(response_data)

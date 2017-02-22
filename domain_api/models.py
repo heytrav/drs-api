@@ -1,5 +1,4 @@
 from django.db import models
-import uuid
 
 
 class PersonalDetail(models.Model):
@@ -104,6 +103,40 @@ class Registrant(models.Model):
     project_id = models.ForeignKey('auth.User',
                                    related_name='registrants',
                                    on_delete=models.CASCADE)
+
+    INT = 'int'
+    LOC = 'loc'
+    POSTAL_INFO_TYPES =(
+        (INT, 'international'),
+        (LOC, 'local'),
+    )
+    name = models.CharField(max_length=200, null=True)
+    email = models.CharField(max_length=200, null=True)
+    telephone = models.CharField(max_length=200, null=True, blank=True)
+    fax = models.CharField(max_length=200, null=True, blank=True)
+    company = models.CharField(max_length=200, null=True, blank=True)
+    house_number = models.CharField(max_length=10, null=True, blank=True)
+    street1 = models.CharField(max_length=200, null=True)
+    street2 = models.CharField(max_length=200, null=True, blank=True)
+    street3 = models.CharField(max_length=200, null=True, blank=True)
+    city = models.CharField(max_length=200, null=True)
+    suburb = models.CharField(max_length=200, null=True, blank=True)
+    state = models.CharField(max_length=200, null=True, blank=True)
+    postcode = models.CharField(max_length=20, null=True)
+    # Must be a 2 letter country code.
+    country = models.CharField(max_length=2, null=True)
+    postal_info_type = models.CharField(
+        max_length=3,
+        choices=POSTAL_INFO_TYPES,
+        default=LOC
+    )
+    authcode = models.CharField(max_length=100, null=True, blank=True)
+    disclose_name = models.BooleanField(default=False)
+    disclose_company = models.BooleanField(default=False)
+    disclose_address = models.BooleanField(default=False)
+    disclose_telephone = models.BooleanField(default=False)
+    disclose_fax = models.BooleanField(default=False)
+    disclose_email = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -112,6 +145,39 @@ class Contact(models.Model):
     """
     Registry identifier for a contact registry_id.
     """
+    INT = 'int'
+    LOC = 'loc'
+    POSTAL_INFO_TYPES =(
+        (INT, 'international'),
+        (LOC, 'local'),
+    )
+    name = models.CharField(max_length=200, null=True)
+    email = models.CharField(max_length=200, null=True)
+    telephone = models.CharField(max_length=200, null=True, blank=True)
+    fax = models.CharField(max_length=200, null=True, blank=True)
+    company = models.CharField(max_length=200, null=True, blank=True)
+    house_number = models.CharField(max_length=10, null=True, blank=True)
+    street1 = models.CharField(max_length=200, null=True)
+    street2 = models.CharField(max_length=200, null=True, blank=True)
+    street3 = models.CharField(max_length=200, null=True, blank=True)
+    city = models.CharField(max_length=200, null=True)
+    suburb = models.CharField(max_length=200, null=True, blank=True)
+    state = models.CharField(max_length=200, null=True, blank=True)
+    postcode = models.CharField(max_length=20, null=True)
+    # Must be a 2 letter country code.
+    country = models.CharField(max_length=2, null=True)
+    postal_info_type = models.CharField(
+        max_length=3,
+        choices=POSTAL_INFO_TYPES,
+        default=LOC
+    )
+    authcode = models.CharField(max_length=100, null=True, blank=True)
+    disclose_name = models.BooleanField(default=False)
+    disclose_company = models.BooleanField(default=False)
+    disclose_address = models.BooleanField(default=False)
+    disclose_telephone = models.BooleanField(default=False)
+    disclose_fax = models.BooleanField(default=False)
+    disclose_email = models.BooleanField(default=False)
     provider = models.ForeignKey(DomainProvider)
     # Id from provider
     registry_id = models.CharField(max_length=200, unique=True)
