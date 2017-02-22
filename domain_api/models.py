@@ -7,6 +7,13 @@ class PersonalDetail(models.Model):
     Person object in db.
     """
 
+    INT = 'int'
+    LOC = 'loc'
+    POSTAL_INFO_TYPES =(
+        (INT, 'international'),
+        (LOC, 'local'),
+    )
+
     first_name = models.CharField(max_length=200)
     surname = models.CharField(max_length=200)
     middle_name = models.CharField(max_length=200, blank=True)
@@ -28,9 +35,20 @@ class PersonalDetail(models.Model):
     country = models.CharField(max_length=2)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    owner = models.ForeignKey('auth.User',
-                              related_name='personal_details',
-                              on_delete=models.CASCADE)
+    postal_info_type = models.CharField(
+        max_length=3,
+        choices=POSTAL_INFO_TYPES,
+        default=LOC
+    )
+    disclose_name = models.BooleanField(default=True)
+    disclose_company = models.BooleanField(default=True)
+    disclose_address = models.BooleanField(default=True)
+    disclose_telephone = models.BooleanField(default=True)
+    disclose_fax = models.BooleanField(default=True)
+    disclose_email = models.BooleanField(default=True)
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='personal_details',
+                                   on_delete=models.CASCADE)
 
     def __str__(self):
         return self.surname + ', ' + self.first_name
@@ -74,28 +92,32 @@ class DomainProvider(models.Model):
         return self.name
 
 
-class RegistrantHandle(models.Model):
+class Registrant(models.Model):
     """
     Registry identifier for a registrant contact.
 
     This type of contact can only be a registrant for a domain.
     """
-    person = models.ForeignKey(PersonalDetail)
     provider = models.ForeignKey(DomainProvider)
     # Id from provider
-    handle = models.CharField(max_length=200, unique=True)
+    registry_id = models.CharField(max_length=200, unique=True)
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='registrants',
+                                   on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
 
-class ContactHandle(models.Model):
+class Contact(models.Model):
     """
-    Registry identifier for a contact handle.
+    Registry identifier for a contact registry_id.
     """
-    person = models.ForeignKey(PersonalDetail)
     provider = models.ForeignKey(DomainProvider)
     # Id from provider
-    handle = models.CharField(max_length=200, unique=True)
+    registry_id = models.CharField(max_length=200, unique=True)
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='contacts',
+                                   on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -168,7 +190,7 @@ class DomainRegistrant(models.Model):
     """
     registered_domain = models.ForeignKey(RegisteredDomain,
                                           related_name="registrant")
-    registrant = models.ForeignKey(RegistrantHandle)
+    registrant = models.ForeignKey(Registrant)
     active = models.NullBooleanField(null=True)
     created = models.DateTimeField(auto_now_add=True)
 
@@ -176,17 +198,17 @@ class DomainRegistrant(models.Model):
         unique_together = ('registered_domain', 'registrant', 'active')
 
 
-class DomainHandles(models.Model):
+class DomainContact(models.Model):
     """
-    Contacts associated with a domain. A domain can have several contact handles
+    Contact associated with a domain. A domain can have several contact registry_ids
     (depending on the registry).
     """
     registered_domain = models.ForeignKey(RegisteredDomain,
-                                          related_name='contact_handles')
-    contact_handle = models.ForeignKey(ContactHandle)
+                                          related_name='contacts')
+    contact = models.ForeignKey(Contact)
     contact_type = models.ForeignKey(ContactType)
     active = models.NullBooleanField(null=True)
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('registered_domain', 'contact_type', 'contact_handle', 'active')
+        unique_together = ('registered_domain', 'contact_type', 'contact', 'active')

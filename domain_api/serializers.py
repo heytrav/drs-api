@@ -5,13 +5,13 @@ from domain_api.models import (
     TopLevelDomain,
     ContactType,
     DomainProvider,
-    RegistrantHandle,
-    ContactHandle,
+    Registrant,
+    Contact,
     TopLevelDomainProvider,
     Domain,
     RegisteredDomain,
     DomainRegistrant,
-    DomainHandles
+    DomainContact
 )
 
 
@@ -20,7 +20,7 @@ class PersonalDetailSerializer(serializers.HyperlinkedModelSerializer):
     """
     Serializer for PersonalDetails
     """
-    owner = serializers.HyperlinkedRelatedField(
+    project_id = serializers.HyperlinkedRelatedField(
         view_name="domain_api:user-detail",
         lookup_field="pk",
         read_only=True
@@ -34,8 +34,9 @@ class PersonalDetailSerializer(serializers.HyperlinkedModelSerializer):
         model = PersonalDetail
         fields = ('url', 'first_name', 'surname', 'middle_name', 'email', 'email2', 'email3',
                   'telephone', 'fax', 'company', 'house_number', 'street1', 'street2', 'street3',
-                  'city', 'suburb', 'state', 'postcode', 'country',
-                  'created', 'updated', 'owner',)
+                  'city', 'suburb', 'state', 'postcode', 'country', 'postal_info_type',
+                  'disclose_name', 'disclose_company', 'disclose_address', 'disclose_telephone',
+                  'disclose_fax', 'disclose_email', 'created', 'updated', 'project_id',)
 
 
 
@@ -93,9 +94,9 @@ class DomainProviderSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('name', 'description', 'slug', 'url')
 
 
-class RegistrantHandleSerializer(serializers.HyperlinkedModelSerializer):
+class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name="domain_api:registranthandle-detail",
+        view_name="domain_api:registrant-detail",
         lookup_field="pk"
     )
     person = serializers.HyperlinkedRelatedField(
@@ -108,16 +109,21 @@ class RegistrantHandleSerializer(serializers.HyperlinkedModelSerializer):
         lookup_field="pk",
         read_only=True
     )
+    project_id = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
-        model = RegistrantHandle
-        fields = ('person', 'provider', 'handle', 'created', 'updated',
-                  'url')
+        model = Registrant
+        fields = ('person', 'provider', 'registry_id', 'created', 'updated',
+                  'url', 'project_id')
 
 
-class ContactHandleSerializer(serializers.HyperlinkedModelSerializer):
+class ContactSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name="domain_api:contacthandle-detail",
+        view_name="domain_api:contact-detail",
         lookup_field="pk",
         read_only=True
     )
@@ -131,11 +137,16 @@ class ContactHandleSerializer(serializers.HyperlinkedModelSerializer):
         lookup_field="pk",
         read_only=True
     )
+    project_id = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
 
     class Meta:
-        model = ContactHandle
-        fields = ('url', 'person', 'provider', 'handle',
-                  'created', 'updated')
+        model = Contact
+        fields = ('url', 'person', 'provider', 'registry_id',
+                  'created', 'updated', 'project_id')
 
 
 class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
@@ -203,8 +214,8 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
         many=True,
         read_only=True
     )
-    contact_handles = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:domainhandles-detail",
+    contacts = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:domaincontacts-detail",
         many=True,
         read_only=True
     )
@@ -212,7 +223,7 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
         model = RegisteredDomain
         fields = ('domain', 'tld', 'tld_provider', 'active', 'auto_renew',
                   'registration_period', 'anniversary', 'created',
-                  'updated','registrant', 'contact_handles', 'url')
+                  'updated','registrant', 'contacts', 'url')
 
 
 class DomainRegistrantSerializer(serializers.HyperlinkedModelSerializer):
@@ -226,7 +237,7 @@ class DomainRegistrantSerializer(serializers.HyperlinkedModelSerializer):
         read_only=True
     )
     registrant = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:registranthandle-detail",
+        view_name="domain_api:registrant-detail",
         lookup_field="pk",
         read_only=True
     )
@@ -236,14 +247,14 @@ class DomainRegistrantSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('registered_domain', 'registrant', 'active', 'created', 'url')
 
 
-class DomainHandlesSerializer(serializers.HyperlinkedModelSerializer):
+class DomainContactSerializer(serializers.HyperlinkedModelSerializer):
     registered_domain = serializers.HyperlinkedRelatedField(
         view_name="domain_api:registereddomain-detail",
         lookup_field="pk",
         read_only=True
     )
-    contact_handle = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:contacthandle-detail",
+    contact = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:contact-detail",
         lookup_field="pk",
         read_only=True
     )
@@ -254,8 +265,8 @@ class DomainHandlesSerializer(serializers.HyperlinkedModelSerializer):
     )
 
     class Meta:
-        model = DomainHandles
-        fields = ('registered_domain', 'contact_type', 'contact_handle', 'active',
+        model = DomainContact
+        fields = ('registered_domain', 'contact_type', 'contact', 'active',
                   'created')
 
 
@@ -269,7 +280,7 @@ class CheckDomainResponseSerializer(serializers.Serializer):
 
 
 class HandleTypeSerializer(serializers.Serializer):
-    handle = serializers.CharField(required=True, allow_blank=False)
+    contact = serializers.CharField(required=True, allow_blank=False)
     contact_type = serializers.CharField(required=True, allow_blank=False)
 
 

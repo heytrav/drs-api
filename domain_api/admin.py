@@ -7,10 +7,10 @@ from .models import (
     TopLevelDomainProvider,
     Domain,
     RegisteredDomain,
-    RegistrantHandle,
-    ContactHandle,
+    Registrant,
+    Contact,
     DomainRegistrant,
-    DomainHandles,
+    DomainContact,
 )
 
 
@@ -36,7 +36,7 @@ admin.site.register(TopLevelDomain)
 admin.site.register(DomainProvider, DomainProviderAdmin)
 admin.site.register(Domain)
 admin.site.register(RegisteredDomain)
-admin.site.register(RegistrantHandle)
-admin.site.register(ContactHandle)
+admin.site.register(Registrant)
+admin.site.register(Contact)
 admin.site.register(DomainRegistrant)
-admin.site.register(DomainHandles)
+admin.site.register(DomainContact)

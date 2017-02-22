@@ -2,19 +2,19 @@ from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 from django_logging import log, ErrorLogObject
 from .models import (
-    ContactHandle,
+    Contact,
     ContactType,
     Domain,
-    DomainHandles,
+    DomainContact,
     DomainProvider,
     DomainRegistrant,
     PersonalDetail,
     RegisteredDomain,
-    RegistrantHandle,
+    Registrant,
     TopLevelDomain,
     TopLevelDomainProvider
 )
-from .entity_management.contacts import ContactHandleFactory
+from .entity_management.contacts import ContactFactory
 from .epp.actions.domain import Domain as DomainAction
 from .epp.queries import Domain as DomainQuery
 from .utilities.domain import parse_domain
@@ -55,11 +55,11 @@ def create_registrant(epp, person_id=None, registry=None, force=False):
     try:
         provider = DomainProvider.objects.get(slug=registry)
         person = PersonalDetail.objects.get(pk=person_id)
-        contact_manager = ContactHandleFactory(provider, person, 'registrant')
-        contact_handle = contact_manager.fetch_existing_handle()
-        if not contact_handle or force:
-            contact_handle = contact_manager.create_registry_contact()
-        epp["registrant"] = contact_handle.handle
+        contact_manager = ContactFactory(provider, person, 'registrant')
+        contact = contact_manager.fetch_existing_contact()
+        if not contact or force:
+            contact = contact_manager.create_registry_contact()
+        epp["registrant"] = contact.registry_id
     except Exception as e:
         log.error({"error": e})
         raise e
@@ -82,14 +82,14 @@ def create_registry_contact(epp, person_id=None, registry=None, contact_type="co
 
     provider = DomainProvider.objects.get(slug=registry)
     person = PersonalDetail.objects.get(pk=person_id)
-    contact_manager = ContactHandleFactory(provider, person, 'contact')
-    contact_handle = contact_manager.fetch_existing_handle()
-    if not contact_handle or force:
-        contact_handle = contact_manager.create_registry_contact()
+    contact_manager = ContactFactory(provider, person, 'contact')
+    contact_obj = contact_manager.fetch_existing_contact()
+    if not contact_obj or force:
+        contact_obj = contact_manager.create_registry_contact()
 
-    log.info({"contact_handle": contact_handle.handle})
+    log.info({"contact_handle": contact_obj.registry_id})
     contact = {}
-    contact[contact_type] = contact_handle.handle
+    contact[contact_type] = contact_obj.registry_id
     contacts.append(contact)
     epp["contact"] = contacts
     return epp
@@ -118,7 +118,7 @@ def connect_domain(create_data):
     Connect the newly created domain in our database.
 
     :create_data: The epp request and response information
-    :returns: TODO
+    :returns: dict with EPP response
 
     """
     try:
@@ -140,17 +140,17 @@ def connect_domain(create_data):
             active=True
         )
         registered_domain.save()
-        registrant = RegistrantHandle.objects.get(handle=create_data["registrant"])
+        registrant = Registrant.objects.get(registry_id=create_data["registrant"])
         registered_domain.registrant.create(
             registrant=registrant,
             active=True,
         )
         for item in create_data["contact"]:
-            (con_type, handle), = item.items()
+            (con_type, registry_id), = item.items()
             contact_type = ContactType.objects.get(name=con_type)
-            contact_handle = ContactHandle.objects.get(handle=handle)
-            registered_domain.contact_handles.create(
-                contact_handle=contact_handle,
+            contact = Contact.objects.get(registry_id=registry_id)
+            registered_domain.contacts.create(
+                contact=contact,
                 contact_type=contact_type,
                 active=True
             )

@@ -1,9 +1,9 @@
 from django_logging import log
-from ..models import ContactHandle, RegistrantHandle
-from domain_api.epp.actions.contact import Contact
+from ..models import Contact, Registrant
+from domain_api.epp.actions.contact import Contact as ContactAction
 
 
-class ContactHandleFactory(object):
+class ContactFactory(object):
 
     """
     Create a registrant or contact handle at a registry.
@@ -25,22 +25,22 @@ class ContactHandleFactory(object):
         self.person = person
         self.contact_type = contact_type
         if contact_type == 'contact':
-            self.related_handle_set = person.contacthandle_set
+            self.related_contact_set = person.project_id.contacts
         elif contact_type == 'registrant':
-            self.related_handle_set = person.registranthandle_set
+            self.related_contact_set = person.project_id.registrants
 
-    def fetch_existing_handle(self):
+    def fetch_existing_contact(self):
         """
         Check if the person has an existing handle at a provider and return it
         if it does.
         :returns: str registry handle
 
         """
-        if self.related_handle_set.count() > 0:
-            return self.related_handle_set.first()
+        if self.related_contact_set.count() > 0:
+            return self.related_contact_set.first()
         return None
 
-    def create_local_handle(self, eppdata):
+    def create_local_contact(self, eppdata):
         """
         Return correct type of serializer for contact type.
 
@@ -49,14 +49,14 @@ class ContactHandleFactory(object):
         :returns: registrant or contact handle object
 
         """
-        handle = eppdata["id"]
-        contact_handle = self.related_handle_set.create(
-            handle=handle,
+        registry_id = eppdata["id"]
+        contact = self.related_contact_set.create(
+            registry_id=registry_id,
             provider=self.provider
         )
-        return contact_handle
+        return contact
 
-    def get_handle_id(self):
+    def get_registry_id(self):
         """
         Return a generic handle string.
         :returns: string
@@ -64,9 +64,9 @@ class ContactHandleFactory(object):
         """
         obj_id = None
         if self.contact_type == "contact":
-            obj_id = ContactHandle.objects.count() + 1
+            obj_id = Contact.objects.count() + 1
         elif self.contact_type == "registrant":
-            obj_id = RegistrantHandle.objects.count() + 1
+            obj_id = Registrant.objects.count() + 1
 
         return "-".join([self.provider.slug[:3], self.contact_type[:3],
                          str(obj_id)])
@@ -80,7 +80,7 @@ class ContactHandleFactory(object):
         :returns: serializer object
 
         """
-        handle = self.get_handle_id()
+        contact = self.get_registry_id()
         person = self.person
         street = [person.street1, person.street2, person.street3]
         postal_info = {
@@ -96,13 +96,13 @@ class ContactHandleFactory(object):
             }
         }
         contact_info = {
-            "id": handle,
+            "id": contact,
             "voice": person.telephone,
             "fax": person.fax,
             "email": person.email,
             "postalInfo": postal_info
         }
-        contact = Contact()
+        contact = ContactAction()
         response = contact.create(self.provider.slug, contact_info)
         log.info(response)
-        return self.create_local_handle(response)
+        return self.create_local_contact(response)

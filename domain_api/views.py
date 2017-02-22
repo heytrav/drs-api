@@ -13,27 +13,27 @@ from domain_api.models import (
     ContactType,
     TopLevelDomain,
     DomainProvider,
-    RegistrantHandle,
-    ContactHandle,
+    Registrant,
+    Contact,
     RegisteredDomain,
     DomainRegistrant,
-    DomainHandles,
+    DomainContact,
     TopLevelDomainProvider
 )
 from domain_api.serializers import (
     UserSerializer,
     PersonalDetailSerializer,
     ContactTypeSerializer,
-    ContactHandleSerializer,
+    ContactSerializer,
     TopLevelDomainSerializer,
     TopLevelDomainProviderSerializer,
     DomainProviderSerializer,
-    RegistrantHandleSerializer,
+    RegistrantSerializer,
     DomainSerializer,
     RegisteredDomainSerializer,
     CheckDomainResponseSerializer,
     DomainRegistrantSerializer,
-    DomainHandlesSerializer,
+    DomainContactSerializer,
     InfoDomainSerializer,
 )
 from domain_api.filters import (
@@ -43,7 +43,7 @@ from .epp.queries import Domain as DomainQuery
 from .exceptions import (
     EppError,
 )
-from domain_api.entity_management.contacts import ContactHandleFactory
+from domain_api.entity_management.contacts import ContactFactory
 from domain_api.utilities.domain import parse_domain
 from .workflows import workflow_factory
 
@@ -115,13 +115,13 @@ def registry_contact(request, registry, contact_type="contact"):
     else:
         serializer = PersonalDetailSerializer(data=data)
         if serializer.is_valid():
-            person = serializer.save(owner=request.user)
+            person = serializer.save(project_id=request.user)
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        contact_factory = ContactHandleFactory(provider,
+        contact_factory = ContactFactory(provider,
                                                contact_type,
                                                context={"request": request})
         serializer = contact_factory.create_registry_contact(person)
@@ -175,7 +175,7 @@ class PersonalDetailViewSet(viewsets.ModelViewSet):
                           permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.save(project_id=self.request.user)
 
     def get_queryset(self):
         """
@@ -186,7 +186,7 @@ class PersonalDetailViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return PersonalDetail.objects.all()
-        return PersonalDetail.objects.filter(owner=user)
+        return PersonalDetail.objects.filter(project_id=user)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -229,16 +229,27 @@ class DomainProviderViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
 
-class ContactHandleViewSet(viewsets.ModelViewSet):
+class ContactViewSet(viewsets.ModelViewSet):
     """
     Contact handles.
     """
 
-    serializer_class = ContactHandleSerializer
+    serializer_class = ContactSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,
                           permissions.IsAuthenticated)
-    queryset = ContactHandle.objects.all()
     filter_backends = (IsPersonFilterBackend,)
+
+    def get_queryset(self):
+        """
+        Override to make sure that this only returns personal details that
+        belong to logged in user.
+        :returns: Filtered set of personal detail objects.
+
+        """
+        user = self.request.user
+        if user.is_staff:
+            return Contact.objects.all()
+        return Contact.objects.filter(project_id=user)
 
 
 class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
@@ -248,9 +259,9 @@ class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAdminUser,)
 
 
-class RegistrantHandleViewSet(viewsets.ModelViewSet):
+class RegistrantViewSet(viewsets.ModelViewSet):
 
-    serializer_class = RegistrantHandleSerializer
+    serializer_class = RegistrantSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
@@ -262,8 +273,8 @@ class RegistrantHandleViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         if user.is_staff:
-            return RegistrantHandle.objects.all()
-        return RegistrantHandle.objects.filter(person__owner=user)
+            return Registrant.objects.all()
+        return Registrant.objects.filter(project_id=user)
 
 
 class DomainViewSet(viewsets.ModelViewSet):
@@ -295,21 +306,21 @@ class DomainRegistrantViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return DomainRegistrant.objects.all()
-        return DomainRegistrant.objects.filter(registrant__person__owner=user)
+        return DomainRegistrant.objects.filter(registrant__project_id=user)
 
 
-class DomainHandleViewSet(viewsets.ModelViewSet):
+class DomainContactViewSet(viewsets.ModelViewSet):
 
-    serializer_class = DomainHandlesSerializer
+    serializer_class = DomainContactSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def get_queryset(self):
         """
         Filter domain handles on logged in user.
-        :returns: Set of DomainHandle objects filtered by customer
+        :returns: Set of DomainContact objects filtered by customer
 
         """
         user = self.request.user
         if user.is_staff:
-            return DomainHandles.objects.all()
-        return DomainHandles.objects.filter(contact_handle__person__owner=user)
+            return DomainContact.objects.all()
+        return DomainContact.objects.filter(contact__project_id=user)
