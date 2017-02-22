@@ -118,7 +118,7 @@ def connect_domain(create_data):
     Connect the newly created domain in our database.
 
     :create_data: The epp request and response information
-    :returns: TODO
+    :returns: dict with EPP response
 
     """
     try:

@@ -115,7 +115,7 @@ def registry_contact(request, registry, contact_type="contact"):
     else:
         serializer = PersonalDetailSerializer(data=data)
         if serializer.is_valid():
-            person = serializer.save(owner=request.user)
+            person = serializer.save(project_id=request.user)
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
@@ -175,7 +175,7 @@ class PersonalDetailViewSet(viewsets.ModelViewSet):
                           permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.save(project_id=self.request.user)
 
     def get_queryset(self):
         """
@@ -186,7 +186,7 @@ class PersonalDetailViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return PersonalDetail.objects.all()
-        return PersonalDetail.objects.filter(owner=user)
+        return PersonalDetail.objects.filter(project_id=user)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -237,8 +237,19 @@ class ContactViewSet(viewsets.ModelViewSet):
     serializer_class = ContactSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,
                           permissions.IsAuthenticated)
-    queryset = Contact.objects.all()
     filter_backends = (IsPersonFilterBackend,)
+
+    def get_queryset(self):
+        """
+        Override to make sure that this only returns personal details that
+        belong to logged in user.
+        :returns: Filtered set of personal detail objects.
+
+        """
+        user = self.request.user
+        if user.is_staff:
+            return Contact.objects.all()
+        return Contact.objects.filter(project_id=user)
 
 
 class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
@@ -263,7 +274,7 @@ class RegistrantViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return Registrant.objects.all()
-        return Registrant.objects.filter(person__owner=user)
+        return Registrant.objects.filter(project_id=user)
 
 
 class DomainViewSet(viewsets.ModelViewSet):
