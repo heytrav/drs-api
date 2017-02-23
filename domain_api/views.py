@@ -35,11 +35,12 @@ from domain_api.serializers import (
     DomainRegistrantSerializer,
     DomainContactSerializer,
     InfoDomainSerializer,
+    InfoContactSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
 )
-from .epp.queries import Domain as DomainQuery
+from .epp.queries import Domain as DomainQuery, Contact as ContactQuery
 from .exceptions import (
     EppError,
 )
@@ -81,6 +82,32 @@ def info_domain(request, registry, domain, format=None):
         query = DomainQuery()
         info = query.info(registry, domain, is_staff=request.user.is_staff)
         serializer = InfoDomainSerializer(data=info)
+        log.info(info)
+        if serializer.is_valid():
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+    except EppError as epp_e:
+        log.error(ErrorLogObject(request, epp_e))
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        log.error(ErrorLogObject(request, e))
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def info_contact(request, contact, format=None):
+    """
+    Query EPP with a infoContact request.
+    :returns: JSON response with details about a contact
+
+    """
+    try:
+        query = ContactQuery()
+        info = query.info(contact)
+        serializer = InfoContactSerializer(data=info)
         log.info(info)
         if serializer.is_valid():
             return Response(serializer.data)

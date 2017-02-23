@@ -142,9 +142,7 @@ class Contact(EppEntity):
             "name": item["contact:name"],
             "company": item.get("contact:org", ""),
             "postal_info_type": item["type"],
-            "street1": contact_street[0],
-            "street2": contact_street[1],
-            "street3": " ".join(contact_street[2:]),
+            "street1": " ".join(contact_street),
             "country": addr["contact:cc"],
             "state": addr["contact:sp"],
             "city": addr["contact:city"],
@@ -160,11 +158,13 @@ class Contact(EppEntity):
         :returns: dict of contact information
 
         """
+        queryset = ContactModel.objects
         try:
-            contact = ContactModel.objects.get(registry_id=registry_id)
+            contact = queryset.get(registry_id=registry_id)
         except ContactModel.DoesNotExist:
             try:
-                contact = RegistrantModel.objects.get(registry_id=registry_id)
+                queryset = RegistrantModel.objects
+                contact = queryset.get(registry_id=registry_id)
             except RegistrantModel.DoesNotExist:
                 log.warn({"contact": registry_id,
                           "message": "infoContact for unknown contact"})
@@ -172,14 +172,14 @@ class Contact(EppEntity):
 
 
         registry = contact.provider.slug
-        data = {"contact": contact}
+        data = {"contact": registry_id}
         response_data = self.rpc_client.call(registry, 'infoContact', data)
         log.debug(response_data)
         info_data = response_data["contact:infData"]
 
         processed_postal_info = self.process_postal_info(
             info_data["contact:postalInfo"]
-        )
+        )[0]
         processed_info_data = {
             "email": info_data["contact:email"],
             "fax": info_data.get("contact:fax", ""),
@@ -188,7 +188,11 @@ class Contact(EppEntity):
         }
         try:
             contact_info_data = {**processed_postal_info, **processed_info_data}
-            contact.update(**contact_info_data)
+            for item, value in contact_info_data.items():
+                if isinstance(value, dict):
+                    contact_info_data[item] = ""
+
+            queryset.filter(pk=contact.id).update(**contact_info_data)
             log.info(contact_info_data)
         except Exception as e:
             log.error({"error": e});

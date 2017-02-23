@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^', include(router.urls, namespace='domain_api')),
     url(r'^check-domain/(?P<registry>[^\/]+)/(?P<domain>.*)/$', views.check_domain),
     url(r'^info-domain/(?P<registry>[^\/]+)/(?P<domain>.*)/$', views.info_domain),
+    url(r'^info-contact/(?P<contact>.*)/$', views.info_contact),
     url(r'^registry-contact/$', views.registry_contact),
     url(r'^registry-contact/(?P<registry>.*)/(?P<contact_type>.*)/$', views.registry_contact),
     url(r'^register-domain/$', views.register_domain),

@@ -291,3 +291,24 @@ class InfoDomainSerializer(serializers.Serializer):
     status = serializers.DictField(child=serializers.CharField())
     auth_info = serializers.CharField(required=False)
     roid = serializers.CharField(required=False)
+
+
+class InfoContactSerializer(serializers.Serializer):
+
+    registry_id = serializers.CharField(required=False, allow_blank=True)
+    name = serializers.CharField(required=False, allow_blank=True)
+    email = serializers.CharField(required=False, allow_blank=True)
+    company = serializers.CharField(required=False, allow_blank=True)
+    city = serializers.CharField(required=False, allow_blank=True)
+    telephone = serializers.CharField(required=False, allow_blank=True)
+    fax = serializers.CharField(required=False, allow_blank=True)
+    house_number = serializers.CharField(required=False, allow_blank=True)
+    street1 = serializers.CharField(required=False, allow_blank=True)
+    street2 = serializers.CharField(required=False, allow_blank=True)
+    street3 = serializers.CharField(required=False, allow_blank=True)
+    state = serializers.CharField(required=False, allow_blank=True)
+    country = serializers.CharField(required=False, allow_blank=True)
+    postcode = serializers.CharField(required=False, allow_blank=True)
+    postal_info_type = serializers.CharField(required=False, allow_blank=True)
+
+
