@@ -149,6 +149,33 @@ class Contact(EppEntity):
             "postcode": addr["contact:pc"]
         }
 
+    def process_disclose(self, raw_disclose_data):
+        """
+        Extract information about disclosed attributes
+
+        :raw_disclose_data: dict with disclose information from EPP
+        :returns: dict processed with true/false
+
+        """
+        flag = False
+        if int(raw_disclose_data["flag"]) == 1:
+            flag = True
+        contact_attributes = {
+            "contact:name": "disclose_name",
+            "contact:voice": "disclose_telephone",
+            "contact:fax": "disclose_fax",
+            "contact:email": "disclose_email",
+            "contact:addr": "disclose_address",
+            "contact:org": "disclose_company"
+        }
+        disclose = {}
+        for epp_attr, item in contact_attributes.items():
+            if epp_attr in raw_disclose_data:
+                disclose[item] = flag
+        return disclose
+
+
+
     def info(self, registry_id):
         """
         Fetch info for a contact
@@ -176,6 +203,9 @@ class Contact(EppEntity):
         response_data = self.rpc_client.call(registry, 'infoContact', data)
         log.debug(response_data)
         info_data = response_data["contact:infData"]
+        disclose_data = {}
+        if "contact:disclose" in info_data:
+            disclose_data = self.process_disclose(info_data["contact:disclose"])
 
         processed_postal_info = self.process_postal_info(
             info_data["contact:postalInfo"]
@@ -186,8 +216,13 @@ class Contact(EppEntity):
             "registry_id": info_data["contact:id"],
             "telephone": info_data["contact:voice"],
         }
+
         try:
-            contact_info_data = {**processed_postal_info, **processed_info_data}
+            contact_info_data = {
+                **processed_postal_info,
+                **processed_info_data,
+                **disclose_data
+            }
             for item, value in contact_info_data.items():
                 if isinstance(value, dict):
                     contact_info_data[item] = ""

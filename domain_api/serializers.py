@@ -310,5 +310,9 @@ class InfoContactSerializer(serializers.Serializer):
     country = serializers.CharField(required=False, allow_blank=True)
     postcode = serializers.CharField(required=False, allow_blank=True)
     postal_info_type = serializers.CharField(required=False, allow_blank=True)
-
-
+    disclose_name = serializers.BooleanField()
+    disclose_company = serializers.BooleanField()
+    disclose_telephone = serializers.BooleanField()
+    disclose_fax = serializers.BooleanField()
+    disclose_email = serializers.BooleanField()
+    disclose_address = serializers.BooleanField()
