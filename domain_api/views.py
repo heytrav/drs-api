@@ -45,20 +45,21 @@ from .exceptions import (
     EppError,
 )
 from domain_api.entity_management.contacts import ContactFactory
-from domain_api.utilities.domain import parse_domain
+from domain_api.utilities.domain import parse_domain, get_domain_registry
 from .workflows import workflow_factory
 
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
-def check_domain(request, registry, domain, format=None):
+def check_domain(request, domain, format=None):
     """
     Query EPP with a checkDomain request.
     :returns: JSON response indicating whether domain is available.
     """
     try:
         query = DomainQuery()
-        availability = query.check_domain(registry, domain)
+        provider = get_domain_registry(domain)
+        availability = query.check_domain(provider.slug, domain)
         serializer = CheckDomainResponseSerializer(data=availability)
         if serializer.is_valid():
             return Response(serializer.data)
@@ -149,8 +150,8 @@ def registry_contact(request, registry, contact_type="contact"):
 
     try:
         contact_factory = ContactFactory(provider,
-                                               contact_type,
-                                               context={"request": request})
+                                         contact_type,
+                                         context={"request": request})
         serializer = contact_factory.create_registry_contact(person)
         return Response(serializer.data)
     except EppError as epp_e:
@@ -206,7 +207,8 @@ class PersonalDetailViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Override to make sure that this only returns personal details that belong to logged in user.
+        Override to make sure that this only returns personal details that
+        belong to logged in user.
         :returns: Filtered set of personal detail objects.
 
         """
@@ -316,7 +318,6 @@ class RegisteredDomainViewSet(viewsets.ModelViewSet):
     serializer_class = RegisteredDomainSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
     queryset = RegisteredDomain.objects.all()
-
 
 
 class DomainRegistrantViewSet(viewsets.ModelViewSet):

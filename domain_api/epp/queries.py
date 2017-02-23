@@ -1,4 +1,5 @@
 from django_logging import log
+from ..utilities.domain import parse_domain
 from ..exceptions import UnknownContact
 from ..models import Contact as ContactModel, Registrant as RegistrantModel
 from .entity import EppEntity
@@ -60,7 +61,7 @@ class Domain(EppEntity):
         }
         return availability
 
-    def info(self, registry, domain, is_staff=False):
+    def info(self, domain, is_staff=False):
         """
         Get info for a domain
 
@@ -69,6 +70,14 @@ class Domain(EppEntity):
         :returns: dict with info about domain
 
         """
+        parsed_domain = parse_domain(domain)
+        domain_obj, _ = Domain.objects.get_or_create(
+            name=parsed_domain["domain"],
+            idn=parsed_domain["domain"]
+        )
+        tld_provider = TopLevelDomainProvider.objects.get(
+            zone__zone=parsed_domain["zone"]
+        )
         data = {"domain": domain}
         response_data = self.rpc_client.call(registry, 'infoDomain', data)
         info_data = response_data["domain:infData"]
@@ -173,8 +182,6 @@ class Contact(EppEntity):
             if epp_attr in raw_disclose_data:
                 disclose[item] = flag
         return disclose
-
-
 
     def info(self, registry_id):
         """

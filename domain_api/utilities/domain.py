@@ -1,5 +1,50 @@
-from ..models import TopLevelDomain
-from ..exceptions import InvalidTld
+from ..exceptions import InvalidTld, UnsupportedTld
+from ..models import (
+    Domain,
+    TopLevelDomain,
+    TopLevelDomainProvider,
+    RegisteredDomain
+)
+
+
+def get_domain_registry(fqdn):
+    """
+    Fetch the registry for a given domain.
+    In the future there may be more than one upstream provider for a particular
+    domain. If it is one registered in our system it should already be
+    connected to one, but if not we should default to one particular registry.
+
+    :fqdn: str domain
+    :returns: DomainProvider object
+
+    """
+    parsed_domain = parse_domain(fqdn)
+    tld_provider = None
+    try:
+        top_level_domain = TopLevelDomain.objects.get(
+            zone=parsed_domain["zone"]
+        )
+        domain_obj, _ = Domain.objects.get_or_create(
+            name=parsed_domain["domain"],
+            idn=parsed_domain["domain"]
+        )
+        registered_domain_set = RegisteredDomain.objects.filter(
+            domain=domain_obj,
+            tld=top_level_domain,
+            active=True
+        )
+        if registered_domain_set.count() > 0:
+            registered_domain = registered_domain_set.first()
+            tld_provider = registered_domain.tld_provider
+        else:
+            tld_provider = TopLevelDomainProvider.objects.get(
+                zone=top_level_domain
+            )
+        return tld_provider.provider
+    except TopLevelDomainProvider.DoesNotExist:
+        raise UnsupportedTld(parsed_domain["zone"])
+    except Exception as e:
+        raise e
 
 
 def parse_domain(fqdn):

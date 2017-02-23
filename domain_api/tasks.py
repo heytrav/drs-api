@@ -17,10 +17,10 @@ from .models import (
 from .entity_management.contacts import ContactFactory
 from .epp.actions.domain import Domain as DomainAction
 from .epp.queries import Domain as DomainQuery
-from .utilities.domain import parse_domain
+from .utilities.domain import parse_domain, get_domain_registry
 
 @shared_task
-def check_domain(domain, registry):
+def check_domain(domain):
     """
     Check if a domain exists.
 
@@ -28,6 +28,8 @@ def check_domain(domain, registry):
     :returns: boolean
 
     """
+    provider = get_domain_registry(domain)
+    registry = provider.slug
     log.info({"command": "check_domain",
               "domain": domain,
               "registry": registry})
