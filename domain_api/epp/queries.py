@@ -140,15 +140,15 @@ class Contact(EppEntity):
             contact_street.append(raw_street)
         return {
             "name": item["contact:name"],
-            "org": item.get("contact:org", ""),
-            "type": item["type"],
-            "addr": {
-                "street": contact_street,
-                "cc": addr["contact:cc"],
-                "sp": addr["contact:sp"],
-                "city": addr["contact:city"],
-                "pc": addr["contact:pc"]
-            }
+            "company": item.get("contact:org", ""),
+            "postal_info_type": item["type"],
+            "street1": contact_street[0],
+            "street2": contact_street[1],
+            "street3": " ".join(contact_street[2:]),
+            "country": addr["contact:cc"],
+            "state": addr["contact:sp"],
+            "city": addr["contact:city"],
+            "postcode": addr["contact:pc"]
         }
 
     def info(self, registry_id):
@@ -177,13 +177,21 @@ class Contact(EppEntity):
         log.debug(response_data)
         info_data = response_data["contact:infData"]
 
+        processed_postal_info = self.process_postal_info(
+            info_data["contact:postalInfo"]
+        )
         processed_info_data = {
             "email": info_data["contact:email"],
             "fax": info_data.get("contact:fax", ""),
-            "id": info_data["contact:id"],
-            "postal_info": self.process_postal_info(
-                info_data["contact:postalInfo"]
-            )
+            "registry_id": info_data["contact:id"],
+            "telephone": info_data["contact:voice"],
         }
+        try:
+            contact_info_data = {**processed_postal_info, **processed_info_data}
+            contact.update(**contact_info_data)
+            log.info(contact_info_data)
+        except Exception as e:
+            log.error({"error": e});
+            raise e
         log.debug({"processed_info": processed_info_data})
-        return processed_info_data
+        return contact_info_data

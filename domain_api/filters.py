@@ -37,4 +37,4 @@ class IsPersonFilterBackend(filters.BaseFilterBackend):
         """
         if request.user.is_staff:
             return queryset
-        return queryset.filter(person__owner=request.user)
+        return queryset.filter(project_id=request.user)

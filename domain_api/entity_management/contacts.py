@@ -65,6 +65,36 @@ class ContactFactory(object):
         """
         return str(uuid.uuid4())[:8]
 
+
+    def process_disclose(self):
+        """
+        Process disclose fields and flag attributes the user does not want
+        to disclose.
+
+        :returns: dict with non-disclose element.
+
+        """
+        person = self.person
+        postal_info_type = person.postal_info_type
+        non_disclose = []
+        if not person.disclose_name:
+            non_disclose.append({"name": "name", "type": postal_info_type})
+        if not person.disclose_company:
+            non_disclose.append({"name": "org", "type": postal_info_type})
+        if not person.disclose_company:
+            non_disclose.append({"name": "addr", "type": postal_info_type})
+        if not person.disclose_telephone:
+            non_disclose.append("voice");
+        if not person.disclose_email:
+            non_disclose.append("email");
+        if not person.disclose_fax:
+            non_disclose.append("fax");
+        if len(non_disclose) > 0:
+            return non_disclose
+        return None
+
+
+
     def create_registry_contact(self):
         """
         Create contact at registry and add to registrant handle or
@@ -77,6 +107,8 @@ class ContactFactory(object):
         contact = self.get_registry_id()
         person = self.person
         street = [person.street1, person.street2, person.street3]
+        non_disclose = self.process_disclose()
+
         postal_info = {
             "name": person.first_name + " " + person.surname,
             "org": person.company,
@@ -96,6 +128,8 @@ class ContactFactory(object):
             "email": person.email,
             "postalInfo": postal_info
         }
+        if non_disclose:
+            contact_info["disclose"] = {"flag": 0, "disclosing": non_disclose}
         contact = ContactAction()
         response = contact.create(self.provider.slug, contact_info)
         log.info(response)

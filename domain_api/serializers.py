@@ -32,12 +32,13 @@ class PersonalDetailSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = PersonalDetail
-        fields = ('url', 'first_name', 'surname', 'middle_name', 'email', 'email2', 'email3',
-                  'telephone', 'fax', 'company', 'house_number', 'street1', 'street2', 'street3',
-                  'city', 'suburb', 'state', 'postcode', 'country', 'postal_info_type',
-                  'disclose_name', 'disclose_company', 'disclose_address', 'disclose_telephone',
-                  'disclose_fax', 'disclose_email', 'created', 'updated', 'project_id',)
-
+        fields = ('url', 'first_name', 'surname', 'middle_name', 'email',
+                  'email2', 'email3', 'telephone', 'fax', 'company',
+                  'house_number', 'street1', 'street2', 'street3', 'city',
+                  'suburb', 'state', 'postcode', 'country', 'postal_info_type',
+                  'disclose_name', 'disclose_company', 'disclose_address',
+                  'disclose_telephone', 'disclose_fax', 'disclose_email',
+                  'created', 'updated', 'project_id',)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -49,7 +50,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username')
-
 
 
 class ContactTypeSerializer(serializers.HyperlinkedModelSerializer):
@@ -99,7 +99,7 @@ class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
         view_name="domain_api:registrant-detail",
         lookup_field="pk"
     )
-    provider=serializers.HyperlinkedRelatedField(
+    provider = serializers.HyperlinkedRelatedField(
         view_name="domain_api:domainprovider-detail",
         lookup_field="pk",
         read_only=True
@@ -112,18 +112,18 @@ class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Registrant
-        fields = ('provider', 'registry_id', 'created', 'updated',
-                  'url', 'project_id')
+        fields = ('url', 'provider', 'registry_id', 'name',
+                  'email', 'telephone', 'fax', 'company', 'house_number',
+                  'street1', 'street2', 'street3', 'city', 'suburb', 'state',
+                  'postcode', 'country', 'postal_info_type', 'disclose_name',
+                  'disclose_company', 'disclose_address', 'disclose_telephone',
+                  'disclose_fax', 'disclose_email', 'created', 'updated',
+                  'project_id',)
 
 
 class ContactSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:contact-detail",
-        lookup_field="pk",
-        read_only=True
-    )
-    person = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:personal-detail",
         lookup_field="pk",
         read_only=True
     )
@@ -140,8 +140,13 @@ class ContactSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Contact
-        fields = ('url', 'person', 'provider', 'registry_id',
-                  'created', 'updated', 'project_id')
+        fields = ('url', 'provider', 'registry_id', 'name',
+                  'email', 'telephone', 'fax', 'company', 'house_number',
+                  'street1', 'street2', 'street3', 'city', 'suburb', 'state',
+                  'postcode', 'country', 'postal_info_type', 'disclose_name',
+                  'disclose_company', 'disclose_address', 'disclose_telephone',
+                  'disclose_fax', 'disclose_email', 'created', 'updated',
+                  'project_id',)
 
 
 class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
@@ -162,9 +167,8 @@ class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = TopLevelDomainProvider
-        fields = ( 'zone', 'provider', 'anniversary_notification_period_days',
+        fields = ('zone', 'provider', 'anniversary_notification_period_days',
                   'renewal_period', 'grace_period_days', 'url')
-
 
 
 class DomainSerializer(serializers.HyperlinkedModelSerializer):
@@ -204,11 +208,12 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
         many=True,
         read_only=True
     )
+
     class Meta:
         model = RegisteredDomain
         fields = ('domain', 'tld', 'tld_provider', 'active', 'auto_renew',
                   'registration_period', 'anniversary', 'created',
-                  'updated','registrant', 'contacts', 'url')
+                  'updated', 'registrant', 'contacts', 'url')
 
 
 class DomainRegistrantSerializer(serializers.HyperlinkedModelSerializer):

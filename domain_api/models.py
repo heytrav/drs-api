@@ -39,12 +39,12 @@ class PersonalDetail(models.Model):
         choices=POSTAL_INFO_TYPES,
         default=LOC
     )
-    disclose_name = models.BooleanField(default=True)
-    disclose_company = models.BooleanField(default=True)
-    disclose_address = models.BooleanField(default=True)
-    disclose_telephone = models.BooleanField(default=True)
-    disclose_fax = models.BooleanField(default=True)
-    disclose_email = models.BooleanField(default=True)
+    disclose_name = models.BooleanField(default=False)
+    disclose_company = models.BooleanField(default=False)
+    disclose_address = models.BooleanField(default=False)
+    disclose_telephone = models.BooleanField(default=False)
+    disclose_fax = models.BooleanField(default=False)
+    disclose_email = models.BooleanField(default=False)
     project_id = models.ForeignKey('auth.User',
                                    related_name='personal_details',
                                    on_delete=models.CASCADE)
