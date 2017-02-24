@@ -27,3 +27,7 @@ class NoTldManager(Exception):
 
 class UnknownContact(Exception):
     pass
+
+
+class UnknownRegistry(Exception):
+    pass

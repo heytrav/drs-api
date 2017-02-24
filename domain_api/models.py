@@ -122,6 +122,7 @@ class Registrant(models.Model):
     city = models.CharField(max_length=200, null=True)
     suburb = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=200, null=True, blank=True)
+    status = models.CharField(max_length=200, null=True)
     postcode = models.CharField(max_length=20, null=True)
     # Must be a 2 letter country code.
     country = models.CharField(max_length=2, null=True)
@@ -131,6 +132,7 @@ class Registrant(models.Model):
         default=LOC
     )
     authcode = models.CharField(max_length=100, null=True, blank=True)
+    roid = models.CharField(max_length=100, null=True, blank=True)
     disclose_name = models.BooleanField(default=False)
     disclose_company = models.BooleanField(default=False)
     disclose_address = models.BooleanField(default=False)
@@ -172,6 +174,7 @@ class Contact(models.Model):
         default=LOC
     )
     authcode = models.CharField(max_length=100, null=True, blank=True)
+    roid = models.CharField(max_length=100, null=True, blank=True)
     disclose_name = models.BooleanField(default=False)
     disclose_company = models.BooleanField(default=False)
     disclose_address = models.BooleanField(default=False)
@@ -179,6 +182,7 @@ class Contact(models.Model):
     disclose_fax = models.BooleanField(default=False)
     disclose_email = models.BooleanField(default=False)
     provider = models.ForeignKey(DomainProvider)
+    status = models.CharField(max_length=200, null=True)
     # Id from provider
     registry_id = models.CharField(max_length=200, unique=True)
     project_id = models.ForeignKey('auth.User',

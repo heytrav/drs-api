@@ -1,7 +1,12 @@
+from django.db.models import Q
 from django_logging import log
-from ..utilities.domain import parse_domain
-from ..exceptions import UnknownContact
-from ..models import Contact as ContactModel, Registrant as RegistrantModel
+from ..utilities.domain import parse_domain, get_domain_registry
+from ..exceptions import UnknownContact, UnknownRegistry
+from ..models import (
+    Contact as ContactModel,
+    Registrant as RegistrantModel,
+    RegisteredDomain
+)
 from .entity import EppEntity
 
 
@@ -61,7 +66,29 @@ class Domain(EppEntity):
         }
         return availability
 
-    def info(self, domain, is_staff=False):
+    def process_nameservers(self, raw_ns):
+        """
+        Process nameserver information in info domain
+
+        :raw_ns: dict with raw nameserver info from EPP
+        :returns: list of nameservers
+
+        """
+        nameservers = []
+        if isinstance(raw_ns, dict) and "domain:hostObj" in raw_ns:
+            ns_host = raw_ns["domain:hostObj"]
+            if isinstance(ns_host, list):
+                for host in ns_host:
+                    nameservers.append(host)
+            elif isinstance(ns_host, str):
+                nameservers.append(ns_host)
+        elif isinstance(raw_ns, list):
+            for host_obj in raw_ns:
+                nameservers.append(host_obj["domain:hostObj"])
+        return nameservers
+
+
+    def info(self, domain, registry, user=None):
         """
         Get info for a domain
 
@@ -70,14 +97,19 @@ class Domain(EppEntity):
         :returns: dict with info about domain
 
         """
+
         parsed_domain = parse_domain(domain)
-        domain_obj, _ = Domain.objects.get_or_create(
-            name=parsed_domain["domain"],
-            idn=parsed_domain["domain"]
+        user_registered_domain_set = RegisteredDomain.objects.filter(
+            Q(registrant__registrant__project_id=user) | Q(contacts__contact__project_id=user)
         )
-        tld_provider = TopLevelDomainProvider.objects.get(
-            zone__zone=parsed_domain["zone"]
+        registered_domain_set = user_registered_domain_set.filter(
+            domain__name=parsed_domain["domain"],
+            tld__zone=parsed_domain["zone"],
+            active=True
         )
+        is_owner = False
+        if registered_domain_set.count() > 0:
+            is_owner = True
         data = {"domain": domain}
         response_data = self.rpc_client.call(registry, 'infoDomain', data)
         info_data = response_data["domain:infData"]
@@ -87,24 +119,16 @@ class Domain(EppEntity):
                 contact["contact_type"] = contact["type"]
                 del contact["type"]
                 del contact["$t"]
-        nameservers = []
-        ns = info_data["domain:ns"]
-        if isinstance(ns, dict):
-            for host in ns["domain:hostObj"]:
-                nameservers.append(host)
-        elif isinstance(ns, list):
-            for host_obj in ns:
-                nameservers.append(host_obj["domain:hostObj"])
-
         return_data = {
             "domain": info_data["domain:name"],
-            "status": {"status": info_data["domain:status"]},
             "registrant": info_data["domain:registrant"],
             "contacts": info_data["domain:contact"],
-            "ns": nameservers,
+            "ns": self.process_nameservers(info_data["domain:ns"]),
+            "status": self.process_status(info_data["domain:status"])
         }
-        if is_staff:
-            return_data["auth_info"] = info_data["domain:authInfo"]["domain:pw"]
+
+        if (is_owner or user.is_staff) and "domain:authInfo" in info_data:
+            return_data["authcode"] = info_data["domain:authInfo"]["domain:pw"]
             return_data["roid"] = info_data["domain:roid"]
         log.info(return_data)
         return return_data
@@ -183,7 +207,7 @@ class Contact(EppEntity):
                 disclose[item] = flag
         return disclose
 
-    def info(self, registry_id):
+    def info(self, registry_id, user=None, registry=None):
         """
         Fetch info for a contact
 
@@ -192,20 +216,33 @@ class Contact(EppEntity):
         :returns: dict of contact information
 
         """
-        queryset = ContactModel.objects
+        is_owner = False
+        contact_queryset = ContactModel.objects.filter(project_id=user)
+        registrant_queryset = RegistrantModel.objects.filter(project_id=user)
+        if user.groups.filter(name='admin').exists():
+            contact_queryset = ContactModel.objects.all()
+            registrant_queryset = RegistrantModel.objects.all()
+        # Find out if this contact is one of ours. If contact belongs to logged
+        # in user or user is admin, return authcode data and other data.
+        contact = None
         try:
+            queryset = contact_queryset
             contact = queryset.get(registry_id=registry_id)
+            is_owner = True
         except ContactModel.DoesNotExist:
             try:
-                queryset = RegistrantModel.objects
+                queryset = registrant_queryset
                 contact = queryset.get(registry_id=registry_id)
+                is_owner = True
             except RegistrantModel.DoesNotExist:
                 log.warn({"contact": registry_id,
                           "message": "infoContact for unknown contact"})
-                raise UnknownContact("Contact does not exist.")
 
-
-        registry = contact.provider.slug
+        if registry is None:
+            if contact:
+                registry = contact.provider.slug
+            else:
+                raise UnknownRegistry("Cannot determine registry to query.")
         data = {"contact": registry_id}
         response_data = self.rpc_client.call(registry, 'infoContact', data)
         log.debug(response_data)
@@ -223,6 +260,15 @@ class Contact(EppEntity):
             "registry_id": info_data["contact:id"],
             "telephone": info_data["contact:voice"],
         }
+        if (is_owner or user.is_staff):
+            extra_fields = {}
+            extra_fields["status"] = self.process_status(
+                info_data["contact:status"]
+            )
+            extra_fields["roid"] = info_data["contact:roid"]
+            if "contact:authInfo" in info_data:
+                extra_fields["authcode"] = info_data["contact:authInfo"]["contact:pw"]
+            processed_info_data = {**processed_info_data, **extra_fields}
 
         try:
             contact_info_data = {
@@ -234,7 +280,8 @@ class Contact(EppEntity):
                 if isinstance(value, dict):
                     contact_info_data[item] = ""
 
-            queryset.filter(pk=contact.id).update(**contact_info_data)
+            if contact and is_owner:
+                queryset.filter(pk=contact.id).update(**contact_info_data)
             log.info(contact_info_data)
         except Exception as e:
             log.error({"error": e});

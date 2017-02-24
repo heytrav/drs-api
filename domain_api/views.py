@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 from celery import chain
 from django_logging import log, ErrorLogObject
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 # Remove this
 from django.contrib.auth.models import User
@@ -36,6 +37,7 @@ from domain_api.serializers import (
     DomainContactSerializer,
     InfoDomainSerializer,
     InfoContactSerializer,
+    ContactDomainResultSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
@@ -43,6 +45,9 @@ from domain_api.filters import (
 from .epp.queries import Domain as DomainQuery, Contact as ContactQuery
 from .exceptions import (
     EppError,
+    InvalidTld,
+    UnsupportedTld,
+    UnknownRegistry
 )
 from domain_api.entity_management.contacts import ContactFactory
 from domain_api.utilities.domain import parse_domain, get_domain_registry
@@ -73,15 +78,18 @@ def check_domain(request, domain, format=None):
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
-def info_domain(request, registry, domain, format=None):
+def info_domain(request, domain, format=None):
     """
     Query EPP with a infoDomain request.
     :returns: JSON response with details about a domain
 
     """
     try:
+        # Fetch registry for domain
+        provider = get_domain_registry(domain)
+
         query = DomainQuery()
-        info = query.info(registry, domain, is_staff=request.user.is_staff)
+        info = query.info(domain, provider.slug, user=request.user)
         serializer = InfoDomainSerializer(data=info)
         log.info(info)
         if serializer.is_valid():
@@ -89,6 +97,12 @@ def info_domain(request, registry, domain, format=None):
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
+    except InvalidTld as e:
+        log.error(ErrorLogObject(request, e))
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    except UnsupportedTld as e:
+        log.error(ErrorLogObject(request, e))
+        return Response(status=status.HTTP_400_BAD_REQUEST)
     except EppError as epp_e:
         log.error(ErrorLogObject(request, epp_e))
         return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -99,7 +113,7 @@ def info_domain(request, registry, domain, format=None):
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
-def info_contact(request, contact, format=None):
+def info_contact(request, contact, registry=None, format=None):
     """
     Query EPP with a infoContact request.
     :returns: JSON response with details about a contact
@@ -107,7 +121,7 @@ def info_contact(request, contact, format=None):
     """
     try:
         query = ContactQuery()
-        info = query.info(contact)
+        info = query.info(contact, user=request.user, registry=registry)
         serializer = InfoContactSerializer(data=info)
         log.info(info)
         if serializer.is_valid():
@@ -115,9 +129,53 @@ def info_contact(request, contact, format=None):
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
+    except UnknownRegistry:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
     except EppError as epp_e:
         log.error(ErrorLogObject(request, epp_e))
         return Response(status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        log.error(ErrorLogObject(request, e))
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def contact_domains(request, registry_id, format=None):
+    """
+    Query for domains linked to a particular registry contact
+    :returns: JSON response with details about a contact
+
+    """
+    try:
+        # Limit registered domain query to "owned" domains
+        registered_domain_set = RegisteredDomain.objects.filter(
+            Q(registrant__registrant__project_id=request.user) | Q(contacts__contact__project_id=request.user)
+        )
+        # Admin gets access to all domains.
+        if request.user.groups.filter(name='admin').exists():
+            registered_domain_set = RegisteredDomain.objects.all()
+
+        contact_domains = registered_domain_set.filter(
+            Q(active=True) &
+            (Q(registrant__registrant__registry_id=registry_id) | Q(contacts__contact__registry_id=registry_id))
+        ).distinct()
+        if len(contact_domains) == 0:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        contact_domain_set = {"result": []}
+        for domain in contact_domains.all():
+            contact_domain_object = {}
+            contact_domain_object["domain"] = ".".join([domain.domain.name, domain.tld.zone])
+            contact_domain_object["created"] = domain.created
+            contact_domain_object["anniversary"] = domain.anniversary
+            contact_domain_set["result"].append(contact_domain_object)
+
+        serializer = ContactDomainResultSerializer(data=contact_domain_set)
+        if serializer.is_valid():
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         log.error(ErrorLogObject(request, e))
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -288,8 +288,8 @@ class InfoDomainSerializer(serializers.Serializer):
     registrant = serializers.CharField(required=True, allow_blank=False)
     roid = serializers.CharField()
     ns = NsHostObjectListSerializer(required=True)
-    status = serializers.DictField(child=serializers.CharField())
-    auth_info = serializers.CharField(required=False)
+    status = serializers.CharField(required=False)
+    authcode = serializers.CharField(required=False)
     roid = serializers.CharField(required=False)
 
 
@@ -316,3 +316,19 @@ class InfoContactSerializer(serializers.Serializer):
     disclose_fax = serializers.BooleanField()
     disclose_email = serializers.BooleanField()
     disclose_address = serializers.BooleanField()
+    status = serializers.CharField(required=False)
+    authcode = serializers.CharField(required=False)
+
+
+class ContactDomainSerializer(serializers.Serializer):
+    domain = serializers.CharField(required=True)
+    created = serializers.DateTimeField(required=True)
+    anniversary = serializers.DateTimeField(required=True)
+
+
+class ContactDomainSetSerializer(serializers.ListField):
+    child = ContactDomainSerializer()
+
+
+class ContactDomainResultSerializer(serializers.Serializer):
+    result = ContactDomainSetSerializer(required=True)
