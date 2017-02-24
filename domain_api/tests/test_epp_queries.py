@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.test import TestCase
 from unittest.mock import patch
 from domain_api.epp.queries import Contact
@@ -26,6 +27,14 @@ class TestInfoContact(TestCase):
     """
     Test processing info contact.
     """
+
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
+            username="testcustomer",
+            email="testcustomer@test.com",
+            password="secret"
+        )
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_info_domain(self):
@@ -83,13 +92,13 @@ class TestInfoContact(TestCase):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=info_contact_response):
-            info_data = contact_query.info("test-registry", "test-contact")
+            info_data = contact_query.info("test-contact",
+                                           self.user,
+                                           'test-registry')
             self.assertIn('email',
                           info_data,
                           "Response from info request contains email")
-            self.assertEqual(info_data["id"],
+            self.assertEqual(info_data["registry_id"],
                              "reg-20",
                              "contact id is expected value")
-            self.assertIsInstance(info_data["postal_info"],
-                                  list,
-                                  "Postal Info is a list")
+            self.assertEqual(info_data["country"], "US", "Expected country US")

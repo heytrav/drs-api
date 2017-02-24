@@ -1,5 +1,10 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
+from ..models import (
+    TopLevelDomain,
+    TopLevelDomainProvider,
+    DomainProvider
+)
 
 
 class TestApiClient(TestCase):
@@ -14,6 +19,24 @@ class TestApiClient(TestCase):
             email="testcustomer@test.com",
             password="secret"
         )
+        test_registry = DomainProvider(
+            name="Provider1",
+            slug="test-registry",
+            description="Provide some domains"
+        )
+        test_registry.save()
+        tld = TopLevelDomain(
+            zone="tld",
+            idn_zone="tld",
+            description="Test TLD"
+        )
+        tld.save()
+        tld_provider = TopLevelDomainProvider(
+            zone=tld,
+            provider=test_registry,
+            anniversary_notification_period_days=30
+        )
+        tld_provider.save()
 
     def login_client(self):
         """

@@ -288,9 +288,9 @@ class InfoDomainSerializer(serializers.Serializer):
     registrant = serializers.CharField(required=True, allow_blank=False)
     roid = serializers.CharField()
     ns = NsHostObjectListSerializer(required=True)
-    status = serializers.CharField(required=False)
-    authcode = serializers.CharField(required=False)
-    roid = serializers.CharField(required=False)
+    status = serializers.CharField(required=False, allow_blank=True)
+    authcode = serializers.CharField(required=False, allow_blank=True)
+    roid = serializers.CharField(required=False, allow_blank=True)
 
 
 class InfoContactSerializer(serializers.Serializer):

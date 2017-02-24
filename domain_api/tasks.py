@@ -63,7 +63,6 @@ def create_registrant(epp, person_id=None, registry=None, force=False):
             contact = contact_manager.create_registry_contact()
         epp["registrant"] = contact.registry_id
     except Exception as e:
-        log.error({"error": e})
         raise e
     return epp
 

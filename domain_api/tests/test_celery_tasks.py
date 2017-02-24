@@ -8,6 +8,8 @@ from ..models import (
     PersonalDetail,
     DomainProvider,
     Contact,
+    TopLevelDomain,
+    TopLevelDomainProvider,
     Registrant
 )
 import domain_api
@@ -22,6 +24,24 @@ class TestCheckDomainTask(TestCase):
 
     def setUp(self):
         super().setUp()
+        test_registry = DomainProvider(
+            name="Provider1",
+            slug="test-registry",
+            description="Provide some domains"
+        )
+        test_registry.save()
+        tld = TopLevelDomain(
+            zone="tld",
+            idn_zone="tld",
+            description="Test TLD"
+        )
+        tld.save()
+        tld_provider = TopLevelDomainProvider(
+            zone=tld,
+            provider=test_registry,
+            anniversary_notification_period_days=30
+        )
+        tld_provider.save()
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_domain_available(self):
@@ -38,7 +58,7 @@ class TestCheckDomainTask(TestCase):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=check_domain_response):
-            available = check_domain("somedomain.tld", "test-registry")
+            available = check_domain("somedomain.tld")
             self.assertTrue(available, "Domain is available")
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
@@ -117,7 +137,8 @@ class TestCreateRegistrant(ContactOperation):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=create_contact_response):
-            processed_epp = create_registrant(epp, self.joe_user.id, 'provider-one')
+            processed_epp = create_registrant(epp, self.joe_user.id,
+                                              'provider-one')
             self.assertIn('registrant',
                           processed_epp,
                           "Registrant added to epp")
