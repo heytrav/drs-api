@@ -54,16 +54,13 @@ def create_registrant(epp, person_id=None, registry=None, force=False):
     :returns: registry id of new contact.
 
     """
-    try:
-        provider = DomainProvider.objects.get(slug=registry)
-        person = PersonalDetail.objects.get(pk=person_id)
-        contact_manager = ContactFactory(provider, person, 'registrant')
-        contact = contact_manager.fetch_existing_contact()
-        if not contact or force:
-            contact = contact_manager.create_registry_contact()
-        epp["registrant"] = contact.registry_id
-    except Exception as e:
-        raise e
+    provider = DomainProvider.objects.get(slug=registry)
+    person = PersonalDetail.objects.get(pk=person_id)
+    contact_manager = ContactFactory(provider, person, 'registrant')
+    contact = contact_manager.fetch_existing_contact()
+    if not contact or force:
+        contact = contact_manager.create_registry_contact()
+    epp["registrant"] = contact.registry_id
     return epp
 
 
@@ -105,13 +102,9 @@ def create_domain(epp, registry):
     :returns: success or fail
 
     """
-    try:
-        domain = DomainAction()
-        result = domain.create(registry, epp)
-        return {**epp, **result}
-    except Exception as e:
-        log.error({"error": e})
-        raise e
+    domain = DomainAction()
+    result = domain.create(registry, epp)
+    return {**epp, **result}
 
 @shared_task
 def connect_domain(create_data):
@@ -159,3 +152,4 @@ def connect_domain(create_data):
         return create_data
     except Exception as e:
         log.error({"error": e})
+        raise e
