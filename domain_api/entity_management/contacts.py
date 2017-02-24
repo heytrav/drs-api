@@ -89,6 +89,7 @@ class ContactFactory(object):
             non_disclose.append("email");
         if not person.disclose_fax:
             non_disclose.append("fax");
+        log.debug(non_disclose)
         if len(non_disclose) > 0:
             return non_disclose
         return None
@@ -130,6 +131,7 @@ class ContactFactory(object):
         }
         if non_disclose:
             contact_info["disclose"] = {"flag": 0, "disclosing": non_disclose}
+        log.info(contact_info)
         contact = ContactAction()
         response = contact.create(self.provider.slug, contact_info)
         log.info(response)

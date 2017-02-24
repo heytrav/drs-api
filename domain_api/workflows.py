@@ -35,7 +35,7 @@ class Workflow(object):
             "name": data["domain"],
             "ns": data["ns"]
         }
-        self.workflow.append(check_domain.s(data["domain"], self.registry))
+        self.workflow.append(check_domain.s(data["domain"]))
         # TODO: process nameservers
         self.workflow.append(
             create_registrant.si(
