@@ -47,11 +47,27 @@ from .exceptions import (
     EppError,
     InvalidTld,
     UnsupportedTld,
-    UnknownRegistry
+    UnknownRegistry,
+    DomainNotAvailable,
+    NotObjectOwner
 )
 from domain_api.entity_management.contacts import ContactFactory
 from domain_api.utilities.domain import parse_domain, get_domain_registry
 from .workflows import workflow_factory
+
+
+def workflow_exception_scan(node):
+    """
+    Walk up a workflow to see if a step raised an exception.
+
+    :node: node from a celery chained workflow or chord
+    :returns: None or raises an exception
+
+    """
+    while node.parent:
+        if isinstance(node.parent, Exception):
+            raise node.parent
+        node = node.parent
 
 
 @api_view(['GET'])
@@ -242,8 +258,16 @@ def register_domain(request):
         log.debug({"msg": "About to call workflow_manager.create_domain"})
         workflow = workflow_manager.create_domain(data)
         # run chained workflow and register the domain
-        response = chain(workflow)().get()
-        return Response(response)
+        chained_workflow = chain(workflow)()
+        res = chained_workflow.get()
+        workflow_exception_scan(res)
+        return Response(res)
+    except DomainNotAvailable:
+        return Response("Domain not available",
+                        status=status.HTTP_400_BAD_REQUEST)
+    except NotObjectOwner:
+        return Response("Not owner of object",
+                        status=status.HTTP_400_BAD_REQUEST)
     except KeyError as e:
         log.error(ErrorLogObject(request, e))
         return Response(status=status.HTTP_400_BAD_REQUEST)

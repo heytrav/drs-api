@@ -18,6 +18,10 @@ from .entity_management.contacts import ContactFactory
 from .epp.actions.domain import Domain as DomainAction
 from .epp.queries import Domain as DomainQuery
 from .utilities.domain import parse_domain, get_domain_registry
+from .exceptions import (
+    DomainNotAvailable,
+    NotObjectOwner
+)
 
 @shared_task
 def check_domain(domain):
@@ -39,7 +43,7 @@ def check_domain(domain):
     log.info({"available": available})
     if available:
         return available
-    raise Exception("Domain not available")
+    raise DomainNotAvailable("%s not available" % domain)
 
 
 @shared_task

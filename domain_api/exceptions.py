@@ -6,6 +6,14 @@ class EppError(Exception):
     pass
 
 
+class DomainNotAvailable(Exception):
+    pass
+
+
+class NotObjectOwner(Exception):
+    pass
+
+
 class UnsupportedTld(Exception):
     """
     Not a TLD we support (yet)
