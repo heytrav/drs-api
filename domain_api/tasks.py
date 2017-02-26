@@ -41,8 +41,8 @@ def check_domain(domain):
     availability = query.check_domain(registry, domain)
     available = availability["result"][0]["available"]
     log.info({"available": available})
-    if available:
-        return available
+    if str(available) == "1" or str(available) == "true" or available == True:
+        return True
     raise DomainNotAvailable("%s not available" % domain)
 
 

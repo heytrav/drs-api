@@ -56,18 +56,38 @@ from domain_api.utilities.domain import parse_domain, get_domain_registry
 from .workflows import workflow_factory
 
 
-def workflow_exception_scan(node):
+def process_workflow_chain(chained_workflow):
     """
-    Walk up a workflow to see if a step raised an exception.
+    Process results of workflow chain.
 
-    :node: node from a celery chained workflow or chord
-    :returns: None or raises an exception
+    :workflow_chain: chain workflow
+    :returns: value of last item in chain
 
+    """
+    try:
+        values = [node.get() for node in reversed(list(workflow_scan(chained_workflow)))]
+        return values[-1]
+    except KeyError as e:
+        log.error({"keyerror": str(e)})
+    except Exception as e:
+        exception_type = type(e).__name__
+        message = str(e)
+        if "DomainNotAvailable" in exception_type:
+            raise DomainNotAvailable(message)
+        elif "NotObjectOwner" in exception_type:
+            raise NotObjectOwner(message)
+        else:
+            raise e
+
+
+def workflow_scan(node):
+    """
+    Generate a list of workflow nodes.
     """
     while node.parent:
-        if isinstance(node.parent, Exception):
-            raise node.parent
+        yield node
         node = node.parent
+    yield node
 
 
 @api_view(['GET'])
@@ -247,6 +267,7 @@ def register_domain(request):
     """
     data = request.data
     parsed_domain = parse_domain(data["domain"])
+    chain_res = None
     try:
         # See if this TLD is provided by one of our registries.
         tld_provider = TopLevelDomainProvider.objects.get(
@@ -259,9 +280,10 @@ def register_domain(request):
         workflow = workflow_manager.create_domain(data)
         # run chained workflow and register the domain
         chained_workflow = chain(workflow)()
-        res = chained_workflow.get()
-        workflow_exception_scan(res)
-        return Response(res)
+        chain_res = process_workflow_chain(chained_workflow)
+        log.debug({"msg": "Have response from workflow", "result": chain_res})
+        #return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(chain_res)
     except DomainNotAvailable:
         return Response("Domain not available",
                         status=status.HTTP_400_BAD_REQUEST)
