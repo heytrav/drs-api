@@ -282,3 +282,32 @@ class DomainContact(models.Model):
 
     class Meta:
         unique_together = ('registered_domain', 'contact_type', 'contact', 'active')
+
+class NameserverHost(models.Model):
+
+    """
+    Nameserver model.
+    """
+    host = models.CharField(max_length=255)
+    domain_nameserver = models.ManyToManyField(RegisteredDomain)
+
+
+class IpAddress(models.Model):
+
+    """
+    IP address
+    """
+
+    V4 = 'v4'
+    V6 = 'v6'
+    IP_ADDRESS_TYPES = (
+        (V4, 'ipv4'),
+        (V6, 'ipv6'),
+    )
+    address = models.CharField(max_length=255)
+    address_type = models.CharField(
+        max_length=2,
+        choices=IP_ADDRESS_TYPES,
+        default=V4
+    )
+    nameserver_host = models.ManyToManyField(NameserverHost)
