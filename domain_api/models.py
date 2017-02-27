@@ -286,16 +286,21 @@ class DomainContact(models.Model):
 class NameserverHost(models.Model):
 
     """
-    Nameserver model.
+    Nameserver
+
+    i.e. ns1.something.com
     """
-    host = models.CharField(max_length=255)
+    host = models.CharField(max_length=255, unique=True)
     domain_nameserver = models.ManyToManyField(RegisteredDomain)
+    default = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
 
 class IpAddress(models.Model):
 
     """
-    IP address
+    IP address.
     """
 
     V4 = 'v4'
@@ -304,10 +309,15 @@ class IpAddress(models.Model):
         (V4, 'ipv4'),
         (V6, 'ipv6'),
     )
-    address = models.CharField(max_length=255)
+    address = models.CharField(max_length=255, unique=True)
     address_type = models.CharField(
         max_length=2,
         choices=IP_ADDRESS_TYPES,
         default=V4
     )
     nameserver_host = models.ManyToManyField(NameserverHost)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='ip_addresses',
+                                   on_delete=models.CASCADE)
