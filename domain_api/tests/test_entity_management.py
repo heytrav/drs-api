@@ -101,6 +101,7 @@ class TestContactManager(TestEntityManager):
 
 
 
+
 class TestDomainManager(TestEntityManager):
 
     """
