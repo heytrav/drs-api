@@ -73,8 +73,20 @@ class CentralNic(Workflow):
         self.registry = 'centralnic-test'
 
 
+class CoccaTest(Workflow):
+
+    """
+    Registry operations specific for Cocca
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.registry = 'cocca-test'
+
+
 workflow_registries = {
-    "centralnic-test": CentralNic
+    "centralnic-test": CentralNic,
+    "cocca-test": CoccaTest
 }
 
 

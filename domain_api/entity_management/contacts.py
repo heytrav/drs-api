@@ -15,20 +15,12 @@ class ContactFactory(object):
 
     def __init__(self,
                  provider=None,
-                 person=None,
-                 contact_type="contact",
-                 context=None):
+                 person=None):
         """
         Initialise factory.
         """
         self.provider = provider
-        self.context = context
         self.person = person
-        self.contact_type = contact_type
-        if contact_type == 'contact':
-            self.related_contact_set = person.project_id.contacts
-        elif contact_type == 'registrant':
-            self.related_contact_set = person.project_id.registrants
 
     def fetch_existing_contact(self):
         """
@@ -107,13 +99,20 @@ class ContactFactory(object):
         """
         contact = self.get_registry_id()
         person = self.person
-        street = [person.street1, person.street2, person.street3]
+        street = [person.street1]
+        if person.street2 != "":
+            street.append(person.street2)
+        if person.street3 != "":
+            street.append(person.street3)
         non_disclose = self.process_disclose()
+        company = ""
+        if person.company:
+            company = person.company
 
         postal_info = {
             "name": person.first_name + " " + person.surname,
-            "org": person.company,
-            "type": "int",
+            "org": company,
+            "type": person.postal_info_type,
             "addr": {
                 "street": street,
                 "city": person.city,
@@ -136,3 +135,47 @@ class ContactFactory(object):
         response = contact.create(self.provider.slug, contact_info)
         log.info(response)
         return self.create_local_contact(response)
+
+
+class RegistrantManager(ContactFactory):
+
+    """
+    Manage registrant creation.
+    """
+
+
+    def __init__(self,
+                 provider=None,
+                 person=None):
+        """
+        Initialise factory.
+        """
+        super().__init__(
+            provider=provider,
+            person=person
+        )
+        self.related_contact_set = person.project_id.registrants.filter(
+            provider=provider
+        )
+
+
+class ContactManager(ContactFactory):
+
+    """
+    Manage contact creation.
+    """
+
+
+    def __init__(self,
+                 provider=None,
+                 person=None):
+        """
+        Initialise factory.
+        """
+        super().__init__(
+            provider=provider,
+            person=person
+        )
+        self.related_contact_set = person.project_id.contacts.filter(
+            provider=provider
+        )
