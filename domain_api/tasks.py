@@ -120,7 +120,7 @@ def create_domain(epp, registry):
     return {**epp, **result}
 
 @shared_task
-def connect_domain(create_data):
+def connect_domain(create_data, user=None):
     """
     Connect the newly created domain in our database.
 
