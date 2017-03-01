@@ -23,7 +23,7 @@ class Workflow(object):
         self.workflow = []
         self.registry = None
 
-    def create_domain(self, data):
+    def create_domain(self, data, user):
         """
         Set up workflow for creating a domain
 
@@ -41,7 +41,8 @@ class Workflow(object):
             create_registrant.si(
                 epp,
                 person_id=data["registrant"],
-                registry=self.registry
+                registry=self.registry,
+                user=user
             )
         )
         for contact in data["contacts"]:
@@ -51,9 +52,10 @@ class Workflow(object):
                                   "person": person_id}})
             self.workflow.append(
                 create_registry_contact.s(
-                    person_id,
-                    self.registry,
-                    contact_type
+                    person_id=person_id,
+                    registry=self.registry,
+                    contact_type=contact_type,
+                    user=user
                 )
             )
 

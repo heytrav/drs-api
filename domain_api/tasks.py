@@ -14,7 +14,7 @@ from .models import (
     TopLevelDomain,
     TopLevelDomainProvider
 )
-from .entity_management.contacts import ContactFactory
+from .entity_management.contacts import RegistrantManager, ContactManager
 from .epp.actions.domain import Domain as DomainAction
 from .epp.queries import Domain as DomainQuery
 from .utilities.domain import parse_domain, get_domain_registry
@@ -47,7 +47,11 @@ def check_domain(domain):
 
 
 @shared_task
-def create_registrant(epp, person_id=None, registry=None, force=False):
+def create_registrant(epp,
+                      person_id=None,
+                      registry=None,
+                      user=None,
+                      force=False):
     """
     Create a new contact at a registry. If a contact handle matching the
     person id and the registry already exists, use that one.
@@ -60,7 +64,7 @@ def create_registrant(epp, person_id=None, registry=None, force=False):
     """
     provider = DomainProvider.objects.get(slug=registry)
     person = PersonalDetail.objects.get(pk=person_id)
-    contact_manager = ContactFactory(provider, person, 'registrant')
+    contact_manager = RegistrantManager(provider, person, user)
     contact = contact_manager.fetch_existing_contact()
     if not contact or force:
         contact = contact_manager.create_registry_contact()
@@ -69,7 +73,12 @@ def create_registrant(epp, person_id=None, registry=None, force=False):
 
 
 @shared_task
-def create_registry_contact(epp, person_id=None, registry=None, contact_type="contact", force=False):
+def create_registry_contact(epp,
+                            person_id=None,
+                            registry=None,
+                            contact_type="contact",
+                            user=None,
+                            force=False):
     """
     Create a new contact at a registry. If a contact handle matching the
     person id and the registry already exists, use that one.
@@ -84,7 +93,7 @@ def create_registry_contact(epp, person_id=None, registry=None, contact_type="co
 
     provider = DomainProvider.objects.get(slug=registry)
     person = PersonalDetail.objects.get(pk=person_id)
-    contact_manager = ContactFactory(provider, person, 'contact')
+    contact_manager = ContactManager(provider, person, user)
     contact_obj = contact_manager.fetch_existing_contact()
     if not contact_obj or force:
         contact_obj = contact_manager.create_registry_contact()

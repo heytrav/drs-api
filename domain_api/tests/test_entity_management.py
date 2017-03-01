@@ -1,26 +1,28 @@
 from django.test import TestCase
-from unittest import patch, MockObject
+from django.contrib.auth.models import User
+from unittest.mock import patch, ANY
 from ..exceptions import InvalidTld
 from ..utilities.domain import parse_domain
 from ..entity_management.contacts import (
-    ContactManager,
     RegistrantManager,
     ContactAction
 )
 from ..models import (
     PersonalDetail,
     DomainProvider,
-    Contact,
     TopLevelDomain,
     TopLevelDomainProvider,
-    Registrant
 )
 import domain_api
 
 
+class MockRpcClient(domain_api.epp.entity.EppRpcClient):
+    def __init__(self, host=None):
+        pass
+
 
 class TestEntityManager(TestCase):
-    def setUp():
+    def setUp(self):
         super().setUp()
         centralnic_test = DomainProvider(
             name="Provider1",
@@ -91,15 +93,48 @@ class TestContactManager(TestEntityManager):
         """
         super().setUp()
 
-    @patch('domain_api.entity_management.contacts.ContactAction', new=MockObject)
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_contact_payload(self):
         registrant_factory = RegistrantManager(
             provider=self.provider,
-            person=self.joe_user
+            person=self.joe_user,
+            user=self.user
         )
+        create_return_value = {
+            "id": "A1234",
+            "create_date": "2017-03-01T12:00:00Z"
+        }
 
+        with patch.object(ContactAction, 'create', return_value=create_return_value) as mocked:
+            registrant_factory.create_registry_contact()
 
-
+            actual_data = {
+                'id': ANY,
+                'voice': '+1.8175551234',
+                'fax': '',
+                'email': 'joeuser@test.com',
+                'postalInfo': {
+                    'name': 'Joe User',
+                    'org': '',
+                    'type': 'loc',
+                    'addr': {
+                        'street': ['Evergreen Terrace'],
+                        'city': 'Springfield',
+                        'sp': 'State',
+                        'pc': '',
+                        'cc': 'US'}
+                },
+                'disclose': {
+                    'flag': 0,
+                    'disclosing': [
+                        { 'name': 'name', 'type': 'loc'},
+                        {'name': 'org', 'type': 'loc'},
+                        {'name': 'addr', 'type': 'loc'},
+                        'voice', 'email', 'fax'
+                    ]
+                }
+            }
+            mocked.assert_called_with('provider-one', actual_data)
 
 
 class TestDomainManager(TestEntityManager):

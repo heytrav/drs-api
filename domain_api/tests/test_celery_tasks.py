@@ -137,8 +137,10 @@ class TestCreateRegistrant(ContactOperation):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=create_contact_response):
-            processed_epp = create_registrant(epp, self.joe_user.id,
-                                              'provider-one')
+            processed_epp = create_registrant(epp,
+                                              self.joe_user.id,
+                                              'provider-one',
+                                              self.user)
             self.assertIn('registrant',
                           processed_epp,
                           "Registrant added to epp")
@@ -161,7 +163,10 @@ class TestCreateRegistrant(ContactOperation):
                           'call',
                           side_effect=EppError("FAIL")):
             with self.assertRaises(EppError):
-                create_registrant({}, self.joe_user.id, 'provider-one')
+                create_registrant({},
+                                  self.joe_user.id,
+                                  'provider-one',
+                                  self.user)
 
 
 class TestCreateContact(ContactOperation):
@@ -191,7 +196,8 @@ class TestCreateContact(ContactOperation):
             processed_epp = create_registry_contact(epp,
                                                     self.joe_user.id,
                                                     'provider-one',
-                                                    'tech')
+                                                    'tech',
+                                                    self.user)
             self.assertIn('contact',
                           processed_epp,
                           "Contact added to epp")
@@ -221,7 +227,8 @@ class TestCreateContact(ContactOperation):
                 create_registry_contact({},
                                         self.joe_user.id,
                                         'provider-one',
-                                        'admin')
+                                        'admin',
+                                        self.user)
 
 
 class TestConnectTask(TestCase):

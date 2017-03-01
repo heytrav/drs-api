@@ -1,6 +1,5 @@
 import uuid
 from django_logging import log
-from ..models import Contact, Registrant
 from domain_api.epp.actions.contact import Contact as ContactAction
 
 
@@ -15,12 +14,14 @@ class ContactFactory(object):
 
     def __init__(self,
                  provider=None,
-                 person=None):
+                 person=None,
+                 user=None):
         """
         Initialise factory.
         """
         self.provider = provider
         self.person = person
+        self.user = user
 
     def fetch_existing_contact(self):
         """
@@ -45,7 +46,8 @@ class ContactFactory(object):
         registry_id = eppdata["id"]
         contact = self.related_contact_set.create(
             registry_id=registry_id,
-            provider=self.provider
+            provider=self.provider,
+            project_id=self.user
         )
         return contact
 
@@ -56,7 +58,6 @@ class ContactFactory(object):
 
         """
         return str(uuid.uuid4())[:8]
-
 
     def process_disclose(self):
         """
@@ -76,17 +77,15 @@ class ContactFactory(object):
         if not person.disclose_company:
             non_disclose.append({"name": "addr", "type": postal_info_type})
         if not person.disclose_telephone:
-            non_disclose.append("voice");
+            non_disclose.append("voice")
         if not person.disclose_email:
-            non_disclose.append("email");
+            non_disclose.append("email")
         if not person.disclose_fax:
-            non_disclose.append("fax");
+            non_disclose.append("fax")
         log.debug(non_disclose)
         if len(non_disclose) > 0:
             return non_disclose
         return None
-
-
 
     def create_registry_contact(self):
         """
@@ -143,18 +142,19 @@ class RegistrantManager(ContactFactory):
     Manage registrant creation.
     """
 
-
     def __init__(self,
                  provider=None,
-                 person=None):
+                 person=None,
+                 user=None):
         """
         Initialise factory.
         """
         super().__init__(
             provider=provider,
-            person=person
+            person=person,
+            user=user
         )
-        self.related_contact_set = person.project_id.registrants.filter(
+        self.related_contact_set = user.registrants.filter(
             provider=provider
         )
 
@@ -165,17 +165,18 @@ class ContactManager(ContactFactory):
     Manage contact creation.
     """
 
-
     def __init__(self,
                  provider=None,
-                 person=None):
+                 person=None,
+                 user=None):
         """
         Initialise factory.
         """
         super().__init__(
             provider=provider,
-            person=person
+            person=person,
+            user=user
         )
-        self.related_contact_set = person.project_id.contacts.filter(
+        self.related_contact_set = user.contacts.filter(
             provider=provider
         )
