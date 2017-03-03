@@ -279,7 +279,10 @@ class NsHostObjectListSerializer(serializers.ListField):
 
 
 class HandleSetSerializer(serializers.ListField):
-    child = HandleTypeSerializer()
+    admin = serializers.CharField(required=False)
+    tech = serializers.CharField(required=False)
+    billing = serializers.CharField(required=False)
+    zone = serializers.CharField(required=False)
 
 
 class InfoDomainSerializer(serializers.Serializer):

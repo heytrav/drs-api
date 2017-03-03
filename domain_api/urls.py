@@ -53,15 +53,15 @@ urlpatterns = [
         views.registry_contact
     ),
     url(r'^register-domain/$', views.register_domain),
-    url(r'^domain/$', domain_list, name='domain-list'),
+    url(r'^domains/$', domain_list, name='domain-list'),
     url(
-        r'^domain/available/(?P<domain>.*)/$',
+        r'^domains/available/(?P<domain>.*)/$',
         domain_single_check, name='check-domain'
     ),
     url(
-        r'^domain/bulk-available/$',
+        r'^domains/bulk-available/$',
         domain_bulk_check,
         name='domain-bulk-available'
     ),
-    url(r'^domain/info/(?P<domain>.*)/$', domain_detail, name='domain-info'),
+    url(r'^domains/info/(?P<domain>.*)/$', domain_detail, name='domain-info'),
 ]

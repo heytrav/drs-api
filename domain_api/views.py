@@ -54,7 +54,8 @@ from .exceptions import (
     UnsupportedTld,
     UnknownRegistry,
     DomainNotAvailable,
-    NotObjectOwner
+    NotObjectOwner,
+    EppObjectDoesNotExist
 )
 from domain_api.entity_management.contacts import ContactFactory
 from domain_api.utilities.domain import parse_domain, get_domain_registry
@@ -311,6 +312,7 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
     Handle domain related queries.
     """
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = InfoDomainSerializer
 
     @detail_route(methods=['get', 'post'])
     def available(self, request, domain=None):
@@ -403,6 +405,9 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
         except UnsupportedTld as e:
             log.error(ErrorLogObject(request, e))
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        except EppObjectDoesNotExist as epp_e:
+            log.error(ErrorLogObject(request, epp_e))
+            return Response(status=status.HTTP_404_NOT_FOUND)
         except EppError as epp_e:
             log.error(ErrorLogObject(request, epp_e))
             return Response(status=status.HTTP_400_BAD_REQUEST)

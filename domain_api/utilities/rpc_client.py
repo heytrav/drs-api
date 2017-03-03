@@ -3,7 +3,8 @@ import pika
 import uuid
 import json
 
-from ..exceptions import EppError
+from ..exceptions import EppError, EppObjectDoesNotExist
+
 
 class EppRpcClient(object):
     """
@@ -44,13 +45,16 @@ class EppRpcClient(object):
         self.channel.basic_publish(exchange=self.exchange,
                                    routing_key=routing_key,
                                    properties=pika.BasicProperties(
-                                         reply_to = self.callback_queue,
-                                         correlation_id = self.corr_id,
+                                         reply_to=self.callback_queue,
+                                         correlation_id=self.corr_id,
                                          ),
                                    body=json.dumps(epp_command))
         while self.response is None:
             self.connection.process_data_events()
         response_data = json.loads(self.response.decode("utf-8"))
-        if int(response_data["result"]["code"]) >= 2000:
+        result_code = int(response_data["result"]["code"])
+        if result_code == 2303:
+            raise EppObjectDoesNotExist(response_data["result"]["msg"])
+        if result_code >= 2000:
             raise EppError(response_data["result"]["msg"])
         return response_data["data"]
