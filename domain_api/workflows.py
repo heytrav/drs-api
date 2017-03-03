@@ -42,7 +42,7 @@ class Workflow(object):
                 epp,
                 person_id=data["registrant"],
                 registry=self.registry,
-                user=user
+                user=user.id
             )
         )
         for contact in data["contacts"]:
@@ -55,7 +55,7 @@ class Workflow(object):
                     person_id=person_id,
                     registry=self.registry,
                     contact_type=contact_type,
-                    user=user
+                    user=user.id
                 )
             )
 

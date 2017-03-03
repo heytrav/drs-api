@@ -277,7 +277,7 @@ def register_domain(request):
         workflow_manager = workflow_factory(registry)()
 
         log.debug({"msg": "About to call workflow_manager.create_domain"})
-        workflow = workflow_manager.create_domain(data)
+        workflow = workflow_manager.create_domain(data, request.user)
         # run chained workflow and register the domain
         chained_workflow = chain(workflow)()
         chain_res = process_workflow_chain(chained_workflow)
