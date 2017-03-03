@@ -352,10 +352,6 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
                 registered_domain_set = RegisteredDomain.objects.all()
 
             contact_domains = registered_domain_set
-            #.filter(
-                #Q(active=True) &
-                #(Q(registrant__registrant__registry_id=registry_id) | Q(contacts__contact__registry_id=registry_id))
-            #).distinct()
             if len(contact_domains) == 0:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             contact_domain_set = {"result": []}
