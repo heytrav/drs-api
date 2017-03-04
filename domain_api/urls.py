@@ -41,18 +41,14 @@ domain_bulk_check = views.DomainRegistryManagementViewset.as_view({
 
 urlpatterns = [
     url(r'^', include(router.urls, namespace='domain_api')),
-    url(r'^check-domain/(?P<domain>.*)/$', views.check_domain),
-    url(r'^info-domain/(?P<domain>.*)/$', views.info_domain),
     url(r'^info-contact/(?P<contact>[^\/]+)/(?P<registry>.*)/$',
         views.info_contact),
     url(r'^info-contact/(?P<contact>.*)/$', views.info_contact),
-    url(r'^contact-domains/(?P<registry_id>.*)/$', views.contact_domains),
     url(r'^registry-contact/$', views.registry_contact),
     url(
         r'^registry-contact/(?P<registry>.*)/(?P<contact_type>.*)/$',
         views.registry_contact
     ),
-    url(r'^register-domain/$', views.register_domain),
     url(r'^domains/$', domain_list, name='domain-list'),
     url(
         r'^domains/available/(?P<domain>.*)/$',
@@ -63,5 +59,6 @@ urlpatterns = [
         domain_bulk_check,
         name='domain-bulk-available'
     ),
+    url(r'^domains/create/$', domain_list, name='domain-create'),
     url(r'^domains/(?P<domain>.*)/$', domain_detail, name='domain-info'),
 ]

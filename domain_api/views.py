@@ -10,7 +10,6 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
     detail_route,
-    list_route
 )
 from rest_framework.response import Response
 from domain_api.models import (
@@ -42,7 +41,6 @@ from domain_api.serializers import (
     DomainContactSerializer,
     InfoDomainSerializer,
     InfoContactSerializer,
-    ContactDomainResultSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
@@ -98,63 +96,6 @@ def workflow_scan(node):
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
-def check_domain(request, domain, format=None):
-    """
-    Query EPP with a checkDomain request.
-    :returns: JSON response indicating whether domain is available.
-    """
-    try:
-        query = DomainQuery()
-        provider = get_domain_registry(domain)
-        availability = query.check_domain(provider.slug, domain)
-        serializer = CheckDomainResponseSerializer(data=availability)
-        if serializer.is_valid():
-            return Response(serializer.data)
-    except EppError as epp_e:
-        log.error(ErrorLogObject(request, epp_e))
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    except KeyError as ke:
-        log.error(ErrorLogObject(request, ke))
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['GET'])
-@permission_classes((permissions.IsAuthenticated,))
-def info_domain(request, domain, format=None):
-    """
-    Query EPP with a infoDomain request.
-    :returns: JSON response with details about a domain
-
-    """
-    try:
-        # Fetch registry for domain
-        provider = get_domain_registry(domain)
-
-        query = DomainQuery()
-        info = query.info(domain, provider.slug, user=request.user)
-        serializer = InfoDomainSerializer(data=info)
-        log.info(info)
-        if serializer.is_valid():
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
-    except InvalidTld as e:
-        log.error(ErrorLogObject(request, e))
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    except UnsupportedTld as e:
-        log.error(ErrorLogObject(request, e))
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    except EppError as epp_e:
-        log.error(ErrorLogObject(request, epp_e))
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        log.error(ErrorLogObject(request, e))
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['GET'])
-@permission_classes((permissions.IsAuthenticated,))
 def info_contact(request, contact, registry=None, format=None):
     """
     Query EPP with a infoContact request.
@@ -176,48 +117,6 @@ def info_contact(request, contact, registry=None, format=None):
     except EppError as epp_e:
         log.error(ErrorLogObject(request, epp_e))
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        log.error(ErrorLogObject(request, e))
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['GET'])
-@permission_classes((permissions.IsAuthenticated,))
-def contact_domains(request, registry_id, format=None):
-    """
-    Query for domains linked to a particular registry contact
-    :returns: JSON response with details about a contact
-
-    """
-    try:
-        # Limit registered domain query to "owned" domains
-        registered_domain_set = RegisteredDomain.objects.filter(
-            Q(registrant__registrant__project_id=request.user) | Q(contacts__contact__project_id=request.user)
-        )
-        # Admin gets access to all domains.
-        if request.user.groups.filter(name='admin').exists():
-            registered_domain_set = RegisteredDomain.objects.all()
-
-        contact_domains = registered_domain_set.filter(
-            Q(active=True) &
-            (Q(registrant__registrant__registry_id=registry_id) | Q(contacts__contact__registry_id=registry_id))
-        ).distinct()
-        if len(contact_domains) == 0:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        contact_domain_set = {"result": []}
-        for domain in contact_domains.all():
-            contact_domain_object = {}
-            contact_domain_object["domain"] = ".".join([domain.domain.name, domain.tld.zone])
-            contact_domain_object["created"] = domain.created
-            contact_domain_object["anniversary"] = domain.anniversary
-            contact_domain_set["result"].append(contact_domain_object)
-
-        serializer = ContactDomainResultSerializer(data=contact_domain_set)
-        if serializer.is_valid():
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         log.error(ErrorLogObject(request, e))
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -256,50 +155,6 @@ def registry_contact(request, registry, contact_type="contact"):
         return Response(serializer.data)
     except EppError as epp_e:
         log.error(ErrorLogObject(request, epp_e))
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        log.error(ErrorLogObject(request, e))
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['POST'])
-@permission_classes((permissions.IsAuthenticated,))
-def register_domain(request):
-    """
-    Register a domain name.
-
-    :request: Request object with JSON payload
-    :returns: Response from registry
-    """
-    data = request.data
-    parsed_domain = parse_domain(data["domain"])
-    chain_res = None
-    try:
-        # See if this TLD is provided by one of our registries.
-        tld_provider = TopLevelDomainProvider.objects.get(
-            zone__zone=parsed_domain["zone"]
-        )
-        registry = tld_provider.provider.slug
-        workflow_manager = workflow_factory(registry)()
-
-        log.debug({"msg": "About to call workflow_manager.create_domain"})
-        workflow = workflow_manager.create_domain(data, request.user)
-        # run chained workflow and register the domain
-        chained_workflow = chain(workflow)()
-        chain_res = process_workflow_chain(chained_workflow)
-        log.debug({"msg": "Have response from workflow", "result": chain_res})
-        #return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(chain_res)
-    except DomainNotAvailable:
-        return Response("Domain not available",
-                        status=status.HTTP_400_BAD_REQUEST)
-    except NotObjectOwner:
-        return Response("Not owner of object",
-                        status=status.HTTP_400_BAD_REQUEST)
-    except KeyError as e:
-        log.error(ErrorLogObject(request, e))
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    except TopLevelDomainProvider.DoesNotExist:
         return Response(status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         log.error(ErrorLogObject(request, e))
@@ -348,7 +203,8 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
         try:
             # Limit registered domain query to "owned" domains
             registered_domain_set = self.get_queryset().filter(
-                Q(registrant__registrant__project_id=request.user) | Q(contacts__contact__project_id=request.user)
+                Q(registrant__registrant__project_id=request.user) |
+                Q(contacts__contact__project_id=request.user)
             ).distinct()
             # Admin gets access to all domains.
             if request.user.groups.filter(name='admin').exists():
@@ -360,7 +216,8 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
             domain_set = []
             for domain in contact_domains.filter(active=True):
                 domain_object = {}
-                domain_object["domain"] = ".".join([domain.domain.name, domain.tld.zone])
+                domain_object["domain"] = ".".join([domain.domain.name,
+                                                    domain.tld.zone])
                 domain_object["registrant"] = domain.registrant.first().registrant.registry_id
                 contact_set = []
                 for dom_contact in domain.contacts.all():
@@ -383,8 +240,6 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
             log.error(ErrorLogObject(request, e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-    #@detail_route(methods=['get'])
     def info(self, request, domain):
         """
         Query EPP with a infoDomain request.
@@ -424,7 +279,6 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
             log.error(ErrorLogObject(request, e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
     def create(self, request):
         """
         Register a domain name.
@@ -448,8 +302,6 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
             # run chained workflow and register the domain
             chained_workflow = chain(workflow)()
             chain_res = process_workflow_chain(chained_workflow)
-            log.debug({"msg": "Have response from workflow", "result": chain_res})
-            #return Response(status=status.HTTP_204_NO_CONTENT)
             return Response(chain_res)
         except DomainNotAvailable:
             return Response("Domain not available",
