@@ -1,5 +1,6 @@
 from __future__ import absolute_import, unicode_literals
-from celery import chain
+from celery import chain, group
+import itertools
 from django_logging import log, ErrorLogObject
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -37,6 +38,7 @@ from domain_api.serializers import (
     DomainSerializer,
     RegisteredDomainSerializer,
     CheckDomainResponseSerializer,
+    DomainAvailabilitySerializer,
     DomainRegistrantSerializer,
     DomainContactSerializer,
     InfoDomainSerializer,
@@ -170,7 +172,7 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
     serializer_class = InfoDomainSerializer
     queryset = RegisteredDomain.objects.all()
 
-    @detail_route(methods=['get', 'post'])
+    @detail_route(methods=['get'])
     def available(self, request, domain=None):
         """
         Check availability of a domain name
@@ -184,9 +186,56 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
             query = DomainQuery()
             provider = get_domain_registry(domain)
             availability = query.check_domain(provider.slug, domain)
-            serializer = CheckDomainResponseSerializer(data=availability)
+            serializer = DomainAvailabilitySerializer(data=availability["result"][0])
             if serializer.is_valid():
                 return Response(serializer.data)
+        except EppError as epp_e:
+            log.error(ErrorLogObject(request, epp_e))
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except KeyError as ke:
+            log.error(ErrorLogObject(request, ke))
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @detail_route(methods=['get'])
+    def bulk_available(self, request, name=None):
+        """
+        Check availability of a domain name
+
+        :request: HTTP request
+        :name: str domain name to check
+        :returns: availability of domain object
+
+        """
+        try:
+            if "." in name:
+                raise Exception("Not allowed to have a tld in bulk search")
+            providers = DomainProvider.objects.all()
+            registry_workflows = []
+            for provider in providers.all():
+                provider_slug = provider.slug
+                workflow_manager = workflow_factory(provider_slug)()
+                tld_providers = provider.topleveldomainprovider_set.all()
+                fqdn_list = []
+                for tld_provider in tld_providers.all():
+                    zone = tld_provider.zone.zone
+                    fqdn_list.append(".".join([name, zone]))
+                check_task = workflow_manager.check_domains(
+                    fqdn_list
+                )
+                registry_workflows.append(check_task)
+            check_group = group(registry_workflows)()
+            registry_result = check_group.get()
+            check_result = []
+            for i in registry_result:
+                check_result += i
+            log.info({"result": check_result})
+            serializer = DomainAvailabilitySerializer(data=check_result, many=True)
+            if serializer.is_valid():
+                return Response(serializer.data)
+            else:
+                return Response(serializer.errors,
+                                status=status.HTTP_400_BAD_REQUEST)
+
         except EppError as epp_e:
             log.error(ErrorLogObject(request, epp_e))
             return Response(status=status.HTTP_400_BAD_REQUEST)

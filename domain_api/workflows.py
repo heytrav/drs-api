@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 from .tasks import (
     check_domain,
+    check_bulk_domain,
     create_registrant,
     create_registry_contact,
     create_domain,
@@ -22,6 +23,16 @@ class Workflow(object):
         """
         self.workflow = []
         self.registry = None
+
+    def check_domains(self, fqdn_list):
+        """
+        Create chained workflows for set of domains.
+
+        :fqdn_list: list of fqdns
+        :returns: chain object for celery
+
+        """
+        return check_bulk_domain.si(self.registry, fqdn_list)
 
     def create_domain(self, data, user):
         """

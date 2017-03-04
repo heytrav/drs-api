@@ -35,7 +35,7 @@ domain_single_check = views.DomainRegistryManagementViewset.as_view({
 })
 
 domain_bulk_check = views.DomainRegistryManagementViewset.as_view({
-    'post': 'available'
+    'get': 'bulk_available'
 })
 
 
@@ -51,13 +51,13 @@ urlpatterns = [
     ),
     url(r'^domains/$', domain_list, name='domain-list'),
     url(
-        r'^domains/available/(?P<domain>.*)/$',
-        domain_single_check, name='check-domain'
-    ),
-    url(
-        r'^domains/bulk-available/$',
+        r'^domains/available/(?P<name>[^\.\/]+)/$',
         domain_bulk_check,
         name='domain-bulk-available'
+    ),
+    url(
+        r'^domains/available/(?P<domain>.*)/$',
+        domain_single_check, name='check-domain'
     ),
     url(r'^domains/create/$', domain_list, name='domain-create'),
     url(r'^domains/(?P<domain>.*)/$', domain_detail, name='domain-info'),

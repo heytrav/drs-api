@@ -263,6 +263,7 @@ class DomainContactSerializer(serializers.HyperlinkedModelSerializer):
 class DomainAvailabilitySerializer(serializers.Serializer):
     domain = serializers.CharField(required=True, allow_blank=False)
     available = serializers.BooleanField(required=True)
+    reason = serializers.CharField(required=False)
 
 
 class CheckDomainResponseSerializer(serializers.Serializer):

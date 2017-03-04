@@ -25,6 +25,20 @@ from .exceptions import (
 )
 
 @shared_task
+def check_bulk_domain(registry, domains):
+    """
+    Bulk domain check
+
+    :domains: set of domains
+    :registry: registry to query
+    :returns: dict result from provider
+
+    """
+    query = DomainQuery()
+    availability = query.check_domain(registry, domains)
+    return availability["result"]
+
+@shared_task
 def check_domain(domain):
     """
     Check if a domain exists.
