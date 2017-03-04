@@ -60,7 +60,7 @@ class TestCheckDomain(TestApiClient):
                              200,
                              "Epp returned normally")
             data = json.loads(response.content.decode('utf-8'))
-            self.assertTrue(data["result"][0]["available"],
+            self.assertTrue(data["available"],
                             "Serialised a check_domain response")
 
 
