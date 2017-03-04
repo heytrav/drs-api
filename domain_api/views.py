@@ -1,6 +1,5 @@
 from __future__ import absolute_import, unicode_literals
 from celery import chain, group
-import itertools
 from django_logging import log, ErrorLogObject
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -38,7 +37,6 @@ from domain_api.serializers import (
     RegistrantSerializer,
     DomainSerializer,
     RegisteredDomainSerializer,
-    CheckDomainResponseSerializer,
     DomainAvailabilitySerializer,
     DomainRegistrantSerializer,
     DomainContactSerializer,
@@ -162,6 +160,47 @@ def registry_contact(request, registry, contact_type="contact"):
     except Exception as e:
         log.error(ErrorLogObject(request, e))
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class ContactManagementViewset(viewsets.GenericViewSet):
+    """
+    Handle contact related queries.
+    """
+
+    def get_queryset(self):
+        """
+        Return the contact queryset.
+        :returns: TODO
+
+        """
+        user = self.request.user
+
+    def info(self, request, registry_id):
+        """
+        Retrieve info about a contact
+
+        :request: TODO
+        :registry_id: TODO
+        :returns: TODO
+
+        """
+        try:
+            query = ContactQuery()
+            info = query.info(contact, user=request.user, registry=registry)
+            serializer = InfoContactSerializer(data=info)
+            log.info(info)
+            if serializer.is_valid():
+                return Response(serializer.data)
+            else:
+                return Response(serializer.errors,
+                                status=status.HTTP_400_BAD_REQUEST)
+        except UnknownRegistry:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except EppError as epp_e:
+            log.error(ErrorLogObject(request, epp_e))
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            log.error(ErrorLogObject(request, e))
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DomainRegistryManagementViewset(viewsets.GenericViewSet):
