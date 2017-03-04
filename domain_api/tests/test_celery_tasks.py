@@ -140,7 +140,7 @@ class TestCreateRegistrant(ContactOperation):
             processed_epp = create_registrant(epp,
                                               self.joe_user.id,
                                               'provider-one',
-                                              self.user)
+                                              self.user.id)
             self.assertIn('registrant',
                           processed_epp,
                           "Registrant added to epp")
@@ -166,7 +166,7 @@ class TestCreateRegistrant(ContactOperation):
                 create_registrant({},
                                   self.joe_user.id,
                                   'provider-one',
-                                  self.user)
+                                  self.user.id)
 
 
 class TestCreateContact(ContactOperation):
@@ -197,7 +197,7 @@ class TestCreateContact(ContactOperation):
                                                     self.joe_user.id,
                                                     'provider-one',
                                                     'tech',
-                                                    self.user)
+                                                    self.user.id)
             self.assertIn('contact',
                           processed_epp,
                           "Contact added to epp")
@@ -228,7 +228,7 @@ class TestCreateContact(ContactOperation):
                                         self.joe_user.id,
                                         'provider-one',
                                         'admin',
-                                        self.user)
+                                        self.user.id)
 
 
 class TestConnectTask(TestCase):

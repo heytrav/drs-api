@@ -263,6 +263,7 @@ class DomainContactSerializer(serializers.HyperlinkedModelSerializer):
 class DomainAvailabilitySerializer(serializers.Serializer):
     domain = serializers.CharField(required=True, allow_blank=False)
     available = serializers.BooleanField(required=True)
+    reason = serializers.CharField(required=False)
 
 
 class CheckDomainResponseSerializer(serializers.Serializer):
@@ -279,7 +280,10 @@ class NsHostObjectListSerializer(serializers.ListField):
 
 
 class HandleSetSerializer(serializers.ListField):
-    child = HandleTypeSerializer()
+    admin = serializers.CharField(required=False)
+    tech = serializers.CharField(required=False)
+    billing = serializers.CharField(required=False)
+    zone = serializers.CharField(required=False)
 
 
 class InfoDomainSerializer(serializers.Serializer):
@@ -287,10 +291,20 @@ class InfoDomainSerializer(serializers.Serializer):
     contacts = HandleSetSerializer()
     registrant = serializers.CharField(required=True, allow_blank=False)
     roid = serializers.CharField()
-    ns = NsHostObjectListSerializer(required=True)
+    ns = NsHostObjectListSerializer(required=False)
     status = serializers.CharField(required=False, allow_blank=True)
     authcode = serializers.CharField(required=False, allow_blank=True)
     roid = serializers.CharField(required=False, allow_blank=True)
+    created = serializers.DateTimeField(required=False)
+    anniversary = serializers.DateTimeField(required=False)
+
+
+class InfoDomainListSerializer(serializers.ListField):
+
+    """
+    Serialise a set of domains into respective info description.
+    """
+    child = InfoDomainSerializer()
 
 
 class InfoContactSerializer(serializers.Serializer):

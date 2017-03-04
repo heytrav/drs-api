@@ -30,7 +30,7 @@ class TestCheckDomain(TestApiClient):
 
         with patch.object(EppRpcClient, 'call', side_effect=EppError("FAIL")):
             response = self.client.get(
-                '/v1/check-domain/whatever.tld/'
+                '/v1/domains/available/whatever.tld/'
             )
             self.assertEqual(response.status_code,
                              400,
@@ -54,13 +54,13 @@ class TestCheckDomain(TestApiClient):
         }
         with patch.object(EppRpcClient, 'call', return_value=return_data):
             response = self.client.get(
-                '/v1/check-domain/whatever.tld/'
+                '/v1/domains/available/whatever.tld/'
             )
             self.assertEqual(response.status_code,
                              200,
                              "Epp returned normally")
             data = json.loads(response.content.decode('utf-8'))
-            self.assertTrue(data["result"][0]["available"],
+            self.assertTrue(data["available"],
                             "Serialised a check_domain response")
 
 
@@ -108,7 +108,7 @@ class TestInfoDomain(TestApiClient):
         }
         with patch.object(EppRpcClient, 'call', return_value=return_value):
             response = self.client.get(
-                '/v1/info-domain/whatever.tld/'
+                '/v1/domains/info/whatever.tld/'
             )
             self.assertEqual(response.status_code,
                              200,

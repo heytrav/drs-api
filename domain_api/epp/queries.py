@@ -115,8 +115,9 @@ class Domain(EppEntity):
         info_data = response_data["domain:infData"]
         for contact in info_data["domain:contact"]:
             if '$t' in contact:
-                contact["contact"] = contact["$t"]
-                contact["contact_type"] = contact["type"]
+                contact_type = contact["type"]
+                contact_id = contact["$t"]
+                contact[contact_type] = contact_id
                 del contact["type"]
                 del contact["$t"]
         return_data = {

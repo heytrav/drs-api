@@ -1,5 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
+from django.contrib.auth.models import User
 from django_logging import log, ErrorLogObject
 from .models import (
     Contact,
@@ -22,6 +23,20 @@ from .exceptions import (
     DomainNotAvailable,
     NotObjectOwner
 )
+
+@shared_task
+def check_bulk_domain(registry, domains):
+    """
+    Bulk domain check
+
+    :domains: set of domains
+    :registry: registry to query
+    :returns: dict result from provider
+
+    """
+    query = DomainQuery()
+    availability = query.check_domain(registry, domains)
+    return availability["result"]
 
 @shared_task
 def check_domain(domain):
@@ -64,7 +79,8 @@ def create_registrant(epp,
     """
     provider = DomainProvider.objects.get(slug=registry)
     person = PersonalDetail.objects.get(pk=person_id)
-    contact_manager = RegistrantManager(provider, person, user)
+    user_obj = User.objects.get(pk=user)
+    contact_manager = RegistrantManager(provider, person, user_obj)
     contact = contact_manager.fetch_existing_contact()
     if not contact or force:
         contact = contact_manager.create_registry_contact()
@@ -93,7 +109,8 @@ def create_registry_contact(epp,
 
     provider = DomainProvider.objects.get(slug=registry)
     person = PersonalDetail.objects.get(pk=person_id)
-    contact_manager = ContactManager(provider, person, user)
+    user_obj = User.objects.get(pk=user)
+    contact_manager = ContactManager(provider, person, user_obj)
     contact_obj = contact_manager.fetch_existing_contact()
     if not contact_obj or force:
         contact_obj = contact_manager.create_registry_contact()
@@ -120,7 +137,7 @@ def create_domain(epp, registry):
     return {**epp, **result}
 
 @shared_task
-def connect_domain(create_data):
+def connect_domain(create_data, user=None):
     """
     Connect the newly created domain in our database.
 

@@ -10,6 +10,10 @@ class DomainNotAvailable(Exception):
     pass
 
 
+class EppObjectDoesNotExist(Exception):
+    pass
+
+
 class NotObjectOwner(Exception):
     pass
 
