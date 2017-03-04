@@ -290,10 +290,20 @@ class InfoDomainSerializer(serializers.Serializer):
     contacts = HandleSetSerializer()
     registrant = serializers.CharField(required=True, allow_blank=False)
     roid = serializers.CharField()
-    ns = NsHostObjectListSerializer(required=True)
+    ns = NsHostObjectListSerializer(required=False)
     status = serializers.CharField(required=False, allow_blank=True)
     authcode = serializers.CharField(required=False, allow_blank=True)
     roid = serializers.CharField(required=False, allow_blank=True)
+    created = serializers.DateTimeField(required=False)
+    anniversary = serializers.DateTimeField(required=False)
+
+
+class InfoDomainListSerializer(serializers.ListField):
+
+    """
+    Serialise a set of domains into respective info description.
+    """
+    child = InfoDomainSerializer()
 
 
 class InfoContactSerializer(serializers.Serializer):

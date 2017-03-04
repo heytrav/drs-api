@@ -313,6 +313,7 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
     """
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = InfoDomainSerializer
+    queryset = RegisteredDomain.objects.all()
 
     @detail_route(methods=['get', 'post'])
     def available(self, request, domain=None):
@@ -346,25 +347,33 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
         """
         try:
             # Limit registered domain query to "owned" domains
-            registered_domain_set = RegisteredDomain.objects.filter(
+            registered_domain_set = self.get_queryset().filter(
                 Q(registrant__registrant__project_id=request.user) | Q(contacts__contact__project_id=request.user)
-            )
+            ).distinct()
             # Admin gets access to all domains.
             if request.user.groups.filter(name='admin').exists():
-                registered_domain_set = RegisteredDomain.objects.all()
+                registered_domain_set = self.get_queryset()
 
             contact_domains = registered_domain_set
             if len(contact_domains) == 0:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            contact_domain_set = {"result": []}
-            for domain in contact_domains.all():
-                contact_domain_object = {}
-                contact_domain_object["domain"] = ".".join([domain.domain.name, domain.tld.zone])
-                contact_domain_object["created"] = domain.created
-                contact_domain_object["anniversary"] = domain.anniversary
-                contact_domain_set["result"].append(contact_domain_object)
+            domain_set = []
+            for domain in contact_domains.filter(active=True):
+                domain_object = {}
+                domain_object["domain"] = ".".join([domain.domain.name, domain.tld.zone])
+                domain_object["registrant"] = domain.registrant.first().registrant.registry_id
+                contact_set = []
+                for dom_contact in domain.contacts.all():
+                    domain_contact = {}
+                    domain_contact[dom_contact.contact_type.name] = dom_contact.contact.registry_id
+                    contact_set.append(domain_contact)
+                domain_object["contacts"] = contact_set
+                domain_object["ns"] = []
+                domain_object["anniversary"] = domain.anniversary
+                domain_object["created"] = domain.created
+                domain_set.append(domain_object)
 
-            serializer = ContactDomainResultSerializer(data=contact_domain_set)
+            serializer = InfoDomainSerializer(data=domain_set, many=True)
             if serializer.is_valid():
                 return Response(serializer.data)
             else:
@@ -375,7 +384,7 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-    @detail_route(methods=['get'])
+    #@detail_route(methods=['get'])
     def info(self, request, domain):
         """
         Query EPP with a infoDomain request.

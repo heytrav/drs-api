@@ -63,5 +63,5 @@ urlpatterns = [
         domain_bulk_check,
         name='domain-bulk-available'
     ),
-    url(r'^domains/info/(?P<domain>.*)/$', domain_detail, name='domain-info'),
+    url(r'^domains/(?P<domain>.*)/$', domain_detail, name='domain-info'),
 ]
