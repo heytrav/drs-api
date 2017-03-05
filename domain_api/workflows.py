@@ -43,9 +43,11 @@ class Workflow(object):
 
         """
         epp = {
-            "name": data["domain"],
-            "ns": data["ns"]
+            "name": data["domain"]
         }
+        if "ns" in data:
+            epp["ns"] = data["ns"]
+
         self.workflow.append(check_domain.s(data["domain"]))
         # TODO: process nameservers
         self.workflow.append(
