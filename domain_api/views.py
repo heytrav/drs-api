@@ -11,6 +11,7 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
     detail_route,
+    list_route
 )
 from rest_framework.response import Response
 from domain_api.models import (
@@ -243,7 +244,7 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
             log.error(ErrorLogObject(request, ke))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def list(self, request):
+    def domain_set(self, request):
         """
         Query for domains linked to a particular registry contact
         :returns: JSON response with details about a contact
@@ -351,6 +352,12 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
             # run chained workflow and register the domain
             chained_workflow = chain(workflow)()
             chain_res = process_workflow_chain(chained_workflow)
+            serializer = InfoDomainSerializer(data=chain_res)
+            if serializer.is_valid():
+                return Response(serializer.data)
+            else:
+                log.error(serializer.errors)
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             return Response(chain_res)
         except DomainNotAvailable:
             return Response("Domain not available",

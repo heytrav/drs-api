@@ -146,7 +146,9 @@ def connect_domain(create_data, user=None):
 
     """
     try:
-        parsed_domain = parse_domain(create_data["name"])
+        create_data["domain"] = create_data.pop('name', None)
+        create_data["contacts"] = create_data.pop('contact', None)
+        parsed_domain = parse_domain(create_data["domain"])
         domain_obj, _ = Domain.objects.get_or_create(
             name=parsed_domain["domain"],
             idn=parsed_domain["domain"]
@@ -170,7 +172,7 @@ def connect_domain(create_data, user=None):
             registrant=registrant,
             active=True,
         )
-        for item in create_data["contact"]:
+        for item in create_data["contacts"]:
             (con_type, registry_id), = item.items()
             contact_type = ContactType.objects.get(name=con_type)
             contact = Contact.objects.get(registry_id=registry_id)

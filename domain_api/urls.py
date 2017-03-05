@@ -24,7 +24,7 @@ router.register(r'domain-contact', views.DomainContactViewSet, "domaincontact")
 router.register(r'users', views.UserViewSet)
 
 domain_list = views.DomainRegistryManagementViewset.as_view({
-    'get': 'list',
+    'get': 'domain_set',
     'post': 'create'
 })
 domain_detail = views.DomainRegistryManagementViewset.as_view({

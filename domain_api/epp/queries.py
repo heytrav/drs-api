@@ -124,9 +124,10 @@ class Domain(EppEntity):
             "domain": info_data["domain:name"],
             "registrant": info_data["domain:registrant"],
             "contacts": info_data["domain:contact"],
-            "ns": self.process_nameservers(info_data["domain:ns"]),
             "status": self.process_status(info_data["domain:status"])
         }
+        if "domain:ns" in info_data:
+            return_data["ns"] = self.process_nameservers(info_data["domain:ns"])
 
         if (is_owner or user.is_staff) and "domain:authInfo" in info_data:
             return_data["authcode"] = info_data["domain:authInfo"]["domain:pw"]
