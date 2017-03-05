@@ -10,7 +10,8 @@ RUN apt-get update && apt-get -y install \
       python3-nose2 \
       python3-pip \
       python3.5 \
-      python3.5-dev
+      python3.5-dev \
+      jq
 
 
 WORKDIR /usr/local/domain-api
