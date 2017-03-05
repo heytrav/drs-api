@@ -85,12 +85,23 @@ WSGI_APPLICATION = 'application.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
+def read_secret_file(secret_file_path, default=None):
+    data = default
+    if secret_file_path:
+        with open(secret_file_path, 'rt') as f:
+            data = f.read().strip()
+    return data
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get("MYSQL_DATABASE", 'domaindb'),
-        'USER': os.environ.get("MYSQL_USER", 'mysqluser'),
-        'PASSWORD': os.environ.get("MYSQL_PASSWORD", ''),
+        'NAME': read_secret_file(os.environ.get('MYSQL_DATABASE_FILE', None),
+                                 os.environ.get("MYSQL_DATABASE", 'domaindb')),
+        'USER': read_secret_file(os.environ.get('MYSQL_USER_FILE', None),
+                                 os.environ.get("MYSQL_USER", 'mysqluser')),
+        'PASSWORD': read_secret_file(os.environ.get('MYSQL_PASSWORD_FILE', None),
+                                     os.environ.get("MYSQL_PASSWORD", '')),
         'HOST': os.environ.get("MYSQL_HOST", '127.0.0.1'),
         'PORT': os.environ.get("MYSQL_PORT", 3306)
     }
