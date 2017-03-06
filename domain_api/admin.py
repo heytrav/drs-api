@@ -9,8 +9,12 @@ from .models import (
     RegisteredDomain,
     Registrant,
     Contact,
+    ContactType,
     DomainRegistrant,
     DomainContact,
+    DefaultAccountTemplate,
+    DefaultRegistrant,
+    DefaultContact,
 )
 
 
@@ -30,7 +34,9 @@ class DomainProviderAdmin(admin.ModelAdmin):
     ]
     inlines = [TopLevelDomainProviderInline]
 
-
+admin.site.register(DefaultAccountTemplate)
+admin.site.register(DefaultRegistrant)
+admin.site.register(DefaultContact)
 admin.site.register(AccountDetail)
 admin.site.register(TopLevelDomain)
 admin.site.register(DomainProvider, DomainProviderAdmin)
@@ -38,5 +44,6 @@ admin.site.register(Domain)
 admin.site.register(RegisteredDomain)
 admin.site.register(Registrant)
 admin.site.register(Contact)
+admin.site.register(ContactType)
 admin.site.register(DomainRegistrant)
 admin.site.register(DomainContact)

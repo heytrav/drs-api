@@ -75,6 +75,8 @@ class ContactType(models.Model):
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField()
 
+    def __str__(self):
+        return self.name
 
 class TopLevelDomain(models.Model):
     """
@@ -214,7 +216,7 @@ class TopLevelDomainProvider(models.Model):
 
     zone = models.ForeignKey(TopLevelDomain)
     provider = models.ForeignKey(DomainProvider)
-    anniversary_notification_period_days = models.IntegerField()
+    anniversary_notification_period_days = models.IntegerField(default=30)
     renewal_period = models.IntegerField(default=30)
     grace_period_days = models.IntegerField(default=30)
 
