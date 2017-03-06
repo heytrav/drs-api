@@ -8,7 +8,7 @@ class AccountDetail(models.Model):
 
     INT = 'int'
     LOC = 'loc'
-    POSTAL_INFO_TYPES =(
+    POSTAL_INFO_TYPES = (
         (INT, 'international'),
         (LOC, 'local'),
     )
@@ -52,6 +52,7 @@ class AccountDetail(models.Model):
     def __str__(self):
         return self.surname + ', ' + self.first_name
 
+
 class DefaultAccountTemplate(models.Model):
 
     """
@@ -66,34 +67,6 @@ class DefaultAccountTemplate(models.Model):
     class Meta:
         unique_together = ('project_id', 'account_template',)
 
-
-class DefaultRegistrant(models.Model):
-
-    """
-    Store default registrant for project.
-    """
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='default_registrant',
-                                   on_delete=models.CASCADE)
-    registrant = models.ForeignKey(Registrant)
-
-    class Meta:
-        unique_together = ('project_id', 'registrant',)
-
-
-class DefaultContact(models.Model):
-    """
-    Store default contact for registrars for a given project.
-    """
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='default_contact',
-                                   on_delete=models.CASCADE)
-    contact_type = models.ForeignKey(ContactType)
-    contact = models.ForeignKey(Contact)
-    provider = models.ForeignKey(DomainProvider)
-
-    class Meta:
-        unique_together = ('project_id', 'contact_type', 'contact', 'provider',)
 
 class ContactType(models.Model):
     """
@@ -148,7 +121,7 @@ class Registrant(models.Model):
 
     INT = 'int'
     LOC = 'loc'
-    POSTAL_INFO_TYPES =(
+    POSTAL_INFO_TYPES = (
         (INT, 'international'),
         (LOC, 'local'),
     )
@@ -191,7 +164,7 @@ class Contact(models.Model):
     """
     INT = 'int'
     LOC = 'loc'
-    POSTAL_INFO_TYPES =(
+    POSTAL_INFO_TYPES = (
         (INT, 'international'),
         (LOC, 'local'),
     )
@@ -269,7 +242,8 @@ class RegisteredDomain(models.Model):
 
     A registered domain is a combined Domain + TopLevelDomainProvider
     object as it may be possible to register the same tld from multiple sources.
-    Providers may have their own unique rules around renewal period and notifications.
+    Providers may have their own unique rules around renewal period and
+    notifications.
     """
     domain = models.ForeignKey(Domain)
     # Needed to enforce unique constraint
@@ -313,8 +287,8 @@ class DomainRegistrant(models.Model):
 
 class DomainContact(models.Model):
     """
-    Contact associated with a domain. A domain can have several contact registry_ids
-    (depending on the registry).
+    Contact associated with a domain. A domain can have several contact
+    registry_ids (depending on the registry).
     """
     registered_domain = models.ForeignKey(RegisteredDomain,
                                           related_name='contacts')
@@ -324,7 +298,9 @@ class DomainContact(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('registered_domain', 'contact_type', 'contact', 'active')
+        unique_together = ('registered_domain', 'contact_type', 'contact',
+                           'active')
+
 
 class NameserverHost(models.Model):
 
@@ -364,3 +340,32 @@ class IpAddress(models.Model):
     project_id = models.ForeignKey('auth.User',
                                    related_name='ip_addresses',
                                    on_delete=models.CASCADE)
+
+
+class DefaultRegistrant(models.Model):
+
+    """
+    Store default registrant for project.
+    """
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='default_registrant',
+                                   on_delete=models.CASCADE)
+    registrant = models.ForeignKey(Registrant)
+
+    class Meta:
+        unique_together = ('project_id', 'registrant',)
+
+
+class DefaultContact(models.Model):
+    """
+    Store default contact for registrars for a given project.
+    """
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='default_contact',
+                                   on_delete=models.CASCADE)
+    contact_type = models.ForeignKey(ContactType)
+    contact = models.ForeignKey(Contact)
+    provider = models.ForeignKey(DomainProvider)
+
+    class Meta:
+        unique_together = ('project_id', 'contact_type', 'contact', 'provider',)
