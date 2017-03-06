@@ -45,12 +45,18 @@ class PersonalDetail(models.Model):
     disclose_telephone = models.BooleanField(default=False)
     disclose_fax = models.BooleanField(default=False)
     disclose_email = models.BooleanField(default=False)
+    default = models.NullBooleanField(null=True)
     project_id = models.ForeignKey('auth.User',
                                    related_name='personal_details',
                                    on_delete=models.CASCADE)
 
     def __str__(self):
         return self.surname + ', ' + self.first_name
+
+    class Meta:
+        unique_together = ('project_id', 'default')
+
+
 
 
 class ContactType(models.Model):
@@ -141,7 +147,10 @@ class Registrant(models.Model):
     disclose_email = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    default = models.NullBooleanField(null=True)
 
+    class Meta:
+        unique_together = ('project_id', 'default')
 
 class Contact(models.Model):
     """
@@ -190,6 +199,7 @@ class Contact(models.Model):
                                    on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
 
 class TopLevelDomainProvider(models.Model):
     """
