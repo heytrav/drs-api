@@ -26,7 +26,7 @@ class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
         read_only=True
     )
     url = serializers.HyperlinkedIdentityField(
-        view_name="domain_api:personal-detail",
+        view_name="domain_api:account-detail",
         lookup_field="pk"
     )
 
