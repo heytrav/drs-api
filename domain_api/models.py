@@ -45,7 +45,6 @@ class PersonalDetail(models.Model):
     disclose_telephone = models.BooleanField(default=False)
     disclose_fax = models.BooleanField(default=False)
     disclose_email = models.BooleanField(default=False)
-    default = models.NullBooleanField(null=True)
     project_id = models.ForeignKey('auth.User',
                                    related_name='personal_details',
                                    on_delete=models.CASCADE)
@@ -53,11 +52,48 @@ class PersonalDetail(models.Model):
     def __str__(self):
         return self.surname + ', ' + self.first_name
 
+class DefaultAccountTemplate(models.Model):
+
+    """
+    Store some default details for a given project.
+    """
+
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='default_account',
+                                   on_delete=models.CASCADE)
+    account_template = models.ForeignKey(PersonalDetail)
+
     class Meta:
-        unique_together = ('project_id', 'default')
+        unique_together = ('project_id', 'account_template',)
 
 
+class DefaultRegistrant(models.Model):
 
+    """
+    Store default registrant for project.
+    """
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='default_registrant',
+                                   on_delete=models.CASCADE)
+    registrant = models.ForeignKey(Registrant)
+
+    class Meta:
+        unique_together = ('project_id', 'registrant',)
+
+
+class DefaultContact(models.Model):
+    """
+    Store default contact for registrars for a given project.
+    """
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='default_contact',
+                                   on_delete=models.CASCADE)
+    contact_type = models.ForeignKey(ContactType)
+    contact = models.ForeignKey(Contact)
+    provider = models.ForeignKey(DomainProvider)
+
+    class Meta:
+        unique_together = ('project_id', 'contact_type', 'contact', 'provider',)
 
 class ContactType(models.Model):
     """
@@ -147,10 +183,7 @@ class Registrant(models.Model):
     disclose_email = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    default = models.NullBooleanField(null=True)
 
-    class Meta:
-        unique_together = ('project_id', 'default')
 
 class Contact(models.Model):
     """
