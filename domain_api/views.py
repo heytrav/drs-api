@@ -519,6 +519,7 @@ class DomainProviderViewSet(viewsets.ModelViewSet):
     queryset = DomainProvider.objects.all()
     serializer_class = DomainProviderSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+    lookup_field = 'slug'
 
 
 class ContactViewSet(viewsets.ModelViewSet):
@@ -530,6 +531,7 @@ class ContactViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,
                           permissions.IsAuthenticated)
     filter_backends = (IsPersonFilterBackend,)
+    lookup_field = 'registry_id'
 
     def get_queryset(self):
         """
@@ -555,6 +557,7 @@ class RegistrantViewSet(viewsets.ModelViewSet):
 
     serializer_class = RegistrantSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = 'registry_id'
 
     def get_queryset(self):
         """
@@ -619,7 +622,8 @@ class DomainContactViewSet(viewsets.ModelViewSet):
 
 class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
     serializer_class = DefaultAccountTemplateSerializer
-    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,
+                          permissions.IsAuthenticated,                         )
 
     def get_queryset(self):
         """

@@ -87,18 +87,19 @@ class DomainProviderSerializer(serializers.HyperlinkedModelSerializer):
     """
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:domainprovider-detail",
-        lookup_field="pk"
+        lookup_field="slug"
     )
 
     class Meta:
         model = DomainProvider
-        fields = ('name', 'description', 'slug', 'url')
+        fields = ('name', 'description', 'slug', 'url',)
+
 
 
 class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:registrant-detail",
-        lookup_field="pk"
+        lookup_field="registry_id"
     )
     provider = serializers.HyperlinkedRelatedField(
         view_name="domain_api:domainprovider-detail",
@@ -125,12 +126,12 @@ class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
 class ContactSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:contact-detail",
-        lookup_field="pk",
+        lookup_field="registry_id",
         read_only=True
     )
     provider = serializers.HyperlinkedRelatedField(
         view_name="domain_api:domainprovider-detail",
-        lookup_field="pk",
+        lookup_field="slug",
         read_only=True
     )
     project_id = serializers.HyperlinkedRelatedField(
@@ -277,7 +278,7 @@ class DefaultAccountTemplateSerializer(serializers.HyperlinkedModelSerializer):
     )
     provider = serializers.HyperlinkedRelatedField(
         view_name="domain_api:domainprovider-detail",
-        lookup_field="pk",
+        lookup_field="slug",
         read_only=True
     )
 
