@@ -11,7 +11,8 @@ from domain_api.models import (
     Domain,
     RegisteredDomain,
     DomainRegistrant,
-    DomainContact
+    DomainContact,
+    DefaultAccountTemplate,
 )
 
 
@@ -258,6 +259,31 @@ class DomainContactSerializer(serializers.HyperlinkedModelSerializer):
         model = DomainContact
         fields = ('registered_domain', 'contact_type', 'contact', 'active',
                   'created')
+
+class DefaultAccountTemplateSerializer(serializers.HyperlinkedModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name="domain_api:defaultaccounttemplate-detail",
+        lookup_field="pk"
+    )
+    project_id = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    account_template = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:account-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+    provider = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:domainprovider-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+
+    class Meta:
+        model = DefaultAccountTemplate
+        fields = ('url', 'project_id', 'account_template', 'provider')
 
 
 class DomainAvailabilitySerializer(serializers.Serializer):

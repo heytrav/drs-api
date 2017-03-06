@@ -24,7 +24,8 @@ from domain_api.models import (
     RegisteredDomain,
     DomainRegistrant,
     DomainContact,
-    TopLevelDomainProvider
+    TopLevelDomainProvider,
+    DefaultAccountTemplate
 )
 from domain_api.serializers import (
     UserSerializer,
@@ -42,6 +43,7 @@ from domain_api.serializers import (
     DomainContactSerializer,
     InfoDomainSerializer,
     InfoContactSerializer,
+    DefaultAccountTemplateSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
@@ -613,3 +615,20 @@ class DomainContactViewSet(viewsets.ModelViewSet):
         if user.is_staff:
             return DomainContact.objects.all()
         return DomainContact.objects.filter(contact__project_id=user)
+
+
+class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
+    serializer_class = DefaultAccountTemplateSerializer
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+
+    def get_queryset(self):
+        """
+        Filter domain handles on logged in user.
+        :returns: Set of DomainContact objects filtered by customer
+
+        """
+        user = self.request.user
+        if user.is_staff:
+            return DefaultAccountTemplate.objects.all()
+        return DefaultAccountTemplate.objects.filter(project_id=user)
+

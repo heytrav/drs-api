@@ -53,21 +53,6 @@ class AccountDetail(models.Model):
         return self.surname + ', ' + self.first_name
 
 
-class DefaultAccountTemplate(models.Model):
-
-    """
-    Store some default details for a given project.
-    """
-
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='default_account',
-                                   on_delete=models.CASCADE)
-    account_template = models.ForeignKey(AccountDetail)
-
-    class Meta:
-        unique_together = ('project_id', 'account_template',)
-
-
 class ContactType(models.Model):
     """
     Types of registry contacts.
@@ -344,6 +329,28 @@ class IpAddress(models.Model):
                                    related_name='ip_addresses',
                                    on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.address + " - " + self.address_type
+
+
+class DefaultAccountTemplate(models.Model):
+
+    """
+    Store some default details for a given project.
+    """
+
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='default_account',
+                                   on_delete=models.CASCADE)
+    account_template = models.ForeignKey(AccountDetail)
+    provider = models.ForeignKey(DomainProvider)
+
+    def __str__(self):
+        return self.account_template.first_name + " " + self.account_template.surname + " - " + self.provider.name
+
+    class Meta:
+        unique_together = ('project_id', 'provider', 'account_template',)
+
 
 class DefaultRegistrant(models.Model):
 
@@ -370,6 +377,9 @@ class DefaultAccountContact(models.Model):
     contact_type = models.ForeignKey(ContactType)
     provider = models.ForeignKey(DomainProvider)
     mandatory = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.provider.name + " - " + self.contact_type.name
 
     class Meta:
         unique_together = ('project_id', 'contact_type', 'account_template',
