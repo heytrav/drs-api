@@ -316,10 +316,10 @@ class InfoContactSerializer(serializers.Serializer):
     city = serializers.CharField(required=False, allow_blank=True)
     telephone = serializers.CharField(required=False, allow_blank=True)
     fax = serializers.CharField(required=False, allow_blank=True)
-    house_number = serializers.CharField(required=False, allow_blank=True)
+    house_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     street1 = serializers.CharField(required=False, allow_blank=True)
-    street2 = serializers.CharField(required=False, allow_blank=True)
-    street3 = serializers.CharField(required=False, allow_blank=True)
+    street2 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    street3 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     state = serializers.CharField(required=False, allow_blank=True)
     country = serializers.CharField(required=False, allow_blank=True)
     postcode = serializers.CharField(required=False, allow_blank=True)
@@ -331,7 +331,7 @@ class InfoContactSerializer(serializers.Serializer):
     disclose_email = serializers.BooleanField()
     disclose_address = serializers.BooleanField()
     status = serializers.CharField(required=False)
-    authcode = serializers.CharField(required=False)
+    authcode = serializers.CharField(required=False, allow_null=True)
 
 
 class ContactDomainSerializer(serializers.Serializer):

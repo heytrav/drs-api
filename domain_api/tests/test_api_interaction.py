@@ -3,7 +3,8 @@ from django.contrib.auth.models import User
 from ..models import (
     TopLevelDomain,
     TopLevelDomainProvider,
-    DomainProvider
+    DomainProvider,
+    PersonalDetail
 )
 
 
@@ -25,6 +26,7 @@ class TestApiClient(TestCase):
             description="Provide some domains"
         )
         test_registry.save()
+        self.provider = test_registry
         tld = TopLevelDomain(
             zone="tld",
             idn_zone="tld",
@@ -37,6 +39,21 @@ class TestApiClient(TestCase):
             anniversary_notification_period_days=30
         )
         tld_provider.save()
+        self.joe_user = PersonalDetail.objects.create(
+            first_name="Joe",
+            surname="User",
+            email="joeuser@test.com",
+            telephone="+1.8175551234",
+            house_number="10",
+            street1="Evergreen Terrace",
+            city="Springfield",
+            state="State",
+            country="US",
+            postal_info_type="loc",
+            disclose_name=False,
+            disclose_telephone=False,
+            project_id=self.user
+        )
 
     def login_client(self):
         """

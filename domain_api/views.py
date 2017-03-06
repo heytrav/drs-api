@@ -46,7 +46,7 @@ from domain_api.serializers import (
 from domain_api.filters import (
     IsPersonFilterBackend
 )
-from .epp.queries import Domain as DomainQuery, Contact as ContactQuery
+from .epp.queries import Domain as DomainQuery, ContactQuery
 from .exceptions import (
     EppError,
     InvalidTld,
@@ -95,34 +95,6 @@ def workflow_scan(node):
     yield node
 
 
-@api_view(['GET'])
-@permission_classes((permissions.IsAuthenticated,))
-def info_contact(request, contact, registry=None, format=None):
-    """
-    Query EPP with a infoContact request.
-    :returns: JSON response with details about a contact
-
-    """
-    try:
-        query = ContactQuery()
-        info = query.info(contact, user=request.user, registry=registry)
-        serializer = InfoContactSerializer(data=info)
-        log.info(info)
-        if serializer.is_valid():
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
-    except UnknownRegistry:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    except EppError as epp_e:
-        log.error(ErrorLogObject(request, epp_e))
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        log.error(ErrorLogObject(request, e))
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 @api_view(['POST'])
 @permission_classes((permissions.IsAdminUser,))
 def registry_contact(request, registry, contact_type="contact"):
@@ -161,31 +133,36 @@ def registry_contact(request, registry, contact_type="contact"):
         log.error(ErrorLogObject(request, e))
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 class ContactManagementViewset(viewsets.GenericViewSet):
     """
     Handle contact related queries.
     """
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         """
         Return the contact queryset.
-        :returns: TODO
+        :returns: QuerySet object
 
         """
         user = self.request.user
+        if self.request.user.groups.filter(name='admin').exists():
+            return Contact.objects.all()
+        return Contact.objects.filter(project_id=user)
 
-    def info(self, request, registry_id):
+    def info(self, request, registry_id, registry=None):
         """
         Retrieve info about a contact
 
-        :request: TODO
-        :registry_id: TODO
-        :returns: TODO
+        :request: HTTP request
+        :registry_id: registry id
+        :returns: InfoContactSerialised response
 
         """
         try:
-            query = ContactQuery()
-            info = query.info(contact, user=request.user, registry=registry)
+            query = ContactQuery(request.user, self.get_queryset())
+            info = query.info(registry_id, registry=registry)
             serializer = InfoContactSerializer(data=info)
             log.info(info)
             if serializer.is_valid():
@@ -202,6 +179,72 @@ class ContactManagementViewset(viewsets.GenericViewSet):
             log.error(ErrorLogObject(request, e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def list(self, request):
+        """
+        List out contact/registrant objects
+
+        :request: HTTP request object
+        :returns: InfoContactSerizer response
+
+        """
+        try:
+            contacts = self.get_queryset()
+            contact_set = []
+            for contact in contacts:
+                contact_obj = {
+                    "registry_id": contact.registry_id,
+                    "name": contact.name,
+                    "email": contact.email,
+                    "company": contact.company,
+                    "city": contact.city,
+                    "telephone": contact.telephone,
+                    "fax": contact.fax,
+                    "house_number": contact.house_number,
+                    "street1": contact.street1,
+                    "street2": contact.street2,
+                    "street3": contact.street3,
+                    "state": contact.state,
+                    "country": contact.country,
+                    "postcode": contact.postcode,
+                    "postal_info_type": contact.postal_info_type,
+                    "disclose_name": contact.disclose_name,
+                    "disclose_company": contact.disclose_company,
+                    "disclose_telephone": contact.disclose_telephone,
+                    "disclose_fax": contact.disclose_fax,
+                    "disclose_email": contact.disclose_email,
+                    "disclose_address": contact.disclose_address,
+                    "status": contact.status,
+                    "authcode": contact.authcode
+                }
+
+
+                contact_set.append(contact_obj)
+            serializer = InfoContactSerializer(data=contact_set, many=True)
+            if serializer.is_valid():
+                return Response(serializer.data)
+            else:
+                return Response(serializer.errors,
+                                status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            raise e
+
+class RegistrantManagementViewset(ContactManagementViewset):
+
+    """
+    Handle registrant related queries.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return the contact queryset.
+        :returns: QuerySet object
+
+        """
+        user = self.request.user
+        if self.request.user.groups.filter(name='admin').exists():
+            return Registrant.objects.all()
+        return Registrant.objects.filter(project_id=user)
 
 class DomainRegistryManagementViewset(viewsets.GenericViewSet):
 
