@@ -78,6 +78,7 @@ class ContactType(models.Model):
     def __str__(self):
         return self.name
 
+
 class TopLevelDomain(models.Model):
     """
     Domain ending model
@@ -358,6 +359,23 @@ class DefaultRegistrant(models.Model):
         unique_together = ('project_id', 'registrant',)
 
 
+class DefaultAccountContact(models.Model):
+    """
+    Assign default contact for registry.
+    """
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='default_account_contact',
+                                   on_delete=models.CASCADE)
+    account_template = models.ForeignKey(AccountDetail)
+    contact_type = models.ForeignKey(ContactType)
+    provider = models.ForeignKey(DomainProvider)
+    mandatory = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('project_id', 'contact_type', 'account_template',
+                           'provider',)
+
+
 class DefaultContact(models.Model):
     """
     Store default contact for registrars for a given project.
@@ -368,6 +386,7 @@ class DefaultContact(models.Model):
     contact_type = models.ForeignKey(ContactType)
     contact = models.ForeignKey(Contact)
     provider = models.ForeignKey(DomainProvider)
+    mandatory = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('project_id', 'contact_type', 'contact', 'provider',)

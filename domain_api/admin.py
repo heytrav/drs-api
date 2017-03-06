@@ -15,6 +15,7 @@ from .models import (
     DefaultAccountTemplate,
     DefaultRegistrant,
     DefaultContact,
+    DefaultAccountContact,
 )
 
 
@@ -35,6 +36,7 @@ class DomainProviderAdmin(admin.ModelAdmin):
     inlines = [TopLevelDomainProviderInline]
 
 admin.site.register(DefaultAccountTemplate)
+admin.site.register(DefaultAccountContact)
 admin.site.register(DefaultRegistrant)
 admin.site.register(DefaultContact)
 admin.site.register(AccountDetail)
