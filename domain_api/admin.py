@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (
-    PersonalDetail,
+    AccountDetail,
     TopLevelDomain,
     DomainProvider,
     TopLevelDomainProvider,
@@ -31,7 +31,7 @@ class DomainProviderAdmin(admin.ModelAdmin):
     inlines = [TopLevelDomainProviderInline]
 
 
-admin.site.register(PersonalDetail)
+admin.site.register(AccountDetail)
 admin.site.register(TopLevelDomain)
 admin.site.register(DomainProvider, DomainProviderAdmin)
 admin.site.register(Domain)
