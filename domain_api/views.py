@@ -15,7 +15,7 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from domain_api.models import (
     Domain,
-    PersonalDetail,
+    AccountDetail,
     ContactType,
     TopLevelDomain,
     DomainProvider,
@@ -28,7 +28,7 @@ from domain_api.models import (
 )
 from domain_api.serializers import (
     UserSerializer,
-    PersonalDetailSerializer,
+    AccountDetailSerializer,
     ContactTypeSerializer,
     ContactSerializer,
     TopLevelDomainSerializer,
@@ -109,11 +109,11 @@ def registry_contact(request, registry, contact_type="contact"):
     data = request.data
     log.debug(data)
     person = None
-    queryset = PersonalDetail.objects.all()
+    queryset = AccountDetail.objects.all()
     if "person" in data:
         person = get_object_or_404(queryset, pk=data["person"])
     else:
-        serializer = PersonalDetailSerializer(data=data)
+        serializer = AccountDetailSerializer(data=data)
         if serializer.is_valid():
             person = serializer.save(project_id=request.user)
         else:
@@ -457,9 +457,9 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class PersonalDetailViewSet(viewsets.ModelViewSet):
+class AccountDetailViewSet(viewsets.ModelViewSet):
 
-    serializer_class = PersonalDetailSerializer
+    serializer_class = AccountDetailSerializer
     permission_classes = (permissions.IsAuthenticated,
                           permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
@@ -475,8 +475,8 @@ class PersonalDetailViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         if user.is_staff:
-            return PersonalDetail.objects.all()
-        return PersonalDetail.objects.filter(project_id=user)
+            return AccountDetail.objects.all()
+        return AccountDetail.objects.filter(project_id=user)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):

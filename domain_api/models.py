@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class PersonalDetail(models.Model):
+class AccountDetail(models.Model):
     """
     Person object in db.
     """
@@ -61,7 +61,7 @@ class DefaultAccountTemplate(models.Model):
     project_id = models.ForeignKey('auth.User',
                                    related_name='default_account',
                                    on_delete=models.CASCADE)
-    account_template = models.ForeignKey(PersonalDetail)
+    account_template = models.ForeignKey(AccountDetail)
 
     class Meta:
         unique_together = ('project_id', 'account_template',)

@@ -5,7 +5,7 @@ from ..tasks import check_domain, create_registrant, create_registry_contact
 from ..exceptions import EppError
 from domain_api.epp.entity import EppRpcClient
 from ..models import (
-    PersonalDetail,
+    AccountDetail,
     DomainProvider,
     Contact,
     TopLevelDomain,
@@ -99,7 +99,7 @@ class ContactOperation(TestCase):
             password="secret"
         )
 
-        self.joe_user = PersonalDetail.objects.create(
+        self.joe_user = AccountDetail.objects.create(
             first_name="Joe",
             surname="User",
             email="joeuser@test.com",

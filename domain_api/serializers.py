@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from domain_api.models import (
-    PersonalDetail,
+    AccountDetail,
     TopLevelDomain,
     ContactType,
     DomainProvider,
@@ -15,10 +15,10 @@ from domain_api.models import (
 )
 
 
-class PersonalDetailSerializer(serializers.HyperlinkedModelSerializer):
+class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
 
     """
-    Serializer for PersonalDetails
+    Serializer for AccountDetails
     """
     project_id = serializers.HyperlinkedRelatedField(
         view_name="domain_api:user-detail",
@@ -31,7 +31,7 @@ class PersonalDetailSerializer(serializers.HyperlinkedModelSerializer):
     )
 
     class Meta:
-        model = PersonalDetail
+        model = AccountDetail
         fields = ('url', 'first_name', 'surname', 'middle_name', 'email',
                   'email2', 'email3', 'telephone', 'fax', 'company',
                   'house_number', 'street1', 'street2', 'street3', 'city',

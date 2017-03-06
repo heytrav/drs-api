@@ -8,7 +8,7 @@ from ..entity_management.contacts import (
     ContactAction
 )
 from ..models import (
-    PersonalDetail,
+    AccountDetail,
     DomainProvider,
     TopLevelDomain,
     TopLevelDomainProvider,
@@ -65,7 +65,7 @@ class TestEntityManager(TestCase):
             password="secret"
         )
 
-        self.joe_user = PersonalDetail.objects.create(
+        self.joe_user = AccountDetail.objects.create(
             first_name="Joe",
             surname="User",
             email="joeuser@test.com",

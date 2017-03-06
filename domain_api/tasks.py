@@ -9,7 +9,7 @@ from .models import (
     DomainContact,
     DomainProvider,
     DomainRegistrant,
-    PersonalDetail,
+    AccountDetail,
     RegisteredDomain,
     Registrant,
     TopLevelDomain,
@@ -78,7 +78,7 @@ def create_registrant(epp,
 
     """
     provider = DomainProvider.objects.get(slug=registry)
-    person = PersonalDetail.objects.get(pk=person_id)
+    person = AccountDetail.objects.get(pk=person_id)
     user_obj = User.objects.get(pk=user)
     contact_manager = RegistrantManager(provider, person, user_obj)
     contact = contact_manager.fetch_existing_contact()
@@ -108,7 +108,7 @@ def create_registry_contact(epp,
     contacts = epp.get("contact", [])
 
     provider = DomainProvider.objects.get(slug=registry)
-    person = PersonalDetail.objects.get(pk=person_id)
+    person = AccountDetail.objects.get(pk=person_id)
     user_obj = User.objects.get(pk=user)
     contact_manager = ContactManager(provider, person, user_obj)
     contact_obj = contact_manager.fetch_existing_contact()

@@ -39,7 +39,7 @@ class ContactFactory(object):
         Return correct type of serializer for contact type.
 
         :eppdata: Handle for contact
-        :person: PersonalDetail object to link to new handle
+        :person: AccountDetail object to link to new handle
         :returns: registrant or contact handle object
 
         """
@@ -92,7 +92,7 @@ class ContactFactory(object):
         Create contact at registry and add to registrant handle or
         contact handle.
 
-        :person: PersonalDetail object
+        :person: AccountDetail object
         :returns: serializer object
 
         """

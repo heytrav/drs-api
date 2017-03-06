@@ -3,7 +3,7 @@ from domain_api import views
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r'personal-detail', views.PersonalDetailViewSet, "personal")
+router.register(r'personal-detail', views.AccountDetailViewSet, "personal")
 router.register(r'contact-types', views.ContactTypeViewSet)
 router.register(r'contact', views.ContactViewSet, "contact")
 router.register(r'tld', views.TopLevelDomainViewSet)
