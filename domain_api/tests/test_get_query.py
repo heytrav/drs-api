@@ -1,9 +1,14 @@
 from unittest.mock import patch
-from domain_api.epp.entity import EppRpcClient
 import domain_api
 import json
+from ..models import (
+    Contact,
+    DomainContact,
+    Registrant,
+    DomainRegistrant
+)
+from domain_api.epp.entity import EppRpcClient
 from ..exceptions import EppError
-
 from .test_api_interaction import TestApiClient
 
 
@@ -87,22 +92,12 @@ class TestInfoDomain(TestApiClient):
                 "domain:status": "ok",
                 "domain:registrant": "R1234",
                 "domain:ns": [
-                    {
-                        "domain:hostObj": "ns1.nameserver.com"
-                    },
-                    {
-                        "domain:hostObj": "ns2.nameserver.com"
-                    }
+                    { "domain:hostObj": "ns1.nameserver.com" },
+                    { "domain:hostObj": "ns2.nameserver.com" }
                 ],
                 "domain:contact": [
-                    {
-                        "$t": "A1234",
-                        "type": "admin",
-                    },
-                    {
-                        "$t": "T1234",
-                        "type": "tech",
-                    }
+                    { "$t": "A1234", "type": "admin", },
+                    { "$t": "T1234", "type": "tech", }
                 ]
             }
         }
@@ -113,3 +108,171 @@ class TestInfoDomain(TestApiClient):
             self.assertEqual(response.status_code,
                              200,
                              "Epp returned normally")
+
+
+class TestContact(TestApiClient):
+
+
+    def setUp(self):
+        """
+        Set up test suite
+        """
+        super().setUp()
+        self.contact = Contact(
+            registry_id='contact-123',
+            project_id=self.user,
+            provider=self.provider
+        )
+        self.contact.save()
+
+
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
+    def test_info_contact(self):
+        """
+        Test basic info contact
+        """
+        self.login_client()
+        info_contact_response = {
+            "contact:infData": {
+                "xmlns:contact": "urn:ietf:params:xml:ns:contact-1.0",
+                "xsi:schemaLocation": "urn:ietf:params:xml:ns:contact-1.0 contact-1.0.xsd",
+                "contact:id": "contact-123",
+                "contact:roid": "78442-CoCCA",
+                "contact:status": [
+                    {
+                        "s": "linked",
+                        "$t": "In use by 10 domains"
+                    },
+                    {
+                        "s": "serverDeleteProhibited",
+                        "$t": "Server locked: This contact is a domain registrant"
+                    },
+                    {
+                        "s": "serverTransferProhibited",
+                        "$t": "Server locked: This contact is a domain registrant"
+                    },
+                    {
+                        "s": "serverUpdateProhibited",
+                        "$t": "Server locked: This contact is a domain registrant"
+                    }
+                ],
+                "contact:postalInfo": {
+                    "type": "loc",
+                    "contact:name": "Tester MacTesterson",
+                    "contact:addr": {
+                        "contact:street": "Haribo",
+                        "contact:city": "Munich",
+                        "contact:sp": "Bayern",
+                        "contact:pc": "48392",
+                        "contact:cc": "DE"
+                    }
+                },
+                "contact:voice": "+49.89444134",
+                "contact:email": "testy@testerson.com",
+                "contact:clID": "catalyst_ote",
+                "contact:crID": "catalyst_ote",
+                "contact:crDate": "2017-03-03T10:06:33.063Z",
+                "contact:upDate": "2017-03-05T21:22:07.154Z",
+                "contact:upID": "catalyst_ote",
+                "contact:disclose": {
+                    "flag": "0",
+                    "contact:name": [ { "type": "loc" }, { "type": "int" } ],
+                    "contact:org": [ { "type": "loc" }, { "type": "int" } ],
+                    "contact:addr": [ { "type": "loc" }, { "type": "int" } ],
+                    "contact:voice": {},
+                    "contact:fax": {},
+                    "contact:email": {}
+                }
+            }
+        }
+        with patch.object(EppRpcClient,
+                          'call',
+                          return_value=info_contact_response):
+            response = self.client.get('/v1/contacts/contact-123/')
+            self.assertEqual(response.status_code,
+                             200,
+                             "Info contact returned normal response")
+
+
+class TestRegistrant(TestApiClient):
+
+
+    def setUp(self):
+        """
+        Set up test suite
+        """
+        super().setUp()
+        self.contact = Registrant(
+            registry_id='registrant-123',
+            project_id=self.user,
+            provider=self.provider
+        )
+        self.contact.save()
+
+
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
+    def test_info_contact(self):
+        """
+        Test basic info contact
+        """
+        self.login_client()
+        info_contact_response = {
+            "contact:infData": {
+                "xmlns:contact": "urn:ietf:params:xml:ns:contact-1.0",
+                "xsi:schemaLocation": "urn:ietf:params:xml:ns:contact-1.0 contact-1.0.xsd",
+                "contact:id": "registrant-123",
+                "contact:roid": "78442-CoCCA",
+                "contact:status": [
+                    {
+                        "s": "linked",
+                        "$t": "In use by 10 domains"
+                    },
+                    {
+                        "s": "serverDeleteProhibited",
+                        "$t": "Server locked: This contact is a domain registrant"
+                    },
+                    {
+                        "s": "serverTransferProhibited",
+                        "$t": "Server locked: This contact is a domain registrant"
+                    },
+                    {
+                        "s": "serverUpdateProhibited",
+                        "$t": "Server locked: This contact is a domain registrant"
+                    }
+                ],
+                "contact:postalInfo": {
+                    "type": "loc",
+                    "contact:name": "Tester MacTesterson",
+                    "contact:addr": {
+                        "contact:street": "Haribo",
+                        "contact:city": "Munich",
+                        "contact:sp": "Bayern",
+                        "contact:pc": "48392",
+                        "contact:cc": "DE"
+                    }
+                },
+                "contact:voice": "+49.89444134",
+                "contact:email": "testy@testerson.com",
+                "contact:clID": "catalyst_ote",
+                "contact:crID": "catalyst_ote",
+                "contact:crDate": "2017-03-03T10:06:33.063Z",
+                "contact:upDate": "2017-03-05T21:22:07.154Z",
+                "contact:upID": "catalyst_ote",
+                "contact:disclose": {
+                    "flag": "0",
+                    "contact:name": [ { "type": "loc" }, { "type": "int" } ],
+                    "contact:org": [ { "type": "loc" }, { "type": "int" } ],
+                    "contact:addr": [ { "type": "loc" }, { "type": "int" } ],
+                    "contact:voice": {},
+                    "contact:fax": {},
+                    "contact:email": {}
+                }
+            }
+        }
+        with patch.object(EppRpcClient,
+                          'call',
+                          return_value=info_contact_response):
+            response = self.client.get('/v1/registrants/registrant-123/')
+            self.assertEqual(response.status_code,
+                             200,
+                             "Info contact returned normal response")

@@ -5,7 +5,7 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(r'personal-detail', views.PersonalDetailViewSet, "personal")
 router.register(r'contact-types', views.ContactTypeViewSet)
-router.register(r'contacts', views.ContactViewSet, "contact")
+router.register(r'contact', views.ContactViewSet, "contact")
 router.register(r'tld', views.TopLevelDomainViewSet)
 router.register(r'tld-provider', views.TopLevelDomainProviderViewSet)
 router.register(r'domain-provider', views.DomainProviderViewSet)
@@ -38,12 +38,21 @@ domain_bulk_check = views.DomainRegistryManagementViewset.as_view({
     'get': 'bulk_available'
 })
 
+contact_detail = views.ContactManagementViewset.as_view({
+    'get': 'info'
+})
+contact_list = views.ContactManagementViewset.as_view({
+    'get': 'list'
+})
+registrant_detail = views.RegistrantManagementViewset.as_view({
+    'get': 'info'
+})
+registrant_list = views.RegistrantManagementViewset.as_view({
+    'get': 'list'
+})
 
 urlpatterns = [
     url(r'^', include(router.urls, namespace='domain_api')),
-    url(r'^info-contact/(?P<contact>[^\/]+)/(?P<registry>.*)/$',
-        views.info_contact),
-    url(r'^info-contact/(?P<contact>.*)/$', views.info_contact),
     url(r'^registry-contact/$', views.registry_contact),
     url(
         r'^registry-contact/(?P<registry>.*)/(?P<contact_type>.*)/$',
@@ -61,4 +70,18 @@ urlpatterns = [
     ),
     url(r'^domains/create/$', domain_list, name='domain-create'),
     url(r'^domains/(?P<domain>.*)/$', domain_detail, name='domain-info'),
+    url(r'^contacts/(?P<registry_id>.*)/$',
+        contact_detail,
+        name='contact-info'),
+    url(r'^contacts/(?P<registry_id>[^\/]+)/(?P<registry>.*)/$',
+        contact_detail,
+        name='contact-info'),
+    url('^contacts/$', contact_list, name='contact-list'),
+    url(r'^registrants/(?P<registry_id>.*)/$',
+        registrant_detail,
+        name='registrant-info'),
+    url(r'^registrants/(?P<registry_id>[^\/]+)/(?P<registry>.*)/$',
+        registrant_detail,
+        name='registrant-info'),
+    url('^registrants/$', registrant_list, name='contact-list'),
 ]

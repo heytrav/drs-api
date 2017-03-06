@@ -1,8 +1,12 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 from unittest.mock import patch
-from domain_api.epp.queries import Contact
+from domain_api.epp.queries import ContactQuery
 from domain_api.epp.entity import EppRpcClient
+from domain_api.models import (
+    Contact,
+    DomainProvider,
+)
 import domain_api
 
 
@@ -35,6 +39,17 @@ class TestInfoContact(TestCase):
             email="testcustomer@test.com",
             password="secret"
         )
+        self.provider = DomainProvider(
+            name="Provider One",
+            slug="provider1"
+        )
+        self.provider.save()
+        self.contact = Contact(
+            registry_id='test-contact',
+            project_id=self.user,
+            provider=self.provider
+        )
+        self.contact.save()
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_info_domain(self):
@@ -88,12 +103,12 @@ class TestInfoContact(TestCase):
                 "xmlns:contact": "urn:ietf:params:xml:ns:contact-1.0"
             }
         }
-        contact_query = Contact()
+        contact_query = ContactQuery(self.user,
+                                     Contact.objects.filter(project_id=self.user))
         with patch.object(EppRpcClient,
                           'call',
                           return_value=info_contact_response):
             info_data = contact_query.info("test-contact",
-                                           self.user,
                                            'test-registry')
             self.assertIn('email',
                           info_data,

@@ -136,14 +136,16 @@ class Domain(EppEntity):
         return return_data
 
 
-class Contact(EppEntity):
+class ContactQuery(EppEntity):
 
     """
     Contact EPP operations.
     """
 
-    def __init__(self):
+    def __init__(self, user, queryset):
         super().__init__()
+        self.user = user
+        self.queryset = queryset
 
     def process_postal_info(self, postal_info):
         """
@@ -209,7 +211,24 @@ class Contact(EppEntity):
                 disclose[item] = flag
         return disclose
 
-    def info(self, registry_id, user=None, registry=None):
+    def fetch_contact_object(self, registry_id):
+        """
+        Retrieve a contact or registrant object using the registry id
+
+        :registry_id: str representing registry id
+        :returns: contact object
+        """
+        try:
+            contact = self.queryset.get(registry_id=registry_id)
+            return contact
+        except ContactModel.DoesNotExist as e:
+            log.warn({"contact": registry_id,
+                      "message": "infoContact for unknown contact"})
+        except RegistrantModel.DoesNotExist as e:
+            log.warn({"registrant": registry_id,
+                      "message": "infoContact for unknwon registrant"})
+
+    def info(self, registry_id, registry=None):
         """
         Fetch info for a contact
 
@@ -219,26 +238,9 @@ class Contact(EppEntity):
 
         """
         is_owner = False
-        contact_queryset = ContactModel.objects.filter(project_id=user)
-        registrant_queryset = RegistrantModel.objects.filter(project_id=user)
-        if user.groups.filter(name='admin').exists():
-            contact_queryset = ContactModel.objects.all()
-            registrant_queryset = RegistrantModel.objects.all()
-        # Find out if this contact is one of ours. If contact belongs to logged
-        # in user or user is admin, return authcode data and other data.
-        contact = None
-        try:
-            queryset = contact_queryset
-            contact = queryset.get(registry_id=registry_id)
+        contact = self.fetch_contact_object(registry_id)
+        if contact:
             is_owner = True
-        except ContactModel.DoesNotExist:
-            try:
-                queryset = registrant_queryset
-                contact = queryset.get(registry_id=registry_id)
-                is_owner = True
-            except RegistrantModel.DoesNotExist:
-                log.warn({"contact": registry_id,
-                          "message": "infoContact for unknown contact"})
 
         if registry is None:
             if contact:
@@ -262,7 +264,7 @@ class Contact(EppEntity):
             "registry_id": info_data["contact:id"],
             "telephone": info_data["contact:voice"],
         }
-        if (is_owner or user.is_staff):
+        if (is_owner or self.user.is_staff):
             extra_fields = {}
             extra_fields["status"] = self.process_status(
                 info_data["contact:status"]
@@ -283,7 +285,7 @@ class Contact(EppEntity):
                     contact_info_data[item] = ""
 
             if contact and is_owner:
-                queryset.filter(pk=contact.id).update(**contact_info_data)
+                self.queryset.filter(pk=contact.id).update(**contact_info_data)
             log.info(contact_info_data)
         except Exception as e:
             log.error({"error": e});
