@@ -136,7 +136,7 @@ def registry_contact(request, registry, contact_type="contact"):
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class ContactManagementViewset(viewsets.GenericViewSet):
+class ContactManagementViewSet(viewsets.GenericViewSet):
     """
     Handle contact related queries.
     """
@@ -189,49 +189,11 @@ class ContactManagementViewset(viewsets.GenericViewSet):
         :returns: InfoContactSerizer response
 
         """
-        try:
-            contacts = self.get_queryset()
-            contact_set = []
-            for contact in contacts:
-                contact_obj = {
-                    "registry_id": contact.registry_id,
-                    "name": contact.name,
-                    "email": contact.email,
-                    "company": contact.company,
-                    "city": contact.city,
-                    "telephone": contact.telephone,
-                    "fax": contact.fax,
-                    "house_number": contact.house_number,
-                    "street1": contact.street1,
-                    "street2": contact.street2,
-                    "street3": contact.street3,
-                    "state": contact.state,
-                    "country": contact.country,
-                    "postcode": contact.postcode,
-                    "postal_info_type": contact.postal_info_type,
-                    "disclose_name": contact.disclose_name,
-                    "disclose_company": contact.disclose_company,
-                    "disclose_telephone": contact.disclose_telephone,
-                    "disclose_fax": contact.disclose_fax,
-                    "disclose_email": contact.disclose_email,
-                    "disclose_address": contact.disclose_address,
-                    "status": contact.status,
-                    "authcode": contact.authcode
-                }
+        contacts = self.get_queryset()
+        serializer = InfoContactSerializer(contacts, many=True)
+        return Response(serializer.data)
 
-
-                contact_set.append(contact_obj)
-            serializer = InfoContactSerializer(data=contact_set, many=True)
-            if serializer.is_valid():
-                return Response(serializer.data)
-            else:
-                return Response(serializer.errors,
-                                status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            raise e
-
-class RegistrantManagementViewset(ContactManagementViewset):
-
+class RegistrantManagementViewSet(ContactManagementViewSet):
     """
     Handle registrant related queries.
     """
@@ -248,8 +210,7 @@ class RegistrantManagementViewset(ContactManagementViewset):
             return Registrant.objects.all()
         return Registrant.objects.filter(project_id=user)
 
-class DomainRegistryManagementViewset(viewsets.GenericViewSet):
-
+class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
     """
     Handle domain related queries.
     """
@@ -458,9 +419,7 @@ class DomainRegistryManagementViewset(viewsets.GenericViewSet):
             log.error(ErrorLogObject(request, e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
 class AccountDetailViewSet(viewsets.ModelViewSet):
-
     serializer_class = AccountDetailSerializer
     permission_classes = (permissions.IsAuthenticated,
                           permissions.DjangoModelPermissionsOrAnonReadOnly,)
@@ -582,14 +541,16 @@ class DomainViewSet(viewsets.ModelViewSet):
 class RegisteredDomainViewSet(viewsets.ModelViewSet):
 
     serializer_class = RegisteredDomainSerializer
-    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissionsOrAnonReadOnly,)
     queryset = RegisteredDomain.objects.all()
 
 
 class DomainRegistrantViewSet(viewsets.ModelViewSet):
 
     serializer_class = DomainRegistrantSerializer
-    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def get_queryset(self):
         """
@@ -606,7 +567,8 @@ class DomainRegistrantViewSet(viewsets.ModelViewSet):
 class DomainContactViewSet(viewsets.ModelViewSet):
 
     serializer_class = DomainContactSerializer
-    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def get_queryset(self):
         """
@@ -622,8 +584,97 @@ class DomainContactViewSet(viewsets.ModelViewSet):
 
 class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
     serializer_class = DefaultAccountTemplateSerializer
-    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,
-                          permissions.IsAuthenticated,                         )
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissionsOrAnonReadOnly)
+
+
+    def create(self, request):
+        """
+        Create a new default template
+
+        :request: HTTP request object
+        :returns: HTTP response
+
+        """
+        data = request.data
+        serializer = self.serializer_class(data=data)
+        if serializer.is_valid():
+            account_templates = AccountDetail.objects.filter(
+                project_id=request.user
+            )
+            account_template = get_object_or_404(account_templates,
+                                                 pk=data["account_template"])
+            serializer.save(
+                project_id=request.user,
+                account_template=account_template,
+                provider=DomainProvider.objects.get(slug=data["provider"])
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, default_id):
+        """
+        Update a default account template
+
+        :request: TODO
+        :data: TODO
+        :returns: TODO
+
+        """
+        default_account_template = get_object_or_404(self.get_queryset(),
+                                                     default_id)
+        data = request.data
+        account_templates = AccountDetail.objects.filter(
+            project_id=request.user
+        )
+        account_template = get_object_or_404(account_templates,
+                                             pk=data["account_template"])
+        default_account_template.update(account_template=account_template,
+                                        provider=data["provider"])
+
+
+    def delete(self, request, default_id):
+        """
+        Delete a default template
+
+        :request: TODO
+        :default_id: TODO
+        :returns: TODO
+
+        """
+        default_account_template = get_object_or_404(self.get_queryset(),
+                                                     pk=default_id)
+        default_account_template.delete()
+
+    def detail(self, request, default_id):
+        """
+        Retrieve single object
+
+        :request: TODO
+        :default_id: TODO
+        :returns: TODO
+
+        """
+        log.debug({"default_id": default_id})
+        default_account_template = get_object_or_404(self.get_queryset(),
+                                                     pk=default_id)
+        serializer = self.serializer_class(default_account_template,
+                                           context={"request": request})
+        return Response(serializer.data)
+
+    def list(self, request):
+        """
+        Return list of default accounts
+
+        :request: HTTP request object
+        :returns: DefaultAccountTemplateSerializer
+
+        """
+        account_templates = self.get_queryset()
+        serializer = self.serializer_class(account_templates,
+                                           context={"request": request},
+                                           many=True)
+        return Response(serializer.data)
 
     def get_queryset(self):
         """
@@ -636,3 +687,26 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
             return DefaultAccountTemplate.objects.all()
         return DefaultAccountTemplate.objects.filter(project_id=user)
 
+
+class DefaultAccountContactViewSet(viewsets.ModelViewSet):
+    serializer_class = DefaultAccountTemplateSerializer
+    permission_classes = (permissions.IsAdminUser,)
+
+
+    def get_queryset(self):
+        """
+        Filter domain handles on logged in user.
+        :returns: Set of DomainContact objects filtered by customer
+
+        """
+        user = self.request.user
+        if user.is_staff:
+            return DefaultAccountContact.objects.all()
+        return DefaultAccountContact.objects.filter(project_id=user)
+
+    #def perform_create(self, serializer):
+
+        #data = self.request.data
+        #provider_slug = data["provider"]
+        #provider = DomainProvider.objects.get(slug=provider_slug)
+        #serializer.save(project_id=self.request.user, provider=provider)

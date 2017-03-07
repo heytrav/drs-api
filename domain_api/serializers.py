@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from django_logging import log, ErrorLogObject
 from domain_api.models import (
     AccountDetail,
     TopLevelDomain,
@@ -13,6 +14,7 @@ from domain_api.models import (
     DomainRegistrant,
     DomainContact,
     DefaultAccountTemplate,
+    DefaultAccountContact,
 )
 
 
@@ -261,30 +263,27 @@ class DomainContactSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('registered_domain', 'contact_type', 'contact', 'active',
                   'created')
 
-class DefaultAccountTemplateSerializer(serializers.HyperlinkedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        view_name="domain_api:defaultaccounttemplate-detail",
-        lookup_field="pk"
-    )
-    project_id = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:user-detail",
-        lookup_field="pk",
-        read_only=True
-    )
-    account_template = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:account-detail",
-        lookup_field="pk",
-        read_only=True
-    )
-    provider = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:domainprovider-detail",
-        lookup_field="slug",
-        read_only=True
-    )
-
+class DefaultAccountTemplateSerializer(serializers.ModelSerializer):
+    #account_template = serializers.HyperlinkedRelatedField(
+        #view_name="domain_api:account-detail",
+        #lookup_field="pk",
+        #read_only=True
+    #)
+    provider = serializers.SlugRelatedField(slug_field='slug', read_only=True)
     class Meta:
         model = DefaultAccountTemplate
-        fields = ('url', 'project_id', 'account_template', 'provider')
+        fields = ('id', 'account_template', 'provider', 'project_id')
+        read_only_fields = ('id', 'project_id',)
+
+
+class DefaultAccountContactSerializer(serializers.ModelSerializer):
+    provider = serializers.SlugRelatedField(slug_field='slug', read_only=True)
+    contact_type = serializers.SlugRelatedField(slug_field='name', read_only=True)
+    class Meta:
+        model = DefaultAccountTemplate
+        fields = ('project_id', 'account_template', 'contact_type', 'provider',
+                  'mandatory')
+        read_only_fields = ('project_id',)
 
 
 class DomainAvailabilitySerializer(serializers.Serializer):
@@ -334,31 +333,16 @@ class InfoDomainListSerializer(serializers.ListField):
     child = InfoDomainSerializer()
 
 
-class InfoContactSerializer(serializers.Serializer):
+class InfoContactSerializer(serializers.ModelSerializer):
 
-    registry_id = serializers.CharField(required=False, allow_blank=True)
-    name = serializers.CharField(required=False, allow_blank=True)
-    email = serializers.CharField(required=False, allow_blank=True)
-    company = serializers.CharField(required=False, allow_blank=True)
-    city = serializers.CharField(required=False, allow_blank=True)
-    telephone = serializers.CharField(required=False, allow_blank=True)
-    fax = serializers.CharField(required=False, allow_blank=True)
-    house_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    street1 = serializers.CharField(required=False, allow_blank=True)
-    street2 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    street3 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    state = serializers.CharField(required=False, allow_blank=True)
-    country = serializers.CharField(required=False, allow_blank=True)
-    postcode = serializers.CharField(required=False, allow_blank=True)
-    postal_info_type = serializers.CharField(required=False, allow_blank=True)
-    disclose_name = serializers.BooleanField()
-    disclose_company = serializers.BooleanField()
-    disclose_telephone = serializers.BooleanField()
-    disclose_fax = serializers.BooleanField()
-    disclose_email = serializers.BooleanField()
-    disclose_address = serializers.BooleanField()
-    status = serializers.CharField(required=False)
-    authcode = serializers.CharField(required=False, allow_null=True)
+    class Meta:
+        model = Contact
+        fields = ('registry_id', 'name', 'email', 'company', 'street1',
+                  'street2', 'street3', 'city', 'telephone', 'fax',
+                  'house_number', 'state', 'country', 'postcode', 'postal_info_type',
+                  'disclose_name', 'disclose_company', 'disclose_telephone',
+                  'disclose_email', 'disclose_address', 'status', 'authcode',
+                  'disclose_fax',)
 
 
 class ContactDomainSerializer(serializers.Serializer):
