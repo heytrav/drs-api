@@ -333,7 +333,7 @@ class InfoDomainListSerializer(serializers.ListField):
     child = InfoDomainSerializer()
 
 
-class InfoContactSerializer(serializers.ModelSerializer):
+class PrivateInfoContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
@@ -343,6 +343,15 @@ class InfoContactSerializer(serializers.ModelSerializer):
                   'disclose_name', 'disclose_company', 'disclose_telephone',
                   'disclose_email', 'disclose_address', 'status', 'authcode',
                   'disclose_fax',)
+
+
+class InfoContactSerializer(serializers.Serializer):
+
+    class Meta:
+        model = Contact
+        fields = ('registry_id', 'name', 'email', 'company', 'street1',
+                  'street2', 'street3', 'city', 'telephone', 'fax',
+                  'house_number', 'state', 'country', 'postcode', 'postal_info_type',)
 
 
 class ContactDomainSerializer(serializers.Serializer):

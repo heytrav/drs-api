@@ -20,6 +20,11 @@ class TestApiClient(TestCase):
             email="testcustomer@test.com",
             password="secret"
         )
+        self.user2 = User.objects.create_user(
+            username="testcustomer2",
+            email="testcustomer2@test.com",
+            password="secret2"
+        )
         test_registry = DomainProvider(
             name="Provider1",
             slug="test-registry",

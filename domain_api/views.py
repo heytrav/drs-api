@@ -43,6 +43,7 @@ from domain_api.serializers import (
     DomainContactSerializer,
     InfoDomainSerializer,
     InfoContactSerializer,
+    PrivateInfoContactSerializer,
     DefaultAccountTemplateSerializer,
 )
 from domain_api.filters import (
@@ -141,17 +142,22 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
     Handle contact related queries.
     """
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PrivateInfoContactSerializer
+    queryset = Contact.objects.all()
 
-    def get_queryset(self):
-        """
-        Return the contact queryset.
-        :returns: QuerySet object
+
+    def is_admin_or_owner(self, contact):
+        """TODO: Docstring for is_admin_or_owner.
+
+        :contact: TODO
+        :returns: TODO
 
         """
-        user = self.request.user
         if self.request.user.groups.filter(name='admin').exists():
-            return Contact.objects.all()
-        return Contact.objects.filter(project_id=user)
+            return True
+        if contact.project_id == self.request.user:
+            return True
+        return False
 
     def info(self, request, registry_id, registry=None):
         """
@@ -163,16 +169,49 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
         """
         try:
-            query = ContactQuery(request.user, self.get_queryset())
-            info = query.info(registry_id, registry=registry)
-            serializer = InfoContactSerializer(data=info)
-            log.info(info)
-            if serializer.is_valid():
+            contact = self.get_queryset().get(registry_id=registry_id)
+
+            if self.is_admin_or_owner(contact):
+                log.debug({"msg": "Performing info query"})
+                query = ContactQuery(request.user, self.get_queryset())
+                contact = query.info(contact)
+                serializer = self.serializer_class(contact)
                 return Response(serializer.data)
             else:
-                return Response(serializer.errors,
-                                status=status.HTTP_400_BAD_REQUEST)
-        except UnknownRegistry:
+                log.debug({"msg": "Returning basic contact info"})
+                contact_data = {
+                    "registry_id": contact.registry_id,
+                }
+                if contact.disclose_name:
+                    contact_data["name"] = contact.name
+                if contact.disclose_email:
+                    contact_data["email"] = contact.email
+                if contact.disclose_telephone:
+                    contact_data["telephone"] = contact.telephone
+                if contact.disclose_fax:
+                    contact_data["fax"] = contact.fax
+                if contact.disclose_company:
+                    contact_data["company"] = contact.company
+                if contact.disclose_address:
+                    contact_data["street1"] = contact.street1
+                    contact_data["street2"] = contact.street2
+                    contact_data["street3"] = contact.street3
+                    contact_data["city"] = contact.city
+                    contact_data["house_number"] = contact.house_number
+                    contact_data["country"] = contact.country
+                    contact_data["state"] = contact.state
+                    contact_data["postcode"] = contact.postcode
+                    contact_data["postal_info_type"] = contact.postal_info_type
+                serializer = InfoContactSerializer(data=contact_data)
+                #if serializer.is_valid():
+                    #log.debug({"msg": "Serializer is valid"})
+                return Response(serializer.data)
+                #else:
+                    #log.error({"errors": serializer.errors})
+                    #return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        except UnknownRegistry as e:
+            log.error(ErrorLogObject(request, e))
             return Response(status=status.HTTP_400_BAD_REQUEST)
         except EppError as epp_e:
             log.error(ErrorLogObject(request, epp_e))
@@ -186,7 +225,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
         List out contact/registrant objects
 
         :request: HTTP request object
-        :returns: InfoContactSerizer response
+        :returns: InfoContactSerializer response
 
         """
         contacts = self.get_queryset()
@@ -198,17 +237,9 @@ class RegistrantManagementViewSet(ContactManagementViewSet):
     Handle registrant related queries.
     """
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = InfoContactSerializer
+    queryset = Registrant.objects.all()
 
-    def get_queryset(self):
-        """
-        Return the contact queryset.
-        :returns: QuerySet object
-
-        """
-        user = self.request.user
-        if self.request.user.groups.filter(name='admin').exists():
-            return Registrant.objects.all()
-        return Registrant.objects.filter(project_id=user)
 
 class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
     """

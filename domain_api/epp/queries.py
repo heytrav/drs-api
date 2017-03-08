@@ -211,24 +211,7 @@ class ContactQuery(EppEntity):
                 disclose[item] = flag
         return disclose
 
-    def fetch_contact_object(self, registry_id):
-        """
-        Retrieve a contact or registrant object using the registry id
-
-        :registry_id: str representing registry id
-        :returns: contact object
-        """
-        try:
-            contact = self.queryset.get(registry_id=registry_id)
-            return contact
-        except ContactModel.DoesNotExist as e:
-            log.warn({"contact": registry_id,
-                      "message": "infoContact for unknown contact"})
-        except RegistrantModel.DoesNotExist as e:
-            log.warn({"registrant": registry_id,
-                      "message": "infoContact for unknwon registrant"})
-
-    def info(self, registry_id, registry=None):
+    def info(self, contact):
         """
         Fetch info for a contact
 
@@ -237,17 +220,10 @@ class ContactQuery(EppEntity):
         :returns: dict of contact information
 
         """
-        is_owner = False
-        contact = self.fetch_contact_object(registry_id)
-        if contact:
-            is_owner = True
 
-        if registry is None:
-            if contact:
-                registry = contact.provider.slug
-            else:
-                raise UnknownRegistry("Cannot determine registry to query.")
-        data = {"contact": registry_id}
+        # Fetch contact from registry.
+        data = {"contact": contact.registry_id}
+        registry = contact.provider.slug
         response_data = self.rpc_client.call(registry, 'infoContact', data)
         log.debug(response_data)
         info_data = response_data["contact:infData"]
@@ -264,15 +240,14 @@ class ContactQuery(EppEntity):
             "registry_id": info_data["contact:id"],
             "telephone": info_data["contact:voice"],
         }
-        if (is_owner or self.user.is_staff):
-            extra_fields = {}
-            extra_fields["status"] = self.process_status(
-                info_data["contact:status"]
-            )
-            extra_fields["roid"] = info_data["contact:roid"]
-            if "contact:authInfo" in info_data:
-                extra_fields["authcode"] = info_data["contact:authInfo"]["contact:pw"]
-            processed_info_data = {**processed_info_data, **extra_fields}
+        extra_fields = {}
+        extra_fields["status"] = self.process_status(
+            info_data["contact:status"]
+        )
+        extra_fields["roid"] = info_data["contact:roid"]
+        if "contact:authInfo" in info_data:
+            extra_fields["authcode"] = info_data["contact:authInfo"]["contact:pw"]
+        processed_info_data = {**processed_info_data, **extra_fields}
 
         try:
             contact_info_data = {
@@ -284,11 +259,10 @@ class ContactQuery(EppEntity):
                 if isinstance(value, dict):
                     contact_info_data[item] = ""
 
-            if contact and is_owner:
-                self.queryset.filter(pk=contact.id).update(**contact_info_data)
+            self.queryset.filter(pk=contact.id).update(**contact_info_data)
             log.info(contact_info_data)
         except Exception as e:
             log.error({"error": e});
             raise e
         log.debug({"processed_info": processed_info_data})
-        return contact_info_data
+        return self.queryset.get(pk=contact.id)
