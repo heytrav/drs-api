@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (
-    PersonalDetail,
+    AccountDetail,
     TopLevelDomain,
     DomainProvider,
     TopLevelDomainProvider,
@@ -9,8 +9,15 @@ from .models import (
     RegisteredDomain,
     Registrant,
     Contact,
+    ContactType,
     DomainRegistrant,
     DomainContact,
+    DefaultAccountTemplate,
+    DefaultRegistrant,
+    DefaultContact,
+    DefaultAccountContact,
+    NameserverHost,
+    IpAddress,
 )
 
 
@@ -30,13 +37,19 @@ class DomainProviderAdmin(admin.ModelAdmin):
     ]
     inlines = [TopLevelDomainProviderInline]
 
-
-admin.site.register(PersonalDetail)
+admin.site.register(DefaultAccountTemplate)
+admin.site.register(DefaultAccountContact)
+admin.site.register(DefaultRegistrant)
+admin.site.register(DefaultContact)
+admin.site.register(AccountDetail)
 admin.site.register(TopLevelDomain)
 admin.site.register(DomainProvider, DomainProviderAdmin)
 admin.site.register(Domain)
 admin.site.register(RegisteredDomain)
 admin.site.register(Registrant)
 admin.site.register(Contact)
+admin.site.register(ContactType)
 admin.site.register(DomainRegistrant)
 admin.site.register(DomainContact)
+admin.site.register(NameserverHost)
+admin.site.register(IpAddress)

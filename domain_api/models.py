@@ -1,14 +1,14 @@
 from django.db import models
 
 
-class PersonalDetail(models.Model):
+class AccountDetail(models.Model):
     """
     Person object in db.
     """
 
     INT = 'int'
     LOC = 'loc'
-    POSTAL_INFO_TYPES =(
+    POSTAL_INFO_TYPES = (
         (INT, 'international'),
         (LOC, 'local'),
     )
@@ -60,6 +60,9 @@ class ContactType(models.Model):
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField()
 
+    def __str__(self):
+        return self.name
+
 
 class TopLevelDomain(models.Model):
     """
@@ -106,7 +109,7 @@ class Registrant(models.Model):
 
     INT = 'int'
     LOC = 'loc'
-    POSTAL_INFO_TYPES =(
+    POSTAL_INFO_TYPES = (
         (INT, 'international'),
         (LOC, 'local'),
     )
@@ -149,7 +152,7 @@ class Contact(models.Model):
     """
     INT = 'int'
     LOC = 'loc'
-    POSTAL_INFO_TYPES =(
+    POSTAL_INFO_TYPES = (
         (INT, 'international'),
         (LOC, 'local'),
     )
@@ -191,6 +194,7 @@ class Contact(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
+
 class TopLevelDomainProvider(models.Model):
     """
     Match a provider with a TLD.
@@ -198,7 +202,7 @@ class TopLevelDomainProvider(models.Model):
 
     zone = models.ForeignKey(TopLevelDomain)
     provider = models.ForeignKey(DomainProvider)
-    anniversary_notification_period_days = models.IntegerField()
+    anniversary_notification_period_days = models.IntegerField(default=30)
     renewal_period = models.IntegerField(default=30)
     grace_period_days = models.IntegerField(default=30)
 
@@ -226,7 +230,8 @@ class RegisteredDomain(models.Model):
 
     A registered domain is a combined Domain + TopLevelDomainProvider
     object as it may be possible to register the same tld from multiple sources.
-    Providers may have their own unique rules around renewal period and notifications.
+    Providers may have their own unique rules around renewal period and
+    notifications.
     """
     domain = models.ForeignKey(Domain)
     # Needed to enforce unique constraint
@@ -270,8 +275,8 @@ class DomainRegistrant(models.Model):
 
 class DomainContact(models.Model):
     """
-    Contact associated with a domain. A domain can have several contact registry_ids
-    (depending on the registry).
+    Contact associated with a domain. A domain can have several contact
+    registry_ids (depending on the registry).
     """
     registered_domain = models.ForeignKey(RegisteredDomain,
                                           related_name='contacts')
@@ -281,7 +286,9 @@ class DomainContact(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('registered_domain', 'contact_type', 'contact', 'active')
+        unique_together = ('registered_domain', 'contact_type', 'contact',
+                           'active')
+
 
 class NameserverHost(models.Model):
 
@@ -321,3 +328,75 @@ class IpAddress(models.Model):
     project_id = models.ForeignKey('auth.User',
                                    related_name='ip_addresses',
                                    on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.address + " - " + self.address_type
+
+
+class DefaultAccountTemplate(models.Model):
+
+    """
+    Store some default details for a given project.
+    """
+
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='default_account',
+                                   on_delete=models.CASCADE)
+    account_template = models.ForeignKey(AccountDetail)
+    provider = models.ForeignKey(DomainProvider)
+
+    def __str__(self):
+        return self.account_template.first_name + " " + self.account_template.surname + " - " + self.provider.name
+
+    class Meta:
+        unique_together = ('project_id', 'provider', 'account_template',)
+
+
+class DefaultRegistrant(models.Model):
+
+    """
+    Store default registrant for project.
+    """
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='default_registrant',
+                                   on_delete=models.CASCADE)
+    registrant = models.ForeignKey(Registrant)
+
+    class Meta:
+        unique_together = ('project_id', 'registrant',)
+
+
+class DefaultAccountContact(models.Model):
+    """
+    Assign default contact for registry.
+    """
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='default_account_contact',
+                                   on_delete=models.CASCADE)
+    account_template = models.ForeignKey(AccountDetail)
+    contact_type = models.ForeignKey(ContactType)
+    provider = models.ForeignKey(DomainProvider)
+    mandatory = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.provider.name + " - " + self.contact_type.name
+
+    class Meta:
+        unique_together = ('project_id', 'contact_type', 'account_template',
+                           'provider',)
+
+
+class DefaultContact(models.Model):
+    """
+    Store default contact for registrars for a given project.
+    """
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='default_contact',
+                                   on_delete=models.CASCADE)
+    contact_type = models.ForeignKey(ContactType)
+    contact = models.ForeignKey(Contact)
+    provider = models.ForeignKey(DomainProvider)
+    mandatory = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('project_id', 'contact_type', 'contact', 'provider',)

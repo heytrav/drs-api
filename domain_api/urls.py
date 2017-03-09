@@ -3,7 +3,7 @@ from domain_api import views
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r'personal-detail', views.PersonalDetailViewSet, "personal")
+router.register(r'account-detail', views.AccountDetailViewSet, "account")
 router.register(r'contact-types', views.ContactTypeViewSet)
 router.register(r'contact', views.ContactViewSet, "contact")
 router.register(r'tld', views.TopLevelDomainViewSet)
@@ -23,31 +23,40 @@ router.register(
 router.register(r'domain-contact', views.DomainContactViewSet, "domaincontact")
 router.register(r'users', views.UserViewSet)
 
-domain_list = views.DomainRegistryManagementViewset.as_view({
+default_account = views.DefaultAccountTemplateViewSet.as_view({
+    'get': 'list',
+    'post': 'create',
+})
+default_account_manage = views.DefaultAccountTemplateViewSet.as_view({
+    'delete': 'delete',
+    'put': 'update',
+    'get': 'detail'
+})
+domain_list = views.DomainRegistryManagementViewSet.as_view({
     'get': 'domain_set',
     'post': 'create'
 })
-domain_detail = views.DomainRegistryManagementViewset.as_view({
+domain_detail = views.DomainRegistryManagementViewSet.as_view({
     'get': 'info',
 })
-domain_single_check = views.DomainRegistryManagementViewset.as_view({
+domain_single_check = views.DomainRegistryManagementViewSet.as_view({
     'get': 'available'
 })
 
-domain_bulk_check = views.DomainRegistryManagementViewset.as_view({
+domain_bulk_check = views.DomainRegistryManagementViewSet.as_view({
     'get': 'bulk_available'
 })
 
-contact_detail = views.ContactManagementViewset.as_view({
+contact_detail = views.ContactManagementViewSet.as_view({
     'get': 'info'
 })
-contact_list = views.ContactManagementViewset.as_view({
+contact_list = views.ContactManagementViewSet.as_view({
     'get': 'list'
 })
-registrant_detail = views.RegistrantManagementViewset.as_view({
+registrant_detail = views.RegistrantManagementViewSet.as_view({
     'get': 'info'
 })
-registrant_list = views.RegistrantManagementViewset.as_view({
+registrant_list = views.RegistrantManagementViewSet.as_view({
     'get': 'list'
 })
 
@@ -84,4 +93,7 @@ urlpatterns = [
         registrant_detail,
         name='registrant-info'),
     url('^registrants/$', registrant_list, name='contact-list'),
+    url(r'^account/default/$', default_account, name='default-account'),
+    url(r'^account/default/(?P<default_id>.*)/$', default_account_manage,
+        name='default-account-manage'),
 ]

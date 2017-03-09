@@ -7,7 +7,9 @@ from .tasks import (
     create_domain,
     connect_domain
 )
-
+from domain_api.models import (
+    DefaultAccountTemplate
+)
 from django_logging import log
 
 
@@ -34,6 +36,34 @@ class Workflow(object):
         """
         return check_bulk_domain.si(self.registry, fqdn_list)
 
+    def fetch_registrant(self, data, user):
+        """
+        Return either the default registrant or whatever user specified.
+
+        :user: request user
+        :data: request data
+        :returns: int id of registrant
+
+        """
+        if "registrant" in data:
+            return data["registrant"]
+        default_registrant = DefaultAccountTemplate.objects.get(
+            provider=self.registry,
+            project_id=user
+        )
+        return default_registrant.id
+
+    def fetch_contacts(self, data, user):
+        """
+        Return either set of default contacts for registry or user specified.
+
+        :data: request data
+        :user: request user
+        :returns: list of contacts
+
+        """
+        pass
+
     def create_domain(self, data, user):
         """
         Set up workflow for creating a domain
@@ -48,12 +78,14 @@ class Workflow(object):
         if "ns" in data:
             epp["ns"] = data["ns"]
 
+        registrant = self.fetch_registrant(data, user)
+
         self.workflow.append(check_domain.s(data["domain"]))
         # TODO: process nameservers
         self.workflow.append(
             create_registrant.si(
                 epp,
-                person_id=data["registrant"],
+                person_id=registrant,
                 registry=self.registry,
                 user=user.id
             )

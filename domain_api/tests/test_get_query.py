@@ -124,6 +124,12 @@ class TestContact(TestApiClient):
             provider=self.provider
         )
         self.contact.save()
+        self.contact2 = Contact(
+            registry_id='contact-124',
+            project_id=self.user2,
+            provider=self.provider
+        )
+        self.contact2.save()
 
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
@@ -194,6 +200,75 @@ class TestContact(TestApiClient):
                              "Info contact returned normal response")
 
 
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
+    def test_info_contact_non_owner(self):
+        """
+        Test basic info contact for different user.
+        """
+        self.login_client()
+        info_contact_response = {
+            "contact:infData": {
+                "xmlns:contact": "urn:ietf:params:xml:ns:contact-1.0",
+                "xsi:schemaLocation": "urn:ietf:params:xml:ns:contact-1.0 contact-1.0.xsd",
+                "contact:id": "contact-124",
+                "contact:roid": "78442-CoCCA",
+                "contact:status": [
+                    {
+                        "s": "linked",
+                        "$t": "In use by 10 domains"
+                    },
+                    {
+                        "s": "serverDeleteProhibited",
+                        "$t": "Server locked: This contact is a domain registrant"
+                    },
+                    {
+                        "s": "serverTransferProhibited",
+                        "$t": "Server locked: This contact is a domain registrant"
+                    },
+                    {
+                        "s": "serverUpdateProhibited",
+                        "$t": "Server locked: This contact is a domain registrant"
+                    }
+                ],
+                "contact:postalInfo": {
+                    "type": "loc",
+                    "contact:name": "Tester MacTesterson",
+                    "contact:addr": {
+                        "contact:street": "Haribo",
+                        "contact:city": "Munich",
+                        "contact:sp": "Bayern",
+                        "contact:pc": "48392",
+                        "contact:cc": "DE"
+                    }
+                },
+                "contact:voice": "+49.89444134",
+                "contact:email": "testy@testerson.com",
+                "contact:clID": "catalyst_ote",
+                "contact:crID": "catalyst_ote",
+                "contact:crDate": "2017-03-03T10:06:33.063Z",
+                "contact:upDate": "2017-03-05T21:22:07.154Z",
+                "contact:upID": "catalyst_ote",
+                "contact:disclose": {
+                    "flag": "0",
+                    "contact:name": [ { "type": "loc" }, { "type": "int" } ],
+                    "contact:org": [ { "type": "loc" }, { "type": "int" } ],
+                    "contact:addr": [ { "type": "loc" }, { "type": "int" } ],
+                    "contact:voice": {},
+                    "contact:fax": {},
+                    "contact:email": {}
+                }
+            }
+        }
+        with patch.object(EppRpcClient,
+                          'call',
+                          return_value=info_contact_response):
+            response = self.client.get('/v1/contacts/contact-124/')
+            self.assertEqual(response.status_code,
+                             200,
+                             "Info contact returned normal response")
+
+
+
 class TestRegistrant(TestApiClient):
 
 
@@ -211,9 +286,9 @@ class TestRegistrant(TestApiClient):
 
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
-    def test_info_contact(self):
+    def test_info_registrant(self):
         """
-        Test basic info contact
+        Test basic info registrant
         """
         self.login_client()
         info_contact_response = {

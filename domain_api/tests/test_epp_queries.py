@@ -108,12 +108,12 @@ class TestInfoContact(TestCase):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=info_contact_response):
-            info_data = contact_query.info("test-contact",
-                                           'test-registry')
-            self.assertIn('email',
-                          info_data,
-                          "Response from info request contains email")
-            self.assertEqual(info_data["registry_id"],
-                             "reg-20",
+            contact = Contact.objects.get(registry_id='test-contact')
+            info_data = contact_query.info(contact)
+            self.assertEqual("joe-test@testerson.com",
+                             info_data.email,
+                             "Response from info request contains email")
+            self.assertEqual("reg-20",
+                             info_data.registry_id,
                              "contact id is expected value")
-            self.assertEqual(info_data["country"], "US", "Expected country US")
+            self.assertEqual(info_data.country, "US", "Expected country US")

@@ -4,7 +4,7 @@ from ..models import (
     TopLevelDomain,
     TopLevelDomainProvider,
     DomainProvider,
-    PersonalDetail
+    AccountDetail
 )
 
 
@@ -19,6 +19,11 @@ class TestApiClient(TestCase):
             username="testcustomer",
             email="testcustomer@test.com",
             password="secret"
+        )
+        self.user2 = User.objects.create_user(
+            username="testcustomer2",
+            email="testcustomer2@test.com",
+            password="secret2"
         )
         test_registry = DomainProvider(
             name="Provider1",
@@ -39,7 +44,7 @@ class TestApiClient(TestCase):
             anniversary_notification_period_days=30
         )
         tld_provider.save()
-        self.joe_user = PersonalDetail.objects.create(
+        self.joe_user = AccountDetail.objects.create(
             first_name="Joe",
             surname="User",
             email="joeuser@test.com",
