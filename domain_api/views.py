@@ -146,7 +146,6 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
     serializer_class = PrivateInfoContactSerializer
     queryset = Contact.objects.all()
 
-
     def is_admin_or_owner(self, contact=None):
         """
         Determine if the current logged in user is admin or the owner of
@@ -253,7 +252,20 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
     """
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = PrivateInfoDomainSerializer
-    queryset = RegisteredDomain.objects.all()
+
+    def get_queryset(self):
+        """
+        Return queryset
+        :returns: RegisteredDomain set
+        """
+        queryset = RegisteredDomain.objects.all()
+        user = self.request.user
+        if user.groups.filter(name='admin').exists():
+            return queryset
+        return queryset.filter(
+            Q(registrant__registrant__project_id=user) |
+            Q(contacts__contact__project_id=user)
+        ).distinct()
 
     def is_admin_or_owner(self, domain=None):
         """
@@ -355,15 +367,8 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         """
         try:
             # Limit registered domain query to "owned" domains
-            registered_domain_set = self.get_queryset().filter(
-                Q(registrant__registrant__project_id=request.user) |
-                Q(contacts__contact__project_id=request.user)
-            ).distinct()
-            # Admin gets access to all domains.
-            if request.user.groups.filter(name='admin').exists():
-                registered_domain_set = self.get_queryset()
-
-            contact_domains = registered_domain_set
+            registered_domain_set = self.get_queryset()
+            contact_domains = registered_domain_set.filter(active=True)
             if len(contact_domains) == 0:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             domain_set = []
