@@ -98,7 +98,7 @@ INSTALLED_APPS = (
 )
 RAVEN_CONFIG = {
     'dsn': read_secret_file(os.environ.get('SENTRY_DSN_FILE',None),
-                            os.envron.get('SENTRY_DSN', None)),
+                            os.environ.get('SENTRY_DSN', None)),
 }
 
 DATABASES = {
