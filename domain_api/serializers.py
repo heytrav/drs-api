@@ -312,6 +312,13 @@ class HandleSetSerializer(serializers.ListField):
     zone = serializers.CharField(required=False)
 
 
+class PrivateInfoDomainSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RegisteredDomain
+        fields = ('domain', 'contacts', 'registrant', 'roid', 'ns',
+                  'status', 'authcode', 'created', 'anniversary')
+
 class InfoDomainSerializer(serializers.Serializer):
     domain = serializers.CharField(required=True, allow_blank=False)
     contacts = HandleSetSerializer()
@@ -346,6 +353,21 @@ class PrivateInfoContactSerializer(serializers.ModelSerializer):
 
 
 class InfoContactSerializer(serializers.Serializer):
+
+    registry_id = serializers.CharField()
+    name = serializers.CharField(required=False)
+    email = serializers.CharField(required=False)
+    company = serializers.CharField(required=False)
+    house_number = serializers.CharField(required=False)
+    street1 = serializers.CharField(required=False)
+    street2 = serializers.CharField(required=False)
+    street3 = serializers.CharField(required=False)
+    city = serializers.CharField(required=False)
+    state = serializers.CharField(required=False)
+    country = serializers.CharField(required=False)
+    postcode = serializers.CharField(required=False)
+    postal_info_type = serializers.CharField(required=False)
+
 
     class Meta:
         model = Contact

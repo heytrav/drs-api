@@ -42,6 +42,7 @@ from domain_api.serializers import (
     DomainRegistrantSerializer,
     DomainContactSerializer,
     InfoDomainSerializer,
+    PrivateInfoDomainSerializer,
     InfoContactSerializer,
     PrivateInfoContactSerializer,
     DefaultAccountTemplateSerializer,
@@ -146,16 +147,18 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
     queryset = Contact.objects.all()
 
 
-    def is_admin_or_owner(self, contact):
-        """TODO: Docstring for is_admin_or_owner.
+    def is_admin_or_owner(self, contact=None):
+        """
+        Determine if the current logged in user is admin or the owner of
+        the object.
 
-        :contact: TODO
-        :returns: TODO
+        :contact: Contact/Registrant object
+        :returns: True or False
 
         """
         if self.request.user.groups.filter(name='admin').exists():
             return True
-        if contact.project_id == self.request.user:
+        if contact and contact.project_id == self.request.user:
             return True
         return False
 
@@ -203,12 +206,12 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
                     contact_data["postcode"] = contact.postcode
                     contact_data["postal_info_type"] = contact.postal_info_type
                 serializer = InfoContactSerializer(data=contact_data)
-                #if serializer.is_valid():
-                    #log.debug({"msg": "Serializer is valid"})
-                return Response(serializer.data)
-                #else:
-                    #log.error({"errors": serializer.errors})
-                    #return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                if serializer.is_valid():
+                    log.debug(serializer.data)
+                    return Response(serializer.data)
+                else:
+                    log.error(serializer.errors)
+                    return Response(serializer.errors)
 
         except UnknownRegistry as e:
             log.error(ErrorLogObject(request, e))
@@ -229,6 +232,9 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
         """
         contacts = self.get_queryset()
+        if not self.is_admin_or_owner():
+            contacts = contacts.filter(project_id=self.request.user)
+
         serializer = InfoContactSerializer(contacts, many=True)
         return Response(serializer.data)
 
@@ -237,7 +243,7 @@ class RegistrantManagementViewSet(ContactManagementViewSet):
     Handle registrant related queries.
     """
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = InfoContactSerializer
+    serializer_class = PrivateInfoContactSerializer
     queryset = Registrant.objects.all()
 
 
@@ -246,8 +252,29 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
     Handle domain related queries.
     """
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = InfoDomainSerializer
+    serializer_class = PrivateInfoDomainSerializer
     queryset = RegisteredDomain.objects.all()
+
+    def is_admin_or_owner(self, domain=None):
+        """
+        Determine if the current logged in user is admin or the owner of
+        the object.
+
+        :domain: Contact/Registrant object
+        :returns: True or False
+
+        """
+        user = self.request.user
+        # Check if user is admin
+        if user.groups.filter(name='admin').exists():
+            return True
+        # otherwise check if user is registrant of contact for domain
+        if domain:
+            if domain.registrant.registrant.filter(project_id=user).exists():
+                return True
+            if domain.contacts.contact.filter(project_id=user).exists():
+                return True
+        return False
 
     @detail_route(methods=['get'])
     def available(self, request, domain=None):
