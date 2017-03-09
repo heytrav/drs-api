@@ -93,6 +93,14 @@ def read_secret_file(secret_file_path, default=None):
     return data
 
 
+INSTALLED_APPS = (
+    'raven.contrib.django.raven_compat',
+)
+RAVEN_CONFIG = {
+    'dsn': read_secret_file(os.environ.get('SENTRY_DSN_FILE',
+                                           os.environ.get('SENTRY_DSN', None)))
+}
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
