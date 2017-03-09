@@ -97,8 +97,8 @@ INSTALLED_APPS = (
     'raven.contrib.django.raven_compat',
 )
 RAVEN_CONFIG = {
-    'dsn': read_secret_file(os.environ.get('SENTRY_DSN_FILE',
-                                           os.environ.get('SENTRY_DSN', None)))
+    'dsn': read_secret_file(os.environ.get('SENTRY_DSN_FILE',None),
+                            os.envron.get('SENTRY_DSN', None)),
 }
 
 DATABASES = {
