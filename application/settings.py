@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django_nose',
     'rest_framework_swagger',
     'django_celery_results',
+    'raven.contrib.django.raven_compat',
 ]
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
@@ -92,6 +93,11 @@ def read_secret_file(secret_file_path, default=None):
             data = f.read().strip()
     return data
 
+
+RAVEN_CONFIG = {
+    'dsn': read_secret_file(os.environ.get('SENTRY_DSN_FILE',None),
+                            os.environ.get('SENTRY_DSN', None)),
+}
 
 DATABASES = {
     'default': {
