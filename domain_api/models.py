@@ -245,6 +245,9 @@ class RegisteredDomain(models.Model):
     # registration period and whatever the notification buffer is for a
     # provider. The aim is to notify a customer ahead of time that their domain
     # is about to renew/expire.
+    authcode = models.CharField(max_length=100, null=True)
+    roid = models.CharField(max_length=100, null=True)
+    status = models.CharField(max_length=200, null=True)
     anniversary = models.DateTimeField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
