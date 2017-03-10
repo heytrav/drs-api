@@ -97,6 +97,7 @@ def read_secret_file(secret_file_path, default=None):
 RAVEN_CONFIG = {
     'dsn': read_secret_file(os.environ.get('SENTRY_DSN_FILE',None),
                             os.environ.get('SENTRY_DSN', None)),
+    'environment': os.environ.get('SENTRY_ENVIRONMENT', None)
 }
 
 DATABASES = {
