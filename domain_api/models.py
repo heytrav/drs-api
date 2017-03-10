@@ -301,7 +301,8 @@ class NameserverHost(models.Model):
     i.e. ns1.something.com
     """
     host = models.CharField(max_length=255, unique=True)
-    domain_nameserver = models.ManyToManyField(RegisteredDomain)
+    domain_nameservers = models.ManyToManyField(RegisteredDomain,
+                                                related_name='ns')
     default = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)

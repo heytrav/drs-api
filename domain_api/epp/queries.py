@@ -16,11 +16,11 @@ class Domain(EppEntity):
     Query operations for domains.
     """
 
-    def __init__(self):
+    def __init__(self, queryset):
         """
         Initialise Domain object.
         """
-        super().__init__()
+        super().__init__(queryset)
 
     def process_availability_item(self, check_data):
         """
@@ -99,17 +99,14 @@ class Domain(EppEntity):
         """
 
         parsed_domain = parse_domain(domain)
-        user_registered_domain_set = RegisteredDomain.objects.filter(
-            Q(registrant__registrant__project_id=user) | Q(contacts__contact__project_id=user)
-        )
-        registered_domain_set = user_registered_domain_set.filter(
+        registered_domain_set = self.queryset.filter(
             domain__name=parsed_domain["domain"],
             tld__zone=parsed_domain["zone"],
             active=True
         )
-        is_owner = False
-        if registered_domain_set.count() > 0:
-            is_owner = True
+        registered_domain = None
+        if registered_domain_set.exists():
+            registered_domain = registered_domain_set.first()
         data = {"domain": domain}
         response_data = self.rpc_client.call(registry, 'infoDomain', data)
         info_data = response_data["domain:infData"]
@@ -129,7 +126,7 @@ class Domain(EppEntity):
         if "domain:ns" in info_data:
             return_data["ns"] = self.process_nameservers(info_data["domain:ns"])
 
-        if (is_owner or user.is_staff) and "domain:authInfo" in info_data:
+        if "domain:authInfo" in info_data:
             return_data["authcode"] = info_data["domain:authInfo"]["domain:pw"]
             return_data["roid"] = info_data["domain:roid"]
         log.info(return_data)
@@ -142,10 +139,8 @@ class ContactQuery(EppEntity):
     Contact EPP operations.
     """
 
-    def __init__(self, user, queryset):
-        super().__init__()
-        self.user = user
-        self.queryset = queryset
+    def __init__(self, queryset):
+        super().__init__(queryset)
 
     def process_postal_info(self, postal_info):
         """

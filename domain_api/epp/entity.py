@@ -8,10 +8,11 @@ class EppEntity(object):
     Represent an EPP Entity
     """
 
-    def __init__(self):
+    def __init__(self, queryset):
         """
         Set up rabbitmq connection.
         """
+        self.queryset = queryset
         self.rpc_client = EppRpcClient(host=settings.RABBITMQ_HOST)
 
     def process_status(self, raw_status):

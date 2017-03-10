@@ -42,6 +42,7 @@ from domain_api.serializers import (
     DomainRegistrantSerializer,
     DomainContactSerializer,
     InfoDomainSerializer,
+    OwnerInfoDomainSerializer,
     PrivateInfoDomainSerializer,
     InfoContactSerializer,
     PrivateInfoContactSerializer,
@@ -175,7 +176,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
             if self.is_admin_or_owner(contact):
                 log.debug({"msg": "Performing info query"})
-                query = ContactQuery(request.user, self.get_queryset())
+                query = ContactQuery(self.get_queryset())
                 contact = query.info(contact)
                 serializer = self.serializer_class(contact)
                 return Response(serializer.data)
@@ -369,8 +370,6 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             # Limit registered domain query to "owned" domains
             registered_domain_set = self.get_queryset()
             contact_domains = registered_domain_set.filter(active=True)
-            if len(contact_domains) == 0:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
             domain_set = []
             for domain in contact_domains.filter(active=True):
                 domain_object = {}
@@ -412,9 +411,10 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             # Fetch registry for domain
             provider = get_domain_registry(domain)
 
-            query = DomainQuery()
-            info = query.info(domain, provider.slug, user=request.user)
-            serializer = InfoDomainSerializer(data=info)
+
+            query = DomainQuery(self.get_queryset())
+            info = query.info(domain, provider.slug)
+            serializer = OwnerInfoDomainSerializer(data=info)
             log.info(info)
             if serializer.is_valid():
                 return Response(serializer.data)
