@@ -8,7 +8,7 @@ class EppEntity(object):
     Represent an EPP Entity
     """
 
-    def __init__(self, queryset):
+    def __init__(self, queryset=None):
         """
         Set up rabbitmq connection.
         """

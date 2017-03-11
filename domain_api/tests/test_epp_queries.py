@@ -103,8 +103,9 @@ class TestInfoContact(TestCase):
                 "xmlns:contact": "urn:ietf:params:xml:ns:contact-1.0"
             }
         }
-        contact_query = ContactQuery(self.user,
-                                     Contact.objects.filter(project_id=self.user))
+        contact_query = ContactQuery(
+            Contact.objects.filter(project_id=self.user)
+        )
         with patch.object(EppRpcClient,
                           'call',
                           return_value=info_contact_response):

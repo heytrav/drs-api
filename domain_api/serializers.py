@@ -308,15 +308,29 @@ class HandleSetSerializer(serializers.ListField):
     zone = serializers.CharField(required=False)
 
 
-class PrivateInfoDomainSerializer(serializers.ModelSerializer):
 
-    registrant = serializers.CharField(required=True)
+class PrivateInfoDomainSerializer(serializers.ModelSerializer):
+    domain = serializers.SerializerMethodField('get_fqdn')
+    registrant = serializers.SerializerMethodField()
+    contacts = serializers.SerializerMethodField()
+
     class Meta:
         model = RegisteredDomain
         fields = ('domain', 'contacts', 'registrant', 'roid', 'ns',
                   'status', 'authcode', 'created', 'anniversary')
         read_only_fields = ('roid', 'anniversary', 'created', 'authcode',
                             'status')
+
+    def get_registrant(self, obj):
+        return obj.registrant.filter(active=True).first().registrant.registry_id
+
+    def get_fqdn(self, obj):
+        return ".".join([obj.domain.name, obj.tld.zone ])
+
+    def get_contacts(self, obj):
+        active_contacts = obj.contacts.filter(active=True)
+        return [ {i.contact_type.name: i.contact.registry_id} for i in active_contacts]
+
 
 
 class OwnerInfoDomainSerializer(serializers.Serializer):
@@ -336,7 +350,7 @@ class InfoDomainSerializer(serializers.Serializer):
     domain = serializers.CharField(required=True, allow_blank=False)
     contacts = HandleSetSerializer()
     registrant = serializers.CharField(required=True, allow_blank=False)
-    roid = serializers.CharField()
+    roid = serializers.CharField(required=False)
     ns = NsHostObjectListSerializer(required=False)
     status = serializers.CharField(required=False, allow_blank=True)
     created = serializers.DateTimeField(required=False)

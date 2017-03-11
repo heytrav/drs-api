@@ -53,7 +53,7 @@ def check_domain(domain):
               "domain": domain,
               "registry": registry})
     query = DomainQuery()
-    availability = query.check_domain(registry, domain)
+    availability = query.check_domain(domain)
     available = availability["result"][0]["available"]
     log.info({"available": available})
     if str(available) == "1" or str(available) == "true" or available == True:

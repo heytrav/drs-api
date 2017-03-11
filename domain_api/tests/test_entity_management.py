@@ -130,7 +130,7 @@ class TestContactManager(TestEntityManager):
                         { 'name': 'name', 'type': 'loc'},
                         {'name': 'org', 'type': 'loc'},
                         {'name': 'addr', 'type': 'loc'},
-                        'voice', 'email', 'fax'
+                        'voice', 'fax', 'email'
                     ]
                 }
             }

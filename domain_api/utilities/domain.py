@@ -74,3 +74,19 @@ def parse_domain(fqdn):
     if domain_name is None or len(domain_name) == 0:
         raise InvalidTld(fqdn)
     return {"domain": domain_name, "zone": probable_tld.zone}
+
+
+def synchronise_domain(info_data, domain_id):
+    """
+    Synchronise data in info domain response with upstream registry.
+
+    :info_data: TODO
+    :registered_domain: TODO
+    :returns: TODO
+
+    """
+    RegisteredDomain.objects.filter(pk=domain_id).update(
+        authcode=info_data["authcode"],
+        roid=info_data["roid"],
+        status=info_data["status"]
+    )

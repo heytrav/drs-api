@@ -8,7 +8,8 @@ from .tasks import (
     connect_domain
 )
 from domain_api.models import (
-    DefaultAccountTemplate
+    DefaultAccountTemplate,
+    DefaultAccountContact,
 )
 from django_logging import log
 
@@ -48,10 +49,26 @@ class Workflow(object):
         if "registrant" in data:
             return data["registrant"]
         default_registrant = DefaultAccountTemplate.objects.get(
-            provider=self.registry,
+            provider__slug=self.registry,
             project_id=user
         )
         return default_registrant.id
+
+    def build_contact_set(self, contacts):
+        """
+        Build list of contacts from result set
+
+        :contact_set: DefaultContact result set
+        :returns: list of contacts
+
+        """
+        contact_set = []
+        for contact in contacts.all():
+            contact_obj = {}
+            contact_type = contact.contact_type.name
+            contact_obj[contact_type] = contact.account_template.id
+            contact_set.append(contact_obj)
+        return contact_set
 
     def fetch_contacts(self, data, user):
         """
@@ -62,7 +79,16 @@ class Workflow(object):
         :returns: list of contacts
 
         """
-        pass
+        default_contacts = DefaultAccountContact.objects.filter(
+            provider__slug=self.registry
+        )
+        mandatory_contacts = default_contacts.filter(mandatory=True)
+        if mandatory_contacts.exists():
+            return self.build_contact_set(mandatory_contacts)
+        elif "contacts" in data:
+            return data["contacts"]
+        elif default_contacts.exists():
+            return self.build_contact_set(default_contacts)
 
     def create_domain(self, data, user):
         """
@@ -90,7 +116,8 @@ class Workflow(object):
                 user=user.id
             )
         )
-        for contact in data["contacts"]:
+        contacts = self.fetch_contacts(data, user)
+        for contact in contacts:
             log.debug(contact)
             (contact_type, person_id), = contact.items()
             log.debug({"parsed": {"contact_type": contact_type,

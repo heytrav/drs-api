@@ -78,10 +78,10 @@ class ContactFactory(object):
             non_disclose.append({"name": "addr", "type": postal_info_type})
         if not person.disclose_telephone:
             non_disclose.append("voice")
-        if not person.disclose_email:
-            non_disclose.append("email")
         if not person.disclose_fax:
             non_disclose.append("fax")
+        if not person.disclose_email:
+            non_disclose.append("email")
         log.debug(non_disclose)
         if len(non_disclose) > 0:
             return non_disclose
