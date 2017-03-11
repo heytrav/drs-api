@@ -49,6 +49,7 @@ class Domain(EppEntity):
         :returns: dict with set of results indicating availability
 
         """
+        log.debug({"args": args[0]})
         registry = get_domain_registry(args[0])
         data = {"domain": [args]}
         log.debug(data)

@@ -25,7 +25,7 @@ from .exceptions import (
 )
 
 @shared_task
-def check_bulk_domain(registry, domains):
+def check_bulk_domain(domains):
     """
     Bulk domain check
 
@@ -35,7 +35,7 @@ def check_bulk_domain(registry, domains):
 
     """
     query = DomainQuery()
-    availability = query.check_domain(registry, domains)
+    availability = query.check_domain(*domains)
     return availability["result"]
 
 @shared_task

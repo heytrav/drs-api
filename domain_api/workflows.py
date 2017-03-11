@@ -35,7 +35,7 @@ class Workflow(object):
         :returns: chain object for celery
 
         """
-        return check_bulk_domain.si(self.registry, fqdn_list)
+        return check_bulk_domain.si(fqdn_list)
 
     def fetch_registrant(self, data, user):
         """
@@ -52,7 +52,7 @@ class Workflow(object):
             provider__slug=self.registry,
             project_id=user
         )
-        return default_registrant.id
+        return default_registrant.account_template.id
 
     def build_contact_set(self, contacts):
         """
@@ -108,6 +108,7 @@ class Workflow(object):
 
         self.workflow.append(check_domain.s(data["domain"]))
         # TODO: process nameservers
+        log.debug({"default_contact": registrant})
         self.workflow.append(
             create_registrant.si(
                 epp,

@@ -156,8 +156,10 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
         """
         if self.request.user.groups.filter(name='admin').exists():
+            log.debug({"msg": "User is admin"})
             return True
         if contact and contact.project_id == self.request.user:
+            log.debug({"msg": "Contact exists and owns " + contact.registry_id})
             return True
         return False
 
@@ -323,8 +325,6 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
 
         """
         try:
-            if "." in name:
-                raise Exception("Not allowed to have a tld in bulk search")
             providers = DomainProvider.objects.all()
             registry_workflows = []
             for provider in providers.all():
