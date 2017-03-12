@@ -157,9 +157,11 @@ class RegistrantManager(ContactFactory):
             template=template,
             user=user
         )
-        self.related_contact_set = user.registrants.filter(
-            provider=provider
-        )
+        self.related_contact_set = Registrant.objects.filter(
+            domainregistrant__active=True,
+            account_template=template,
+            provider__slug=provider
+        ).distinct()
 
 
 class ContactManager(ContactFactory):

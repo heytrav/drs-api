@@ -5,7 +5,8 @@ from ..tasks import (
     check_domain,
     create_registrant,
     create_registry_contact,
-    ContactManager
+    ContactManager,
+    RegistrantManager
 )
 from ..exceptions import EppError
 from domain_api.epp.entity import EppRpcClient
@@ -18,6 +19,7 @@ from ..models import (
     Registrant,
     ContactType,
     DefaultAccountContact,
+    DefaultAccountTemplate
 )
 import domain_api
 
@@ -110,6 +112,122 @@ class ContactOperation(TestCase):
             email="testcustomer@test.com",
             password="secret"
         )
+        self.joe_user = AccountDetail.objects.create(
+            first_name="Joe",
+            surname="User",
+            email="joeuser@test.com",
+            telephone="+1.8175551234",
+            house_number="10",
+            street1="Evergreen Terrace",
+            city="Springfield",
+            state="State",
+            country="US",
+            project_id=self.user
+        )
+        self.bob_user = AccountDetail.objects.create(
+            first_name="bob",
+            surname="User",
+            email="bobuser@test.com",
+            telephone="+1.8175551234",
+            house_number="10",
+            street1="Evergreen Terrace",
+            city="Springfield",
+            state="State",
+            country="US",
+            project_id=self.user
+        )
+
+
+class TestCreateRegistrant(ContactOperation):
+
+    """
+    Test creation of a regsitrant object.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.default_registrant = DefaultAccountTemplate.objects.create(
+            project_id=self.user,
+            account_template=self.joe_user,
+            provider=self.provider
+        )
+        self.generic_registrant = Registrant.objects.create(
+            provider=self.provider,
+            registry_id='registrant-231',
+            name='Bob User',
+            project_id=self.user,
+            account_template=self.bob_user
+        )
+
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
+    def test_create_registrant(self):
+        """
+        Check that registrant handle is added to DB
+        """
+        epp = {}
+        create_contact_response = {
+            "contact:creData": {
+                "contact:id": "tk429",
+                "contact:crDate": "2017-01-01T12:00:01"
+            }
+        }
+        with patch.object(EppRpcClient,
+                          'call',
+                          return_value=create_contact_response):
+            processed_epp = create_registrant(epp,
+                                              self.joe_user.id,
+                                              'provider-one',
+                                              self.user.id)
+            self.assertIn('registrant',
+                          processed_epp,
+                          "Registrant added to epp")
+            self.assertEqual('tk429',
+                             processed_epp['registrant'],
+                             "Registrant had handle id.")
+            contact = self.joe_user.project_id.registrants.filter(
+                registry_id='tk429'
+            ).first()
+            self.assertIsInstance(contact,
+                                  Registrant,
+                                  'Created expected contact handle')
+
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
+    def test_create_registrant_epp_error(self):
+        """
+        Check that an EPP error causes failure.
+        """
+        with patch.object(EppRpcClient,
+                          'call',
+                          side_effect=EppError("FAIL")):
+            with self.assertRaises(EppError):
+                create_registrant({},
+                                  self.joe_user.id,
+                                  'provider-one',
+                                  self.user.id)
+
+    def test_must_create_new_registrant(self):
+        """
+        Test that we must create a new registrant.
+
+        """
+        with patch.object(RegistrantManager,
+                          'create_registry_contact',
+                          return_value=self.generic_registrant) as mocked:
+            create_registrant({},
+                              self.joe_user.id,
+                              'provider-one',
+                              self.user.id)
+            mocked.assert_called()
+
+
+class TestCreateContact(ContactOperation):
+
+    """
+    Test creation of a regsitrant object.
+    """
+
+    def setUp(self):
+        super().setUp()
         self.admin_acct1 = AccountDetail.objects.create(
             first_name="Ada",
             surname="min",
@@ -162,85 +280,6 @@ class ContactOperation(TestCase):
             project_id=self.user,
             account_template=self.admin_acct1
         )
-
-        self.joe_user = AccountDetail.objects.create(
-            first_name="Joe",
-            surname="User",
-            email="joeuser@test.com",
-            telephone="+1.8175551234",
-            house_number="10",
-            street1="Evergreen Terrace",
-            city="Springfield",
-            state="State",
-            country="US",
-            project_id=self.user
-        )
-
-
-class TestCreateRegistrant(ContactOperation):
-
-    """
-    Test creation of a regsitrant object.
-    """
-
-    def setUp(self):
-        super().setUp()
-
-    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
-    def test_create_registrant(self):
-        """
-        Check that registrant handle is added to DB
-        """
-        epp = {}
-        create_contact_response = {
-            "contact:creData": {
-                "contact:id": "tk429",
-                "contact:crDate": "2017-01-01T12:00:01"
-            }
-        }
-        with patch.object(EppRpcClient,
-                          'call',
-                          return_value=create_contact_response):
-            processed_epp = create_registrant(epp,
-                                              self.joe_user.id,
-                                              'provider-one',
-                                              self.user.id)
-            self.assertIn('registrant',
-                          processed_epp,
-                          "Registrant added to epp")
-            self.assertEqual('tk429',
-                             processed_epp['registrant'],
-                             "Registrant had handle id.")
-            contact = self.joe_user.project_id.registrants.filter(
-                registry_id='tk429'
-            ).first()
-            self.assertIsInstance(contact,
-                                  Registrant,
-                                  'Created expected contact handle')
-
-    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
-    def test_create_registrant_epp_error(self):
-        """
-        Check that an EPP error causes failure.
-        """
-        with patch.object(EppRpcClient,
-                          'call',
-                          side_effect=EppError("FAIL")):
-            with self.assertRaises(EppError):
-                create_registrant({},
-                                  self.joe_user.id,
-                                  'provider-one',
-                                  self.user.id)
-
-
-class TestCreateContact(ContactOperation):
-
-    """
-    Test creation of a regsitrant object.
-    """
-
-    def setUp(self):
-        super().setUp()
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_create_contact(self):

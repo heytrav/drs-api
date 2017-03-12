@@ -400,7 +400,7 @@ class DefaultAccountContact(models.Model):
 
     class Meta:
         unique_together = ('project_id', 'contact_type', 'account_template',
-                           'provider',)
+                           'provider', 'mandatory',)
 
 
 class DefaultContact(models.Model):

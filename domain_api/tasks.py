@@ -77,9 +77,9 @@ def create_registrant(epp,
 
     """
     provider = DomainProvider.objects.get(slug=registry)
-    person = AccountDetail.objects.get(pk=person_id)
+    template = AccountDetail.objects.get(pk=person_id)
     user_obj = User.objects.get(pk=user)
-    contact_manager = RegistrantManager(provider, person, user_obj)
+    contact_manager = RegistrantManager(provider, template, user_obj)
     contact = contact_manager.fetch_existing_contact()
     if not contact or force:
         contact = contact_manager.create_registry_contact()
