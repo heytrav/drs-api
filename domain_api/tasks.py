@@ -6,7 +6,6 @@ from .models import (
     Contact,
     ContactType,
     Domain,
-    DomainContact,
     DomainProvider,
     DomainRegistrant,
     AccountDetail,
@@ -106,11 +105,14 @@ def create_registry_contact(epp,
 
     """
     contacts = epp.get("contact", [])
+    log.debug({"person": person_id, "registry": registry,
+               "contact_type": contact_type,
+               "user": user})
 
     provider = DomainProvider.objects.get(slug=registry)
-    person = AccountDetail.objects.get(pk=person_id)
+    template = AccountDetail.objects.get(pk=person_id)
     user_obj = User.objects.get(pk=user)
-    contact_manager = ContactManager(provider, person, user_obj)
+    contact_manager = ContactManager(provider, template, contact_type, user_obj)
     contact_obj = contact_manager.fetch_existing_contact()
     if not contact_obj or force:
         contact_obj = contact_manager.create_registry_contact()

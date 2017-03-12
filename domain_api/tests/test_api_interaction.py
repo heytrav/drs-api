@@ -15,6 +15,11 @@ class TestApiClient(TestCase):
         Set up test suite
         """
         self.client = Client()
+        self.admin_user = User.objects.create_user(
+            username="admin",
+            email="admin@test.com",
+            password="secret"
+        )
         self.user = User.objects.create_user(
             username="testcustomer",
             email="testcustomer@test.com",
@@ -48,6 +53,21 @@ class TestApiClient(TestCase):
             first_name="Joe",
             surname="User",
             email="joeuser@test.com",
+            telephone="+1.8175551234",
+            house_number="10",
+            street1="Evergreen Terrace",
+            city="Springfield",
+            state="State",
+            country="US",
+            postal_info_type="loc",
+            disclose_name=False,
+            disclose_telephone=False,
+            project_id=self.user
+        )
+        self.other_user = AccountDetail.objects.create(
+            first_name="Other",
+            surname="User",
+            email="otheruser@test.com",
             telephone="+1.8175551234",
             house_number="10",
             street1="Evergreen Terrace",

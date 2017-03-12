@@ -1,7 +1,12 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from unittest.mock import patch
-from ..tasks import check_domain, create_registrant, create_registry_contact
+from ..tasks import (
+    check_domain,
+    create_registrant,
+    create_registry_contact,
+    ContactManager
+)
 from ..exceptions import EppError
 from domain_api.epp.entity import EppRpcClient
 from ..models import (
@@ -10,7 +15,9 @@ from ..models import (
     Contact,
     TopLevelDomain,
     TopLevelDomainProvider,
-    Registrant
+    Registrant,
+    ContactType,
+    DefaultAccountContact,
 )
 import domain_api
 
@@ -93,10 +100,67 @@ class ContactOperation(TestCase):
             slug="provider-one",
             description="Provide some domains"
         )
+        self.admin_user = User.objects.create_user(
+            username="admin",
+            email="admin@test.com",
+            password="secret"
+        )
         self.user = User.objects.create_user(
             username="testcustomer",
             email="testcustomer@test.com",
             password="secret"
+        )
+        self.admin_acct1 = AccountDetail.objects.create(
+            first_name="Ada",
+            surname="min",
+            email="admin@test.com",
+            telephone="+1.8175551234",
+            house_number="10",
+            street1="Evergreen Terrace",
+            city="Springfield",
+            state="State",
+            country="US",
+            postal_info_type="loc",
+            project_id=self.admin_user
+        )
+        self.tech_acct1 = AccountDetail.objects.create(
+            first_name="Tech",
+            surname="Guy",
+            email="tech@test.com",
+            telephone="+1.8175551234",
+            house_number="10",
+            street1="Evergreen Terrace",
+            city="Springfield",
+            state="State",
+            country="US",
+            postal_info_type="loc",
+            disclose_name=False,
+            disclose_telephone=False,
+            project_id=self.admin_user
+        )
+        admin_type = ContactType.objects.create(name='admin',
+                                                description='Admin contact')
+        tech_type = ContactType.objects.create(name='tech',
+                                               description='Admin contact')
+
+        self.default_admin = DefaultAccountContact.objects.create(
+            project_id=self.admin_user,
+            account_template=self.admin_acct1,
+            provider=self.provider,
+            contact_type=admin_type,
+        )
+        self.default_tech = DefaultAccountContact.objects.create(
+            project_id=self.admin_user,
+            account_template=self.tech_acct1,
+            provider=self.provider,
+            contact_type=tech_type,
+        )
+        self.generic_admin_contact = Contact.objects.create(
+            provider=self.provider,
+            registry_id='contact-123',
+            name='Some Admin',
+            project_id=self.user,
+            account_template=self.admin_acct1
         )
 
         self.joe_user = AccountDetail.objects.create(
@@ -214,6 +278,21 @@ class TestCreateContact(ContactOperation):
             self.assertIsInstance(contact,
                                   Contact,
                                   'Created expected contact handle')
+
+    def test_must_create_new_registry_contact(self):
+        """
+        Test that we must create a new contact.
+
+        """
+        with patch.object(ContactManager,
+                          'create_registry_contact',
+                          return_value=self.generic_admin_contact) as mocked:
+            create_registry_contact({},
+                                    self.joe_user.id,
+                                    'provider-one',
+                                    'tech',
+                                    self.user.id)
+            mocked.assert_called()
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_create_contact_epp_error(self):

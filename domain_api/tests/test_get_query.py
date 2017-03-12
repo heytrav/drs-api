@@ -121,13 +121,15 @@ class TestContact(TestApiClient):
         self.contact = Contact(
             registry_id='contact-123',
             project_id=self.user,
-            provider=self.provider
+            provider=self.provider,
+            account_template=self.joe_user
         )
         self.contact.save()
         self.contact2 = Contact(
             registry_id='contact-124',
             project_id=self.user2,
-            provider=self.provider
+            provider=self.provider,
+            account_template=self.other_user
         )
         self.contact2.save()
 
@@ -280,7 +282,8 @@ class TestRegistrant(TestApiClient):
         self.contact = Registrant(
             registry_id='registrant-123',
             project_id=self.user,
-            provider=self.provider
+            provider=self.provider,
+            account_template=self.joe_user
         )
         self.contact.save()
 

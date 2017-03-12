@@ -5,6 +5,7 @@ from ..exceptions import InvalidTld
 from ..utilities.domain import parse_domain
 from ..entity_management.contacts import (
     RegistrantManager,
+    ContactManager,
     ContactAction
 )
 from ..models import (
@@ -12,6 +13,9 @@ from ..models import (
     DomainProvider,
     TopLevelDomain,
     TopLevelDomainProvider,
+    DefaultAccountContact,
+    ContactType,
+    Contact
 )
 import domain_api
 
@@ -24,18 +28,21 @@ class MockRpcClient(domain_api.epp.entity.EppRpcClient):
 class TestEntityManager(TestCase):
     def setUp(self):
         super().setUp()
-        centralnic_test = DomainProvider(
+        self.centralnic_test = DomainProvider.objects.create(
             name="Provider1",
             slug="centralnic-test",
             description="Provide some domains"
         )
-        centralnic_test.save()
-        provider2 = DomainProvider(
+        self.provider = DomainProvider.objects.create(
+            name="Provider One",
+            slug="provider-one",
+            description="Provide some domains"
+        )
+        self.provider2 = DomainProvider.objects.create(
             name="Provider2",
             slug="provider2",
             description="Provide some other domains"
         )
-        provider2.save()
         tld = TopLevelDomain(
             zone="tld",
             idn_zone="tld",
@@ -50,15 +57,10 @@ class TestEntityManager(TestCase):
         other_tld.save()
         tld_centralnic_test = TopLevelDomainProvider(
             zone=tld,
-            provider=centralnic_test,
+            provider=self.centralnic_test,
             anniversary_notification_period_days=10
         )
         tld_centralnic_test.save()
-        self.provider = DomainProvider.objects.create(
-            name="Provider One",
-            slug="provider-one",
-            description="Provide some domains"
-        )
         self.user = User.objects.create_user(
             username="testcustomer",
             email="testcustomer@test.com",
@@ -97,7 +99,7 @@ class TestContactManager(TestEntityManager):
     def test_contact_payload(self):
         registrant_factory = RegistrantManager(
             provider=self.provider,
-            person=self.joe_user,
+            template=self.joe_user,
             user=self.user
         )
         create_return_value = {
@@ -106,7 +108,7 @@ class TestContactManager(TestEntityManager):
         }
 
         with patch.object(ContactAction, 'create', return_value=create_return_value) as mocked:
-            registrant_factory.create_registry_contact()
+            registrant = registrant_factory.create_registry_contact()
 
             actual_data = {
                 'id': ANY,
@@ -135,6 +137,9 @@ class TestContactManager(TestEntityManager):
                 }
             }
             mocked.assert_called_with('provider-one', actual_data)
+            self.assertEqual(self.joe_user.id,
+                             registrant.account_template.id,
+                             'Account template is equal')
 
 
 class TestDomainManager(TestEntityManager):

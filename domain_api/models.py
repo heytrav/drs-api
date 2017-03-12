@@ -142,9 +142,15 @@ class Registrant(models.Model):
     disclose_telephone = models.BooleanField(default=False)
     disclose_fax = models.BooleanField(default=False)
     disclose_email = models.BooleanField(default=False)
+    account_template = models.ForeignKey(AccountDetail)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return "%s - %s  provider: %s account_template: %s" % (self.pk,
+                                                               self.name,
+                                                               self.provider.slug,
+                                                               self.account_template.id)
 
 class Contact(models.Model):
     """
@@ -191,9 +197,16 @@ class Contact(models.Model):
     project_id = models.ForeignKey('auth.User',
                                    related_name='contacts',
                                    on_delete=models.CASCADE)
+    account_template = models.ForeignKey(AccountDetail)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
+
+    def __str__(self):
+        return "%s - %s  provider: %s account_template: %s" % (self.pk,
+                                                               self.name,
+                                                               self.provider.slug,
+                                                               self.account_template.id)
 
 class TopLevelDomainProvider(models.Model):
     """

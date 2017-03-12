@@ -89,6 +89,7 @@ class Workflow(object):
             return data["contacts"]
         elif default_contacts.exists():
             return self.build_contact_set(default_contacts)
+        return None
 
     def create_domain(self, data, user):
         """
