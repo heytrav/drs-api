@@ -443,7 +443,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             chain_res = process_workflow_chain(chained_workflow)
             serializer = InfoDomainSerializer(data=chain_res)
             if serializer.is_valid():
-                return Response(serializer.data)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 log.error(serializer.errors)
                 return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)

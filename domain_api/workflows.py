@@ -54,29 +54,49 @@ class Workflow(object):
         )
         return default_registrant.account_template.id
 
-    def build_contact_set(self, contacts):
+    def append_contact_obj_to_workflow(self,
+                                       contact,
+                                       user_id,
+                                       mandatory=False):
         """
-        Build list of contacts from result set
+        Append DefaultAccountDetail object to create contact workflow.
 
-        :contact_set: DefaultContact result set
-        :returns: list of contacts
-
+        :template_id: int id of an AccountDetail object
         """
-        contact_set = []
-        for contact in contacts.all():
-            contact_obj = {}
-            contact_type = contact.contact_type.name
-            contact_obj[contact_type] = contact.account_template.id
-            contact_set.append(contact_obj)
-        return contact_set
+        contact_type = contact.contact_type.name
+        template_id = contact.account_template.id
+        user = user_id
+        contact_dict = {contact_type: template_id}
+        if mandatory:
+            user = contact.project_id.id
+        self.append_contact_workflow(contact_dict, user)
 
-    def fetch_contacts(self, data, user):
+    def append_contact_workflow(self,
+                                contact,
+                                user_id):
         """
-        Return either set of default contacts for registry or user specified.
+        Append item to create contact workflow.
 
-        :data: request data
-        :user: request user
-        :returns: list of contacts
+        :template_id: int id of an AccountDetail object
+        """
+        (contact_type, person_id), = contact.items()
+        self.workflow.append(
+            create_registry_contact.s(
+                person_id=person_id,
+                registry=self.registry,
+                contact_type=contact_type,
+                user=user_id
+            )
+        )
+
+    def create_contact_workflow(self, data, user):
+        """
+        Append create contact commands to workflow. Preferentially append
+        mandatory default contacts if there are any, followed by contacts
+        sent in create domain request and finally default non-mandatory
+        contacts.
+
+        :data: EPP datastructure
 
         """
         default_contacts = DefaultAccountContact.objects.filter(
@@ -84,12 +104,11 @@ class Workflow(object):
         )
         mandatory_contacts = default_contacts.filter(mandatory=True)
         if mandatory_contacts.exists():
-            return self.build_contact_set(mandatory_contacts)
+            [self.append_contact_obj_to_workflow(i, user, True) for i in mandatory_contacts.all()]
         elif "contacts" in data:
-            return data["contacts"]
+            [self.append_contact_workflow(i, user) for i in data["contacts"]]
         elif default_contacts.exists():
-            return self.build_contact_set(default_contacts)
-        return None
+            [self.append_contact_obj_to_workflow(i, user, False) for i in default_contacts.all()]
 
     def create_domain(self, data, user):
         """
@@ -118,20 +137,7 @@ class Workflow(object):
                 user=user.id
             )
         )
-        contacts = self.fetch_contacts(data, user)
-        for contact in contacts:
-            log.debug(contact)
-            (contact_type, person_id), = contact.items()
-            log.debug({"parsed": {"contact_type": contact_type,
-                                  "person": person_id}})
-            self.workflow.append(
-                create_registry_contact.s(
-                    person_id=person_id,
-                    registry=self.registry,
-                    contact_type=contact_type,
-                    user=user.id
-                )
-            )
+        self.create_contact_workflow(data, user)
 
         self.workflow.append(create_domain.s(self.registry))
         self.workflow.append(connect_domain.s())
