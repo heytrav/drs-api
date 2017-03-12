@@ -16,11 +16,11 @@ class Domain(EppEntity):
     Query operations for domains.
     """
 
-    def __init__(self):
+    def __init__(self, queryset=None):
         """
         Initialise Domain object.
         """
-        super().__init__()
+        super().__init__(queryset)
 
     def process_availability_item(self, check_data):
         """
@@ -41,7 +41,7 @@ class Domain(EppEntity):
             response["reason"] = check_data["domain:reason"]
         return response
 
-    def check_domain(self, registry, *args):
+    def check_domain(self, *args):
         """
         Send a check domain request to the registry.
 
@@ -49,9 +49,11 @@ class Domain(EppEntity):
         :returns: dict with set of results indicating availability
 
         """
+        log.debug({"args": args[0]})
+        registry = get_domain_registry(args[0])
         data = {"domain": [args]}
         log.debug(data)
-        response_data = self.rpc_client.call(registry, 'checkDomain', data)
+        response_data = self.rpc_client.call(registry.slug, 'checkDomain', data)
         log.debug({"response data": response_data})
         check_data = response_data["domain:chkData"]["domain:cd"]
         results = []
@@ -88,7 +90,7 @@ class Domain(EppEntity):
         return nameservers
 
 
-    def info(self, domain, registry, user=None):
+    def info(self, domain, user=None):
         """
         Get info for a domain
 
@@ -97,21 +99,18 @@ class Domain(EppEntity):
         :returns: dict with info about domain
 
         """
-
+        registry = get_domain_registry(domain)
         parsed_domain = parse_domain(domain)
-        user_registered_domain_set = RegisteredDomain.objects.filter(
-            Q(registrant__registrant__project_id=user) | Q(contacts__contact__project_id=user)
-        )
-        registered_domain_set = user_registered_domain_set.filter(
+        registered_domain_set = self.queryset.filter(
             domain__name=parsed_domain["domain"],
             tld__zone=parsed_domain["zone"],
             active=True
         )
-        is_owner = False
-        if registered_domain_set.count() > 0:
-            is_owner = True
+        registered_domain = None
+        if registered_domain_set.exists():
+            registered_domain = registered_domain_set.first()
         data = {"domain": domain}
-        response_data = self.rpc_client.call(registry, 'infoDomain', data)
+        response_data = self.rpc_client.call(registry.slug, 'infoDomain', data)
         info_data = response_data["domain:infData"]
         for contact in info_data["domain:contact"]:
             if '$t' in contact:
@@ -129,11 +128,11 @@ class Domain(EppEntity):
         if "domain:ns" in info_data:
             return_data["ns"] = self.process_nameservers(info_data["domain:ns"])
 
-        if (is_owner or user.is_staff) and "domain:authInfo" in info_data:
+        if "domain:authInfo" in info_data:
             return_data["authcode"] = info_data["domain:authInfo"]["domain:pw"]
             return_data["roid"] = info_data["domain:roid"]
         log.info(return_data)
-        return return_data
+        return (return_data, registered_domain)
 
 
 class ContactQuery(EppEntity):
@@ -142,10 +141,8 @@ class ContactQuery(EppEntity):
     Contact EPP operations.
     """
 
-    def __init__(self, user, queryset):
-        super().__init__()
-        self.user = user
-        self.queryset = queryset
+    def __init__(self, queryset=None):
+        super().__init__(queryset)
 
     def process_postal_info(self, postal_info):
         """

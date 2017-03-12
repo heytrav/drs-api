@@ -1,6 +1,7 @@
 import uuid
 from django_logging import log
 from domain_api.epp.actions.contact import Contact as ContactAction
+from ..models import Contact, Registrant
 
 
 class ContactFactory(object):
@@ -14,18 +15,18 @@ class ContactFactory(object):
 
     def __init__(self,
                  provider=None,
-                 person=None,
+                 template=None,
                  user=None):
         """
         Initialise factory.
         """
         self.provider = provider
-        self.person = person
+        self.template = template
         self.user = user
 
     def fetch_existing_contact(self):
         """
-        Check if the person has an existing handle at a provider and return it
+        Check if the template has an existing handle at a provider and return it
         if it does.
         :returns: str registry handle
 
@@ -39,15 +40,17 @@ class ContactFactory(object):
         Return correct type of serializer for contact type.
 
         :eppdata: Handle for contact
-        :person: AccountDetail object to link to new handle
+        :template: AccountDetail object to link to new handle
         :returns: registrant or contact handle object
 
         """
         registry_id = eppdata["id"]
+        log.debug({"user": self.user.id})
         contact = self.related_contact_set.create(
             registry_id=registry_id,
             provider=self.provider,
-            project_id=self.user
+            project_id=self.user,
+            account_template=self.template
         )
         return contact
 
@@ -67,22 +70,22 @@ class ContactFactory(object):
         :returns: dict with non-disclose element.
 
         """
-        person = self.person
-        postal_info_type = person.postal_info_type
+        template = self.template
+        postal_info_type = template.postal_info_type
         non_disclose = []
-        if not person.disclose_name:
+        if not template.disclose_name:
             non_disclose.append({"name": "name", "type": postal_info_type})
-        if not person.disclose_company:
+        if not template.disclose_company:
             non_disclose.append({"name": "org", "type": postal_info_type})
-        if not person.disclose_company:
+        if not template.disclose_company:
             non_disclose.append({"name": "addr", "type": postal_info_type})
-        if not person.disclose_telephone:
+        if not template.disclose_telephone:
             non_disclose.append("voice")
-        if not person.disclose_email:
-            non_disclose.append("email")
-        if not person.disclose_fax:
+        if not template.disclose_fax:
             non_disclose.append("fax")
-        log.debug(non_disclose)
+        if not template.disclose_email:
+            non_disclose.append("email")
+        log.debug({"nondisclose": non_disclose})
         if len(non_disclose) > 0:
             return non_disclose
         return None
@@ -92,39 +95,39 @@ class ContactFactory(object):
         Create contact at registry and add to registrant handle or
         contact handle.
 
-        :person: AccountDetail object
+        :template: AccountDetail object
         :returns: serializer object
 
         """
         contact = self.get_registry_id()
-        person = self.person
-        street = [person.street1]
-        if person.street2 != "":
-            street.append(person.street2)
-        if person.street3 != "":
-            street.append(person.street3)
+        template = self.template
+        street = [template.street1]
+        if template.street2 != "":
+            street.append(template.street2)
+        if template.street3 != "":
+            street.append(template.street3)
         non_disclose = self.process_disclose()
         company = ""
-        if person.company:
-            company = person.company
+        if template.company:
+            company = template.company
 
         postal_info = {
-            "name": person.first_name + " " + person.surname,
+            "name": template.first_name + " " + template.surname,
             "org": company,
-            "type": person.postal_info_type,
+            "type": template.postal_info_type,
             "addr": {
                 "street": street,
-                "city": person.city,
-                "sp": person.state,
-                "pc": person.postcode,
-                "cc": person.country
+                "city": template.city,
+                "sp": template.state,
+                "pc": template.postcode,
+                "cc": template.country
             }
         }
         contact_info = {
             "id": contact,
-            "voice": person.telephone,
-            "fax": person.fax,
-            "email": person.email,
+            "voice": template.telephone,
+            "fax": template.fax,
+            "email": template.email,
             "postalInfo": postal_info
         }
         if non_disclose:
@@ -144,19 +147,21 @@ class RegistrantManager(ContactFactory):
 
     def __init__(self,
                  provider=None,
-                 person=None,
+                 template=None,
                  user=None):
         """
         Initialise factory.
         """
         super().__init__(
             provider=provider,
-            person=person,
+            template=template,
             user=user
         )
-        self.related_contact_set = user.registrants.filter(
-            provider=provider
-        )
+        self.related_contact_set = Registrant.objects.filter(
+            domainregistrant__active=True,
+            account_template=template,
+            provider__slug=provider
+        ).distinct()
 
 
 class ContactManager(ContactFactory):
@@ -167,16 +172,20 @@ class ContactManager(ContactFactory):
 
     def __init__(self,
                  provider=None,
-                 person=None,
+                 template=None,
+                 contact_type=None,
                  user=None):
         """
         Initialise factory.
         """
         super().__init__(
             provider=provider,
-            person=person,
+            template=template,
             user=user
         )
-        self.related_contact_set = user.contacts.filter(
-            provider=provider
-        )
+        self.related_contact_set = Contact.objects.filter(
+            domaincontact__active=True,
+            account_template=template,
+            domaincontact__contact_type__name=contact_type,
+            provider__slug=provider
+        ).distinct()

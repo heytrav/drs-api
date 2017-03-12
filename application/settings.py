@@ -95,7 +95,7 @@ def read_secret_file(secret_file_path, default=None):
 
 
 RAVEN_CONFIG = {
-    'dsn': read_secret_file(os.environ.get('SENTRY_DSN_FILE',None),
+    'dsn': read_secret_file(os.environ.get('SENTRY_DSN_FILE', None),
                             os.environ.get('SENTRY_DSN', None)),
     'environment': os.environ.get('SENTRY_ENVIRONMENT', None)
 }
@@ -107,7 +107,8 @@ DATABASES = {
                                  os.environ.get("MYSQL_DATABASE", 'domaindb')),
         'USER': read_secret_file(os.environ.get('MYSQL_USER_FILE', None),
                                  os.environ.get("MYSQL_USER", 'mysqluser')),
-        'PASSWORD': read_secret_file(os.environ.get('MYSQL_PASSWORD_FILE', None),
+        'PASSWORD': read_secret_file(os.environ.get('MYSQL_PASSWORD_FILE',
+                                                    None),
                                      os.environ.get("MYSQL_PASSWORD", '')),
         'HOST': os.environ.get("MYSQL_HOST", '127.0.0.1'),
         'PORT': os.environ.get("MYSQL_PORT", 3306)
@@ -137,7 +138,6 @@ DJANGO_LOGGING = {
     "CONSOLE_LOG": True,
     "LOGLEVEL": os.environ.get("DJANGO_LOG_LEVEL", "INFO"),
     "CONTENT_JSON_ONLY": True
-    #"ELASTICSEARCH_ENABLED": True,
 
 }
 

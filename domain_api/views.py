@@ -10,7 +10,6 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
     detail_route,
-    list_route
 )
 from rest_framework.response import Response
 from domain_api.models import (
@@ -42,6 +41,7 @@ from domain_api.serializers import (
     DomainRegistrantSerializer,
     DomainContactSerializer,
     InfoDomainSerializer,
+    OwnerInfoDomainSerializer,
     PrivateInfoDomainSerializer,
     InfoContactSerializer,
     PrivateInfoContactSerializer,
@@ -61,7 +61,7 @@ from .exceptions import (
     EppObjectDoesNotExist
 )
 from domain_api.entity_management.contacts import ContactFactory
-from domain_api.utilities.domain import parse_domain, get_domain_registry
+from domain_api.utilities.domain import parse_domain, synchronise_domain
 from .workflows import workflow_factory
 
 
@@ -156,8 +156,10 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
         """
         if self.request.user.groups.filter(name='admin').exists():
+            log.debug({"msg": "User is admin"})
             return True
         if contact and contact.project_id == self.request.user:
+            log.debug({"msg": "Contact exists and owns " + contact.registry_id})
             return True
         return False
 
@@ -175,7 +177,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
             if self.is_admin_or_owner(contact):
                 log.debug({"msg": "Performing info query"})
-                query = ContactQuery(request.user, self.get_queryset())
+                query = ContactQuery(self.get_queryset())
                 contact = query.info(contact)
                 serializer = self.serializer_class(contact)
                 return Response(serializer.data)
@@ -237,6 +239,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
         serializer = InfoContactSerializer(contacts, many=True)
         return Response(serializer.data)
 
+
 class RegistrantManagementViewSet(ContactManagementViewSet):
     """
     Handle registrant related queries.
@@ -282,7 +285,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             return True
         # otherwise check if user is registrant of contact for domain
         if domain:
-            if domain.registrant.registrant.filter(project_id=user).exists():
+            if domain.registrant.filter(active=True, registrant__project_id=user):
                 return True
             if domain.contacts.contact.filter(project_id=user).exists():
                 return True
@@ -300,8 +303,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         """
         try:
             query = DomainQuery()
-            provider = get_domain_registry(domain)
-            availability = query.check_domain(provider.slug, domain)
+            availability = query.check_domain(domain)
             serializer = DomainAvailabilitySerializer(data=availability["result"][0])
             if serializer.is_valid():
                 return Response(serializer.data)
@@ -323,8 +325,6 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
 
         """
         try:
-            if "." in name:
-                raise Exception("Not allowed to have a tld in bulk search")
             providers = DomainProvider.objects.all()
             registry_workflows = []
             for provider in providers.all():
@@ -369,31 +369,8 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             # Limit registered domain query to "owned" domains
             registered_domain_set = self.get_queryset()
             contact_domains = registered_domain_set.filter(active=True)
-            if len(contact_domains) == 0:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            domain_set = []
-            for domain in contact_domains.filter(active=True):
-                domain_object = {}
-                domain_object["domain"] = ".".join([domain.domain.name,
-                                                    domain.tld.zone])
-                domain_object["registrant"] = domain.registrant.first().registrant.registry_id
-                contact_set = []
-                for dom_contact in domain.contacts.all():
-                    domain_contact = {}
-                    domain_contact[dom_contact.contact_type.name] = dom_contact.contact.registry_id
-                    contact_set.append(domain_contact)
-                domain_object["contacts"] = contact_set
-                domain_object["ns"] = []
-                domain_object["anniversary"] = domain.anniversary
-                domain_object["created"] = domain.created
-                domain_set.append(domain_object)
-
-            serializer = InfoDomainSerializer(data=domain_set, many=True)
-            if serializer.is_valid():
-                return Response(serializer.data)
-            else:
-                return Response(serializer.errors,
-                                status=status.HTTP_400_BAD_REQUEST)
+            serializer = self.serializer_class(contact_domains, many=True)
+            return Response(serializer.data)
         except Exception as e:
             log.error(ErrorLogObject(request, e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -410,12 +387,16 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         """
         try:
             # Fetch registry for domain
-            provider = get_domain_registry(domain)
-
-            query = DomainQuery()
-            info = query.info(domain, provider.slug, user=request.user)
-            serializer = InfoDomainSerializer(data=info)
+            query = DomainQuery(self.get_queryset())
+            info, registered_domain = query.info(domain)
             log.info(info)
+            if registered_domain and self.is_admin_or_owner(registered_domain):
+                synchronise_domain(info, registered_domain.id)
+                serializer = self.serializer_class(
+                    self.get_queryset().get(pk=registered_domain.id)
+                )
+                return Response(serializer.data)
+            serializer = InfoDomainSerializer(data=info)
             if serializer.is_valid():
                 return Response(serializer.data)
             else:
@@ -462,7 +443,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             chain_res = process_workflow_chain(chained_workflow)
             serializer = InfoDomainSerializer(data=chain_res)
             if serializer.is_valid():
-                return Response(serializer.data)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 log.error(serializer.errors)
                 return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)

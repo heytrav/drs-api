@@ -8,7 +8,8 @@ from .tasks import (
     connect_domain
 )
 from domain_api.models import (
-    DefaultAccountTemplate
+    DefaultAccountTemplate,
+    DefaultAccountContact,
 )
 from django_logging import log
 
@@ -34,7 +35,7 @@ class Workflow(object):
         :returns: chain object for celery
 
         """
-        return check_bulk_domain.si(self.registry, fqdn_list)
+        return check_bulk_domain.si(fqdn_list)
 
     def fetch_registrant(self, data, user):
         """
@@ -48,21 +49,66 @@ class Workflow(object):
         if "registrant" in data:
             return data["registrant"]
         default_registrant = DefaultAccountTemplate.objects.get(
-            provider=self.registry,
+            provider__slug=self.registry,
             project_id=user
         )
-        return default_registrant.id
+        return default_registrant.account_template.id
 
-    def fetch_contacts(self, data, user):
+    def append_contact_obj_to_workflow(self,
+                                       contact,
+                                       user_id,
+                                       mandatory=False):
         """
-        Return either set of default contacts for registry or user specified.
+        Append DefaultAccountDetail object to create contact workflow.
 
-        :data: request data
-        :user: request user
-        :returns: list of contacts
+        :template_id: int id of an AccountDetail object
+        """
+        contact_type = contact.contact_type.name
+        template_id = contact.account_template.id
+        user = user_id
+        contact_dict = {contact_type: template_id}
+        if mandatory:
+            user = contact.project_id.id
+        self.append_contact_workflow(contact_dict, user)
+
+    def append_contact_workflow(self,
+                                contact,
+                                user_id):
+        """
+        Append item to create contact workflow.
+
+        :template_id: int id of an AccountDetail object
+        """
+        (contact_type, person_id), = contact.items()
+        self.workflow.append(
+            create_registry_contact.s(
+                person_id=person_id,
+                registry=self.registry,
+                contact_type=contact_type,
+                user=user_id
+            )
+        )
+
+    def create_contact_workflow(self, data, user):
+        """
+        Append create contact commands to workflow. Preferentially append
+        mandatory default contacts if there are any, followed by contacts
+        sent in create domain request and finally default non-mandatory
+        contacts.
+
+        :data: EPP datastructure
 
         """
-        pass
+        default_contacts = DefaultAccountContact.objects.filter(
+            provider__slug=self.registry
+        )
+        mandatory_contacts = default_contacts.filter(mandatory=True)
+        if mandatory_contacts.exists():
+            [self.append_contact_obj_to_workflow(i, user, True) for i in mandatory_contacts.all()]
+        elif "contacts" in data:
+            [self.append_contact_workflow(i, user) for i in data["contacts"]]
+        elif default_contacts.exists():
+            [self.append_contact_obj_to_workflow(i, user, False) for i in default_contacts.all()]
 
     def create_domain(self, data, user):
         """
@@ -82,6 +128,7 @@ class Workflow(object):
 
         self.workflow.append(check_domain.s(data["domain"]))
         # TODO: process nameservers
+        log.debug({"default_contact": registrant})
         self.workflow.append(
             create_registrant.si(
                 epp,
@@ -90,19 +137,7 @@ class Workflow(object):
                 user=user.id
             )
         )
-        for contact in data["contacts"]:
-            log.debug(contact)
-            (contact_type, person_id), = contact.items()
-            log.debug({"parsed": {"contact_type": contact_type,
-                                  "person": person_id}})
-            self.workflow.append(
-                create_registry_contact.s(
-                    person_id=person_id,
-                    registry=self.registry,
-                    contact_type=contact_type,
-                    user=user.id
-                )
-            )
+        self.create_contact_workflow(data, user)
 
         self.workflow.append(create_domain.s(self.registry))
         self.workflow.append(connect_domain.s())

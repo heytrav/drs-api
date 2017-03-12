@@ -6,7 +6,6 @@ from .models import (
     Contact,
     ContactType,
     Domain,
-    DomainContact,
     DomainProvider,
     DomainRegistrant,
     AccountDetail,
@@ -25,7 +24,7 @@ from .exceptions import (
 )
 
 @shared_task
-def check_bulk_domain(registry, domains):
+def check_bulk_domain(domains):
     """
     Bulk domain check
 
@@ -35,7 +34,7 @@ def check_bulk_domain(registry, domains):
 
     """
     query = DomainQuery()
-    availability = query.check_domain(registry, domains)
+    availability = query.check_domain(*domains)
     return availability["result"]
 
 @shared_task
@@ -53,7 +52,7 @@ def check_domain(domain):
               "domain": domain,
               "registry": registry})
     query = DomainQuery()
-    availability = query.check_domain(registry, domain)
+    availability = query.check_domain(domain)
     available = availability["result"][0]["available"]
     log.info({"available": available})
     if str(available) == "1" or str(available) == "true" or available == True:
@@ -78,9 +77,9 @@ def create_registrant(epp,
 
     """
     provider = DomainProvider.objects.get(slug=registry)
-    person = AccountDetail.objects.get(pk=person_id)
+    template = AccountDetail.objects.get(pk=person_id)
     user_obj = User.objects.get(pk=user)
-    contact_manager = RegistrantManager(provider, person, user_obj)
+    contact_manager = RegistrantManager(provider, template, user_obj)
     contact = contact_manager.fetch_existing_contact()
     if not contact or force:
         contact = contact_manager.create_registry_contact()
@@ -106,11 +105,14 @@ def create_registry_contact(epp,
 
     """
     contacts = epp.get("contact", [])
+    log.debug({"person": person_id, "registry": registry,
+               "contact_type": contact_type,
+               "user": user})
 
     provider = DomainProvider.objects.get(slug=registry)
-    person = AccountDetail.objects.get(pk=person_id)
+    template = AccountDetail.objects.get(pk=person_id)
     user_obj = User.objects.get(pk=user)
-    contact_manager = ContactManager(provider, person, user_obj)
+    contact_manager = ContactManager(provider, template, contact_type, user_obj)
     contact_obj = contact_manager.fetch_existing_contact()
     if not contact_obj or force:
         contact_obj = contact_manager.create_registry_contact()

@@ -6,6 +6,7 @@ from domain_api.epp.entity import EppRpcClient
 from domain_api.models import (
     Contact,
     DomainProvider,
+    AccountDetail
 )
 import domain_api
 
@@ -39,17 +40,31 @@ class TestInfoContact(TestCase):
             email="testcustomer@test.com",
             password="secret"
         )
-        self.provider = DomainProvider(
+        self.provider = DomainProvider.objects.create(
             name="Provider One",
             slug="provider1"
         )
-        self.provider.save()
-        self.contact = Contact(
+        self.joe_user = AccountDetail.objects.create(
+            first_name="Joe",
+            surname="User",
+            email="joeuser@test.com",
+            telephone="+1.8175551234",
+            house_number="10",
+            street1="Evergreen Terrace",
+            city="Springfield",
+            state="State",
+            country="US",
+            postal_info_type="loc",
+            disclose_name=False,
+            disclose_telephone=False,
+            project_id=self.user
+        )
+        self.contact = Contact.objects.create(
             registry_id='test-contact',
             project_id=self.user,
-            provider=self.provider
+            provider=self.provider,
+            account_template=self.joe_user
         )
-        self.contact.save()
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_info_domain(self):
@@ -103,8 +118,9 @@ class TestInfoContact(TestCase):
                 "xmlns:contact": "urn:ietf:params:xml:ns:contact-1.0"
             }
         }
-        contact_query = ContactQuery(self.user,
-                                     Contact.objects.filter(project_id=self.user))
+        contact_query = ContactQuery(
+            Contact.objects.filter(project_id=self.user)
+        )
         with patch.object(EppRpcClient,
                           'call',
                           return_value=info_contact_response):
