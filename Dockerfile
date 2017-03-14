@@ -19,7 +19,7 @@ COPY . /usr/local/domain-api
 RUN pip3 install -r requirements.txt
 
 
-EXPOSE 8000 80 443
+EXPOSE 8000
 VOLUME ["/usr/local/domain-api"]
 
 CMD ["python3", "manage.py", "test"]
