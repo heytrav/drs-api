@@ -87,18 +87,3 @@ class TestApiClient(TestCase):
         :returns: logged in session
         """
         self.client.login(username="testcustomer", password="secret")
-
-
-    def test_jwt_login(self):
-        """
-        Test login to api-token-auth returns a json web token
-        :returns: TODO
-
-        """
-        credentials = {
-            "username": "testcustomer",
-            "password": "secret"
-        }
-        response = self.client.post('/api-token-auth', data=credentials)
-        data = response.data
-        self.assertIn('token', data)
