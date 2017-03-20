@@ -12,16 +12,26 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import datetime
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+def read_secret_file(secret_file_path, default=None):
+    data = default
+    if secret_file_path:
+        with open(secret_file_path, 'rt') as f:
+            data = f.read().strip()
+    return data
+
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '-gd#qi9!+)u+!65m)m^ad)yq2b5)jbny)(&8lzp-m5$+2z%78%'
+SECRET_KEY = read_secret_file(os.environ.get('DJANGO_SECRET_KEY_FILE'),
+                              '-gd#qi9!+)u+!65m)m^ad)yq2b5)jbny)(&8lzp-m5$+2z%78%')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -90,18 +100,18 @@ WSGI_APPLICATION = 'application.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
-def read_secret_file(secret_file_path, default=None):
-    data = default
-    if secret_file_path:
-        with open(secret_file_path, 'rt') as f:
-            data = f.read().strip()
-    return data
-
-
 RAVEN_CONFIG = {
     'dsn': read_secret_file(os.environ.get('SENTRY_DSN_FILE', None),
                             os.environ.get('SENTRY_DSN', None)),
     'environment': os.environ.get('SENTRY_ENVIRONMENT', None)
+}
+JWT_AUTH = {
+    "JWT_ALLOW_REFRESH": True,
+    "JWT_SECRET_KEY": read_secret_file(os.environ.get("JWT_SECRET_KEY_FILE"),
+                                       SECRET_KEY),
+    "JWT_EXPIRATION_DELTA": datetime.timedelta(
+        seconds=int(os.environ.get('JWT_EXPIRATION_DELTA_SECONDS', 300))
+    ),
 }
 
 DATABASES = {
@@ -158,7 +168,7 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
@@ -166,9 +176,15 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+    ),
 }
 
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'localhost')
