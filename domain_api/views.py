@@ -5,7 +5,8 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 # Remove this
 from django.contrib.auth.models import User
-from rest_framework import status, permissions, viewsets
+from django.contrib.auth import get_user_model
+from rest_framework import status, permissions, viewsets, generics
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -136,6 +137,16 @@ def registry_contact(request, registry, contact_type="contact"):
     except Exception as e:
         log.error(ErrorLogObject(request, e))
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class CreateUserView(generics.CreateAPIView):
+
+    """
+    Create a user.
+    """
+    model = get_user_model()
+    permission_classes = [ permissions.AllowAny,]
+    serializer_class = UserSerializer
+
 
 
 class ContactManagementViewSet(viewsets.GenericViewSet):
@@ -662,10 +673,6 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
         """
         Update a default account template
 
-        :request: TODO
-        :data: TODO
-        :returns: TODO
-
         """
         default_account_template = get_object_or_404(self.get_queryset(),
                                                      default_id)
@@ -683,10 +690,6 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
         """
         Delete a default template
 
-        :request: TODO
-        :default_id: TODO
-        :returns: TODO
-
         """
         default_account_template = get_object_or_404(self.get_queryset(),
                                                      pk=default_id)
@@ -695,10 +698,6 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
     def detail(self, request, default_id):
         """
         Retrieve single object
-
-        :request: TODO
-        :default_id: TODO
-        :returns: TODO
 
         """
         log.debug({"default_id": default_id})

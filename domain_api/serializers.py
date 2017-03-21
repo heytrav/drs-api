@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from domain_api.models import (
     AccountDetail,
     TopLevelDomain,
@@ -14,6 +15,8 @@ from domain_api.models import (
     DomainContact,
     DefaultAccountTemplate,
 )
+
+UserModel = get_user_model()
 
 
 class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
@@ -47,10 +50,35 @@ class UserSerializer(serializers.ModelSerializer):
     """
     Serialize users.
     """
+    password = serializers.CharField(write_only=True)
+
+    def create(self, validated_data):
+        """
+        Override create method to create this user using specific User
+        related methods.
+
+        :validated_data: data validated for serializer
+        :returns: User object
+
+        """
+        user = UserModel.objects.create(
+            username=validated_data["username"]
+        )
+        user.set_password(validated_data["password"])
+        if "email" in validated_data:
+            user.email = validated_data["email"]
+        if "first_name" in validated_data:
+            user.first_name = validated_data["first_name"]
+        if "last_name" in validated_data:
+            user.last_name = validated_data["last_name"]
+
+        user.save()
+        user.groups.add(Group.objects.get(name="customer"))
+        return user
 
     class Meta:
-        model = User
-        fields = ('id', 'username')
+        model = UserModel
+        fields = ('id', 'username', 'password', 'first_name', 'last_name')
 
 
 class ContactTypeSerializer(serializers.HyperlinkedModelSerializer):
@@ -308,7 +336,6 @@ class HandleSetSerializer(serializers.ListField):
     zone = serializers.CharField(required=False)
 
 
-
 class PrivateInfoDomainSerializer(serializers.ModelSerializer):
     domain = serializers.SerializerMethodField('get_fqdn')
     registrant = serializers.SerializerMethodField()
@@ -325,12 +352,11 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
         return obj.registrant.filter(active=True).first().registrant.registry_id
 
     def get_fqdn(self, obj):
-        return ".".join([obj.domain.name, obj.tld.zone ])
+        return ".".join([obj.domain.name, obj.tld.zone])
 
     def get_contacts(self, obj):
         active_contacts = obj.contacts.filter(active=True)
-        return [ {i.contact_type.name: i.contact.registry_id} for i in active_contacts]
-
+        return [{i.contact_type.name: i.contact.registry_id} for i in active_contacts]
 
 
 class OwnerInfoDomainSerializer(serializers.Serializer):

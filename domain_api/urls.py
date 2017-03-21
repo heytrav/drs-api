@@ -60,6 +60,7 @@ registrant_list = views.RegistrantManagementViewSet.as_view({
     'get': 'list'
 })
 
+
 urlpatterns = [
     url(r'^', include(router.urls, namespace='domain_api')),
     url(r'^registry-contact/$', views.registry_contact),
