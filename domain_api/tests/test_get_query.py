@@ -1,11 +1,8 @@
 from unittest.mock import patch
 import domain_api
-import json
 from ..models import (
     Contact,
-    DomainContact,
     Registrant,
-    DomainRegistrant
 )
 from domain_api.epp.entity import EppRpcClient
 from ..exceptions import EppError
@@ -64,7 +61,7 @@ class TestCheckDomain(TestApiClient):
             self.assertEqual(response.status_code,
                              200,
                              "Epp returned normally")
-            data = json.loads(response.content.decode('utf-8'))
+            data = response.data
             self.assertTrue(data["available"],
                             "Serialised a check_domain response")
 
@@ -92,12 +89,12 @@ class TestInfoDomain(TestApiClient):
                 "domain:status": "ok",
                 "domain:registrant": "R1234",
                 "domain:ns": [
-                    { "domain:hostObj": "ns1.nameserver.com" },
-                    { "domain:hostObj": "ns2.nameserver.com" }
+                    {"domain:hostObj": "ns1.nameserver.com"},
+                    {"domain:hostObj": "ns2.nameserver.com"}
                 ],
                 "domain:contact": [
-                    { "$t": "A1234", "type": "admin", },
-                    { "$t": "T1234", "type": "tech", }
+                    {"$t": "A1234", "type": "admin"},
+                    {"$t": "T1234", "type": "tech"}
                 ]
             }
         }
@@ -111,7 +108,6 @@ class TestInfoDomain(TestApiClient):
 
 
 class TestContact(TestApiClient):
-
 
     def setUp(self):
         """
@@ -132,7 +128,6 @@ class TestContact(TestApiClient):
             account_template=self.other_user
         )
         self.contact2.save()
-
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_info_contact(self):
@@ -184,9 +179,9 @@ class TestContact(TestApiClient):
                 "contact:upID": "catalyst_ote",
                 "contact:disclose": {
                     "flag": "0",
-                    "contact:name": [ { "type": "loc" }, { "type": "int" } ],
-                    "contact:org": [ { "type": "loc" }, { "type": "int" } ],
-                    "contact:addr": [ { "type": "loc" }, { "type": "int" } ],
+                    "contact:name": [{"type": "loc"}, {"type": "int"}],
+                    "contact:org": [{"type": "loc"}, {"type": "int"}],
+                    "contact:addr": [{"type": "loc"}, {"type": "int"}],
                     "contact:voice": {},
                     "contact:fax": {},
                     "contact:email": {}
@@ -200,7 +195,6 @@ class TestContact(TestApiClient):
             self.assertEqual(response.status_code,
                              200,
                              "Info contact returned normal response")
-
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_info_contact_non_owner(self):
@@ -272,7 +266,6 @@ class TestContact(TestApiClient):
 
 
 class TestRegistrant(TestApiClient):
-
 
     def setUp(self):
         """
