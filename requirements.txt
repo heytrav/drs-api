@@ -1,5 +1,5 @@
 amqp==2.1.4
-appdirs==1.4.0
+appdirs==1.4.3
 appnope==0.1.0
 behave==1.2.5
 billiard==3.5.0.2
@@ -43,7 +43,7 @@ prompt-toolkit==1.0.13
 ptyprocess==0.5.1
 Pygments==2.2.0
 PyJWT==1.4.2
-pyparsing==2.1.10
+pyparsing==2.2.0
 python-memcached==1.58
 pytz==2016.10
 raven==6.0.0
