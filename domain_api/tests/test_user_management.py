@@ -1,5 +1,5 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 
 
 class TestUserManagement(TestCase):
@@ -14,6 +14,7 @@ class TestUserManagement(TestCase):
 
         """
         super().setUp()
+        Group.objects.create(name='customer')
 
     def test_create_user(self):
         """
