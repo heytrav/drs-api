@@ -19,6 +19,7 @@ django-logging-json==1.5.3
 django-nose==1.4.4
 django-rest-swagger==2.1.1
 djangorestframework==3.5.3
+djangorestframework-jwt==1.9.0
 elasticsearch==2.4.1
 ipython==5.2.2
 ipython-genutils==0.1.0
@@ -41,6 +42,7 @@ pika==0.10.0
 prompt-toolkit==1.0.13
 ptyprocess==0.5.1
 Pygments==2.2.0
+PyJWT==1.4.2
 pyparsing==2.1.10
 pytz==2016.10
 raven==6.0.0

@@ -502,6 +502,7 @@ class ContactTypeViewSet(viewsets.ModelViewSet):
     queryset = ContactType.objects.all()
     serializer_class = ContactTypeSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+    lookup_field = 'name'
 
 
 class TopLevelDomainViewSet(viewsets.ModelViewSet):
@@ -512,6 +513,7 @@ class TopLevelDomainViewSet(viewsets.ModelViewSet):
     queryset = TopLevelDomain.objects.all()
     serializer_class = TopLevelDomainSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+    lookup_field = 'idn_zone'
 
 
 class DomainProviderViewSet(viewsets.ModelViewSet):

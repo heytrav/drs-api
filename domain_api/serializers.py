@@ -56,7 +56,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ContactTypeSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:contacttype-detail",
-        lookup_field="pk"
+        lookup_field="name"
     )
 
     class Meta:
@@ -71,7 +71,7 @@ class TopLevelDomainSerializer(serializers.HyperlinkedModelSerializer):
     """
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:topleveldomain-detail",
-        lookup_field="pk"
+        lookup_field="idn_zone"
     )
 
     class Meta:
@@ -153,12 +153,12 @@ class ContactSerializer(serializers.HyperlinkedModelSerializer):
 class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
     provider = serializers.HyperlinkedRelatedField(
         view_name="domain_api:domainprovider-detail",
-        lookup_field="pk",
+        lookup_field="slug",
         read_only=True
     )
     zone = serializers.HyperlinkedRelatedField(
         view_name="domain_api:topleveldomain-detail",
-        lookup_field="pk",
+        lookup_field="idn_zone",
         read_only=True
     )
     url = serializers.HyperlinkedIdentityField(
@@ -229,7 +229,7 @@ class DomainRegistrantSerializer(serializers.HyperlinkedModelSerializer):
     )
     registrant = serializers.HyperlinkedRelatedField(
         view_name="domain_api:registrant-detail",
-        lookup_field="pk",
+        lookup_field="registry_id",
         read_only=True
     )
 
@@ -246,12 +246,12 @@ class DomainContactSerializer(serializers.HyperlinkedModelSerializer):
     )
     contact = serializers.HyperlinkedRelatedField(
         view_name="domain_api:contact-detail",
-        lookup_field="pk",
+        lookup_field="registry_id",
         read_only=True
     )
     contact_type = serializers.HyperlinkedRelatedField(
         view_name="domain_api:contacttype-detail",
-        lookup_field="pk",
+        lookup_field="name",
         read_only=True
     )
 
