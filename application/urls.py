@@ -21,6 +21,7 @@ from rest_framework_jwt.views import (
     verify_jwt_token,
     refresh_jwt_token
 )
+from domain_api.views import CreateUserView
 
 schema_view = get_swagger_view(title='Domain API')
 
@@ -34,4 +35,5 @@ urlpatterns = [
     url(r'^api-token-refresh', refresh_jwt_token),
     url(r'^api-token-verify', verify_jwt_token),
     url('^schema/$', schema_view),
+    url(r'^register/$', CreateUserView.as_view(), name="create-user"),
 ]
