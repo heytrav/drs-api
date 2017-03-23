@@ -1,4 +1,5 @@
 from django.db import models
+import idna
 
 
 class AccountDetail(models.Model):
@@ -81,6 +82,18 @@ class TopLevelDomain(models.Model):
     def __str__(self):
         return self.zone
 
+    def save(self, *args, **kwargs):
+        if "xn--" in self.zone:
+            self.idn_zone = self.zone
+            self.zone = idna.decode(self.idn_zone)
+        elif "xn--" not in self.idn_zone:
+            self.zone = self.idn
+            self.idn_zone = idna.encode(self.zone)
+        elif not self.idn:
+            self.idn_zone = idna.encode(self.zone)
+        else:
+            self.zone =idna.decode(self.idn_zone)
+        super(TopLevelDomain, self).save(*args, **kwargs)
 
 class DomainProvider(models.Model):
     """
@@ -235,6 +248,22 @@ class Domain(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        """
+        Override the save method
+        """
+        if "xn--" in self.name:
+            self.idn = self.name
+            self.name = idna.decode(self.name)
+        elif "xn--" not in self.idn:
+            self.name = self.idn
+            self.idn = idna.encode(self.idn)
+        elif not self.idn:
+            self.idn = idna.encode(self.name)
+        else:
+            self.name = idna.decode(self.idn)
+        super(Domain, self).save(*args, **kwargs)
 
 
 class RegisteredDomain(models.Model):
