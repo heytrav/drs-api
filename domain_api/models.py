@@ -88,9 +88,9 @@ class TopLevelDomain(models.Model):
             self.zone = idna.decode(self.idn_zone)
         elif "xn--" not in self.idn_zone:
             self.zone = self.idn_zone
-            self.idn_zone = idna.encode(self.zone)
+            self.idn_zone = idna.encode(self.zone, uts46=True)
         elif not self.idn_zone:
-            self.idn_zone = idna.encode(self.zone)
+            self.idn_zone = idna.encode(self.zone, uts46=True)
         else:
             self.zone =idna.decode(self.idn_zone)
         super(TopLevelDomain, self).save(*args, **kwargs)
@@ -258,9 +258,9 @@ class Domain(models.Model):
             self.name = idna.decode(self.name)
         elif "xn--" not in self.idn:
             self.name = self.idn
-            self.idn = idna.encode(self.idn)
+            self.idn = idna.encode(self.idn, uts46=True)
         elif not self.idn:
-            self.idn = idna.encode(self.name)
+            self.idn = idna.encode(self.name, uts46=True)
         else:
             self.name = idna.decode(self.idn)
         super(Domain, self).save(*args, **kwargs)
