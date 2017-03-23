@@ -87,9 +87,9 @@ class TopLevelDomain(models.Model):
             self.idn_zone = self.zone
             self.zone = idna.decode(self.idn_zone)
         elif "xn--" not in self.idn_zone:
-            self.zone = self.idn
+            self.zone = self.idn_zone
             self.idn_zone = idna.encode(self.zone)
-        elif not self.idn:
+        elif not self.idn_zone:
             self.idn_zone = idna.encode(self.zone)
         else:
             self.zone =idna.decode(self.idn_zone)
