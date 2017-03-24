@@ -100,7 +100,7 @@ class TestInfoDomain(TestApiClient):
         }
         with patch.object(EppRpcClient, 'call', return_value=return_value):
             response = self.client.get(
-                '/v1/domains/info/whatever.tld/'
+                '/v1/domains/whatever.tld/'
             )
             self.assertEqual(response.status_code,
                              200,

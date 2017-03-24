@@ -39,7 +39,6 @@ class TestApiClient(TestCase):
         self.provider = test_registry
         tld = TopLevelDomain(
             zone="tld",
-            idn_zone="tld",
             description="Test TLD"
         )
         tld.save()

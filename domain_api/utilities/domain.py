@@ -1,4 +1,5 @@
 from ..exceptions import InvalidTld, UnsupportedTld
+import idna
 from ..models import (
     Domain,
     TopLevelDomain,
@@ -26,7 +27,6 @@ def get_domain_registry(fqdn):
         )
         domain_obj, _ = Domain.objects.get_or_create(
             name=parsed_domain["domain"],
-            idn=parsed_domain["domain"]
         )
         registered_domain_set = RegisteredDomain.objects.filter(
             domain=domain_obj,
@@ -58,6 +58,7 @@ def parse_domain(fqdn):
     :returns: dict containing name and tld
 
     """
+    fqdn = idna.encode(fqdn, uts46=True).decode('ascii')
     tlds = TopLevelDomain.objects.all()
     probable_tld = None
     length = 0

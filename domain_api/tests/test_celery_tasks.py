@@ -41,7 +41,6 @@ class TestCheckDomainTask(TestCase):
         test_registry.save()
         tld = TopLevelDomain(
             zone="tld",
-            idn_zone="tld",
             description="Test TLD"
         )
         tld.save()
@@ -217,7 +216,7 @@ class TestCreateRegistrant(ContactOperation):
                               self.joe_user.id,
                               'provider-one',
                               self.user.id)
-            mocked.assert_called()
+            self.assertTrue(mocked.called)
 
 
 class TestCreateContact(ContactOperation):
@@ -331,7 +330,7 @@ class TestCreateContact(ContactOperation):
                                     'provider-one',
                                     'tech',
                                     self.user.id)
-            mocked.assert_called()
+            self.assertTrue(mocked.called)
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_create_contact_epp_error(self):

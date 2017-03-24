@@ -45,13 +45,11 @@ class TestEntityManager(TestCase):
         )
         tld = TopLevelDomain(
             zone="tld",
-            idn_zone="tld",
             description="Test TLD"
         )
         tld.save()
         other_tld = TopLevelDomain(
             zone="other",
-            idn_zone="other",
             description="Other Test TLD"
         )
         other_tld.save()

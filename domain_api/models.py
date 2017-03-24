@@ -1,4 +1,5 @@
 from django.db import models
+import idna
 
 
 class AccountDetail(models.Model):
@@ -72,15 +73,21 @@ class TopLevelDomain(models.Model):
     """
     # TLD
     zone = models.CharField(max_length=100, unique=True)
-    # Internationalised syntax: xn--*
-    idn_zone = models.CharField(max_length=100, unique=True)
     description = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.zone
+        return self.tld
 
+    def _get_tld(self):
+        return idna.decode(self.zone)
+
+    tld = property(_get_tld)
+
+    def save(self, *args, **kwargs):
+        self.zone = idna.encode(self.zone, uts46=True)
+        super(TopLevelDomain, self).save(*args, **kwargs)
 
 class DomainProvider(models.Model):
     """
@@ -229,12 +236,21 @@ class Domain(models.Model):
     """
     # The part of a domain name before the tld
     name = models.CharField(max_length=200, unique=True)
-    # punyencoded version of the name field. For ascii domains this will
-    # be identical to name.
-    idn = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
-        return self.name
+        return self.domain
+
+    def _get_domain(self):
+        return idna.decode(self.name)
+
+    domain = property(_get_domain)
+
+    def save(self, *args, **kwargs):
+        """
+        Override the save method
+        """
+        self.name = idna.encode(self.name, uts46=True)
+        super(Domain, self).save(*args, **kwargs)
 
 
 class RegisteredDomain(models.Model):

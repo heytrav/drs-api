@@ -7,6 +7,7 @@ from ..models import (
     Registrant as RegistrantModel,
     RegisteredDomain
 )
+import idna
 from .entity import EppEntity
 
 
@@ -51,7 +52,7 @@ class Domain(EppEntity):
         """
         log.debug({"args": args[0]})
         registry = get_domain_registry(args[0])
-        data = {"domain": [args]}
+        data = {"domain": [idna.encode(i, uts46=True) for i in args]}
         log.debug(data)
         response_data = self.rpc_client.call(registry.slug, 'checkDomain', data)
         log.debug({"response data": response_data})
