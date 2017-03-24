@@ -42,6 +42,34 @@ class Domain(EppEntity):
             response["reason"] = check_data["domain:reason"]
         return response
 
+    def process_contact_set(self, contacts):
+        """
+        Process a set of 1 or more contacts
+
+        :contacts: dict or list of contacts
+        :returns: list of dict objects
+
+        """
+        if isinstance(contacts, list):
+            return [self.process_contact_item(i) for i in contacts]
+        return [self.process_contact_item(contacts)]
+
+    def process_contact_item(self, contact):
+        """
+        Process a single contact item.
+
+        :contact: dict object containing contact data
+        :returns: dict with contact-type mapping to id
+
+        """
+        if '$t' in contact:
+            processed = {}
+            contact_type = contact["type"]
+            contact_id = contact["$t"]
+            processed[contact_type] = contact_id
+            return processed
+        return None
+
     def check_domain(self, *args):
         """
         Send a check domain request to the registry.
@@ -113,17 +141,10 @@ class Domain(EppEntity):
         data = {"domain": domain}
         response_data = self.rpc_client.call(registry.slug, 'infoDomain', data)
         info_data = response_data["domain:infData"]
-        for contact in info_data["domain:contact"]:
-            if '$t' in contact:
-                contact_type = contact["type"]
-                contact_id = contact["$t"]
-                contact[contact_type] = contact_id
-                del contact["type"]
-                del contact["$t"]
         return_data = {
             "domain": info_data["domain:name"],
             "registrant": info_data["domain:registrant"],
-            "contacts": info_data["domain:contact"],
+            "contacts": self.process_contact_set(info_data["domain:contact"]),
             "status": self.process_status(info_data["domain:status"])
         }
         if "domain:ns" in info_data:
