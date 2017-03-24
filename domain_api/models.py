@@ -86,7 +86,7 @@ class TopLevelDomain(models.Model):
     tld = property(_get_tld)
 
     def save(self, *args, **kwargs):
-        self.zone = idna.encode(self.zone, uts46=True)
+        self.zone = idna.encode(self.zone, uts46=True).decode('ascii')
         super(TopLevelDomain, self).save(*args, **kwargs)
 
 class DomainProvider(models.Model):
@@ -249,7 +249,7 @@ class Domain(models.Model):
         """
         Override the save method
         """
-        self.name = idna.encode(self.name, uts46=True)
+        self.name = idna.encode(self.name, uts46=True).decode('ascii')
         super(Domain, self).save(*args, **kwargs)
 
 

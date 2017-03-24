@@ -315,7 +315,9 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         """
         try:
             query = DomainQuery()
-            availability = query.check_domain(idna.encode(domain, uts46=True))
+            availability = query.check_domain(
+                idna.encode(domain, uts46=True).decode('ascii')
+            )
             serializer = DomainAvailabilitySerializer(data=availability["result"][0])
             if serializer.is_valid():
                 return Response(serializer.data)
@@ -348,7 +350,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
                     zone = tld_provider.zone.zone
                     fqdn_list.append(".".join(
                         [
-                            idna.encode(name, uts46=True),
+                            idna.encode(name, uts46=True).decode('ascii'),
                             zone
                         ]
                     )
