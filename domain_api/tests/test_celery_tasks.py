@@ -41,7 +41,6 @@ class TestCheckDomainTask(TestCase):
         test_registry.save()
         tld = TopLevelDomain(
             zone="tld",
-            idn_zone="tld",
             description="Test TLD"
         )
         tld.save()

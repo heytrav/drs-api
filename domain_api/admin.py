@@ -37,14 +37,31 @@ class DomainProviderAdmin(admin.ModelAdmin):
     ]
     inlines = [TopLevelDomainProviderInline]
 
+class DomainAdmin(admin.ModelAdmin):
+    list_display = ('domain', 'name',)
+    readonly_fields = ('domain',)
+
+    fieldsets = [
+        (None, {'fields': ['domain', 'name']}),
+    ]
+
+class TopLevelDomainAdmin(admin.ModelAdmin):
+    list_display = ('tld', 'zone', 'description')
+    readonly_fields = ('tld',)
+
+    fieldsets = [
+        (None, {'fields': ['tld', 'zone']}),
+        ('Description', {'fields': ['description']})
+    ]
+
 admin.site.register(DefaultAccountTemplate)
 admin.site.register(DefaultAccountContact)
 admin.site.register(DefaultRegistrant)
 admin.site.register(DefaultContact)
 admin.site.register(AccountDetail)
-admin.site.register(TopLevelDomain)
+admin.site.register(TopLevelDomain, TopLevelDomainAdmin)
 admin.site.register(DomainProvider, DomainProviderAdmin)
-admin.site.register(Domain)
+admin.site.register(Domain, DomainAdmin)
 admin.site.register(RegisteredDomain)
 admin.site.register(Registrant)
 admin.site.register(Contact)

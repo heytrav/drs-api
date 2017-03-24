@@ -153,7 +153,6 @@ def connect_domain(create_data, user=None):
         parsed_domain = parse_domain(create_data["domain"])
         domain_obj, _ = Domain.objects.get_or_create(
             name=parsed_domain["domain"],
-            idn=parsed_domain["domain"]
         )
         tld_provider = TopLevelDomainProvider.objects.get(
             zone__zone=parsed_domain["zone"]

@@ -1,4 +1,5 @@
 from __future__ import absolute_import, unicode_literals
+import idna
 from celery import chain, group
 from django_logging import log, ErrorLogObject
 from django.db.models import Q
@@ -314,7 +315,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         """
         try:
             query = DomainQuery()
-            availability = query.check_domain(domain)
+            availability = query.check_domain(idna.encode(domain, uts46=True))
             serializer = DomainAvailabilitySerializer(data=availability["result"][0])
             if serializer.is_valid():
                 return Response(serializer.data)
@@ -345,7 +346,13 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
                 fqdn_list = []
                 for tld_provider in tld_providers.all():
                     zone = tld_provider.zone.zone
-                    fqdn_list.append(".".join([name, zone]))
+                    fqdn_list.append(".".join(
+                        [
+                            idna.encode(name, uts46=True),
+                            zone
+                        ]
+                    )
+                    )
                 check_task = workflow_manager.check_domains(
                     fqdn_list
                 )
@@ -524,7 +531,7 @@ class TopLevelDomainViewSet(viewsets.ModelViewSet):
     queryset = TopLevelDomain.objects.all()
     serializer_class = TopLevelDomainSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
-    lookup_field = 'idn_zone'
+    lookup_field = 'zone'
 
 
 class DomainProviderViewSet(viewsets.ModelViewSet):
@@ -593,6 +600,7 @@ class DomainViewSet(viewsets.ModelViewSet):
     serializer_class = DomainSerializer
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Domain.objects.all()
+    lookup_field = 'name'
 
 
 class RegisteredDomainViewSet(viewsets.ModelViewSet):

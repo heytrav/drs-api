@@ -99,12 +99,12 @@ class TopLevelDomainSerializer(serializers.HyperlinkedModelSerializer):
     """
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:topleveldomain-detail",
-        lookup_field="idn_zone"
+        lookup_field="zone"
     )
 
     class Meta:
         model = TopLevelDomain
-        fields = ('zone', 'idn_zone', 'description', 'created',
+        fields = ('zone', 'tld', 'description', 'created',
                   'updated', 'url')
 
 
@@ -186,7 +186,7 @@ class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
     )
     zone = serializers.HyperlinkedRelatedField(
         view_name="domain_api:topleveldomain-detail",
-        lookup_field="idn_zone",
+        lookup_field="zone",
         read_only=True
     )
     url = serializers.HyperlinkedIdentityField(
@@ -203,12 +203,12 @@ class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
 class DomainSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:domain-detail",
-        lookup_field="pk"
+        lookup_field="name"
     )
 
     class Meta:
         model = Domain
-        fields = ('name', 'idn', 'url')
+        fields = ('domain', 'name', 'url')
 
 
 class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
@@ -352,7 +352,7 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
         return obj.registrant.filter(active=True).first().registrant.registry_id
 
     def get_fqdn(self, obj):
-        return ".".join([obj.domain.name, obj.tld.zone])
+        return ".".join([obj.domain.domain, obj.tld.tld])
 
     def get_contacts(self, obj):
         active_contacts = obj.contacts.filter(active=True)
