@@ -16,8 +16,9 @@ from .models import (
     DefaultRegistrant,
     DefaultContact,
     DefaultAccountContact,
-    #NameserverHost,
-    #IpAddress,
+    NameserverHost,
+    IpAddress,
+    Nameserver
 )
 
 
@@ -68,5 +69,5 @@ admin.site.register(Contact)
 admin.site.register(ContactType)
 admin.site.register(DomainRegistrant)
 admin.site.register(DomainContact)
-#admin.site.register(NameserverHost)
-#admin.site.register(IpAddress)
+admin.site.register(NameserverHost)
+admin.site.register(IpAddress)

@@ -315,6 +315,11 @@ class DomainAvailabilitySerializer(serializers.Serializer):
     available = serializers.BooleanField(required=True)
     reason = serializers.CharField(required=False)
 
+class HostAvailabilitySerializer(serializers.Serializer):
+    host = serializers.CharField(required=True, allow_blank=False)
+    available = serializers.BooleanField(required=True)
+    reason = serializers.CharField(required=False)
+
 
 class CheckDomainResponseSerializer(serializers.Serializer):
     result = DomainAvailabilitySerializer(many=True)

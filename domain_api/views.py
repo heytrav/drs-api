@@ -40,6 +40,7 @@ from domain_api.serializers import (
     DomainSerializer,
     RegisteredDomainSerializer,
     DomainAvailabilitySerializer,
+    HostAvailabilitySerializer,
     DomainRegistrantSerializer,
     DomainContactSerializer,
     InfoDomainSerializer,
@@ -52,7 +53,7 @@ from domain_api.serializers import (
 from domain_api.filters import (
     IsPersonFilterBackend
 )
-from .epp.queries import Domain as DomainQuery, ContactQuery
+from .epp.queries import Domain as DomainQuery, ContactQuery, HostQuery
 from .exceptions import (
     EppError,
     InvalidTld,
@@ -256,6 +257,51 @@ class RegistrantManagementViewSet(ContactManagementViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = PrivateInfoContactSerializer
     queryset = Registrant.objects.all()
+
+class HostManagementViewSet(viewsets.GenericViewSet):
+
+    """
+    Handle nameserver related queries.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return queryset
+        :returns: queryset object
+
+        """
+        queryset = NameserverHost.objects.all()
+        user = self.request.user
+        if user.groups.filter(name='admin').exists():
+            return queryset
+        return queryset.filter(project_id=user).distinct()
+
+    def available(self, request, host=None):
+        """
+        Check availability of host.
+
+        :request: HTTP request
+        :returns: availability of host object
+
+        """
+        try:
+            query = HostQuery()
+            availability = query.check_host(
+                idna.encode(host, uts46=True).decode('ascii')
+            )
+            serializer = HostAvailabilitySerializer(data=availability["result"][0])
+            if serializer.is_valid():
+                return Response(serializer.data)
+        except EppError as epp_e:
+            log.error(ErrorLogObject(request, epp_e))
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except KeyError as ke:
+            log.error(ErrorLogObject(request, ke))
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            raise e
 
 class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
     """

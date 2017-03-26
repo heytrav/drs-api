@@ -149,21 +149,23 @@ class TestNameserver(TestCase):
             slug="provider1"
         )
         TopLevelDomainProvider.objects.create(
-            tld=tld,
+            zone=tld,
             provider=provider
         )
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_check_host_query(self):
-        """TODO: Docstring for test_check_host_query.
-        :returns: TODO
+        """
+        Test processing check_host response
 
         """
         check_host_response = {
             "host:chkData": {
                 "host:cd":  {
-                    "$t": "ns1.whatever.tld",
-                    "avail": 1
+                    "host:name": {
+                        "$t": "ns1.whatever.tld",
+                        "avail": 1
+                    }
                 }
             }
         }
@@ -173,6 +175,6 @@ class TestNameserver(TestCase):
                           'call',
                           return_value=check_host_response):
             processed = host_query.check_host('ns1.whatever.tld')
-            results = processed["results"]
+            results = processed["result"]
             self.assertTrue(results[0]["available"],
                             "Processed response from check host command")
