@@ -26,7 +26,8 @@ from domain_api.models import (
     DomainRegistrant,
     DomainContact,
     TopLevelDomainProvider,
-    DefaultAccountTemplate
+    DefaultAccountTemplate,
+    NameserverHost,
 )
 from domain_api.serializers import (
     UserSerializer,
@@ -308,6 +309,51 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             raise e
+
+
+    def info(self, request, host):
+        """
+        Query EPP with a infoHost request.
+
+
+        :request: HTTP request
+        :host: str host name to check
+        :returns: JSON response with details about a host
+
+        """
+        try:
+            # Fetch registry for host
+            query = HostQuery(self.get_queryset())
+            #info, registered_host = query.info(host)
+            info = query.info(host)
+            log.info(info)
+            #if registered_host and self.is_admin_or_owner(registered_host):
+                #synchronise_host(info, registered_host.id)
+                #serializer = self.serializer_class(
+                    #self.get_queryset().get(pk=registered_host.id)
+                #)
+                #return Response(serializer.data)
+            serializer = InfoHostSerializer(data=info)
+            if serializer.is_valid():
+                return Response(serializer.data)
+            else:
+                return Response(serializer.errors,
+                                status=status.HTTP_400_BAD_REQUEST)
+        except InvalidTld as e:
+            log.error(ErrorLogObject(request, e))
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except UnsupportedTld as e:
+            log.error(ErrorLogObject(request, e))
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except EppObjectDoesNotExist as epp_e:
+            log.error(ErrorLogObject(request, epp_e))
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except EppError as epp_e:
+            log.error(ErrorLogObject(request, epp_e))
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            log.error(ErrorLogObject(request, e))
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request):
         """

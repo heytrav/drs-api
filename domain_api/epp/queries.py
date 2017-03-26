@@ -267,6 +267,7 @@ class ContactQuery(EppEntity):
         log.debug({"processed_info": processed_info_data})
         return self.queryset.get(pk=contact.id)
 
+
 class HostQuery(EppEntity):
 
     """
@@ -302,3 +303,53 @@ class HostQuery(EppEntity):
             "result": results
         }
         return availability
+
+    def process_addr_item(self, item):
+        """
+        Process a host info address item
+
+        :item: TODO
+        :returns: TODO
+
+        """
+        processed = {}
+        if "$t" in item:
+            processed["type"] = item["ip"]
+            processed["ip"] = item["$t"]
+        return processed
+
+    def process_addresses(self, addresses):
+        """
+        Process of a set host addresses
+
+        :addresses: TODO
+        :returns: TODO
+
+        """
+        if isinstance(addresses, list):
+            return [self.process_addr_item(i) for i in addresses]
+        return [self.process_addr_item(addresses)]
+
+
+    def info(self, host, user=None):
+        """
+        Get info for a host
+
+        :host: str host name to query
+        :returns: dict with info about host
+
+        """
+        registry = get_domain_registry(host)
+        data = {"name": host}
+        response_data = self.rpc_client.call(registry.slug, 'infoHost', data)
+        info_data = response_data["host:infData"]
+        return_data = {
+            "host": info_data["host:name"],
+            "addr": self.process_addresses(info_data["host:addr"]),
+            "status": self.process_status(info_data["host:status"])
+        }
+        if "host:authInfo" in info_data:
+            return_data["authcode"] = info_data["host:authInfo"]["host:pw"]
+            return_data["roid"] = info_data["host:roid"]
+        log.info(return_data)
+        return return_data

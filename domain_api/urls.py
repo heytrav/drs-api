@@ -66,6 +66,9 @@ host_single_check = views.HostManagementViewSet.as_view({
 host_list = views.HostManagementViewSet.as_view({
     'post': 'create'
 })
+host_detail = views.HostManagementViewSet.as_view({
+    'get': 'info',
+})
 
 
 urlpatterns = [
@@ -109,4 +112,5 @@ urlpatterns = [
         host_single_check, name='check-host'
     ),
     url(r'^hosts/$', host_list, name='host-list'),
+    url(r'^hosts/(?P<host>.*)/$', host_detail, name='host-info'),
 ]
