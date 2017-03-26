@@ -387,6 +387,13 @@ class InfoDomainSerializer(serializers.Serializer):
     created = serializers.DateTimeField(required=False)
     anniversary = serializers.DateTimeField(required=False)
 
+class AddrSetSerializer(serializers.ListField):
+    v4 = serializers.CharField(required=False)
+    v6 = serializers.CharField(required=False)
+
+class InfoHostSerializer(serializers.Serializer):
+    host = serializers.CharField(required=True, allow_blank=False)
+    addr = AddrSetSerializer()
 
 class InfoDomainListSerializer(serializers.ListField):
 

@@ -155,7 +155,7 @@ class Workflow(object):
 
         """
         self.workflow.append(check_host.s(data["host"]))
-        self.workflow.append(create_host.s(data))
+        self.workflow.append(create_host.si(data))
         return self.workflow
 
 

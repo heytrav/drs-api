@@ -1,5 +1,5 @@
 from django_logging import log
-from ..utilities.domain import get_domain_registry
+from ...utilities.domain import get_domain_registry
 from ..entity import EppEntity
 
 
@@ -25,7 +25,8 @@ class Host(EppEntity):
 
         """
         registry = get_domain_registry(host_data["host"])
-        result = self.rpc_client.call(registry, 'createHost', host_data)
+        host_data["name"] = host_data["host"]
+        result = self.rpc_client.call(registry.slug, 'createHost', host_data)
 
         create_data = result["host:creData"]
         log.debug(result)

@@ -1,4 +1,5 @@
 from __future__ import absolute_import, unicode_literals
+import idna
 from celery import shared_task
 from django.contrib.auth.models import User
 from django_logging import log, ErrorLogObject
@@ -189,7 +190,7 @@ def connect_domain(create_data, user=None):
         raise e
 
 @shared_task
-def check_domain(host):
+def check_host(host):
     """
     Check if a host exists.
 

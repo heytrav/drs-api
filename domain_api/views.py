@@ -49,6 +49,7 @@ from domain_api.serializers import (
     InfoContactSerializer,
     PrivateInfoContactSerializer,
     DefaultAccountTemplateSerializer,
+    InfoHostSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
@@ -64,7 +65,11 @@ from .exceptions import (
     EppObjectDoesNotExist
 )
 from domain_api.entity_management.contacts import ContactFactory
-from domain_api.utilities.domain import parse_domain, synchronise_domain
+from domain_api.utilities.domain import (
+    parse_domain,
+    synchronise_domain,
+    get_domain_registry,
+)
 from .workflows import workflow_factory
 
 
@@ -264,6 +269,7 @@ class HostManagementViewSet(viewsets.GenericViewSet):
     Handle nameserver related queries.
     """
 
+    serializer_class = InfoHostSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
@@ -315,9 +321,9 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         try:
             # See if this TLD is provided by one of our registries.
             registry = get_domain_registry(data["host"])
-            workflow_manager = workflow_factory(registry)()
+            workflow_manager = workflow_factory(registry.slug)()
 
-            log.debug({"msg": "About to call workflow_manager.create_domain"})
+            log.debug({"msg": "About to call workflow_manager.create_host"})
             workflow = workflow_manager.create_host(data, request.user)
             # run chained workflow and register the domain
             chained_workflow = chain(workflow)()

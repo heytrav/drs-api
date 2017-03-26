@@ -63,6 +63,9 @@ registrant_list = views.RegistrantManagementViewSet.as_view({
 host_single_check = views.HostManagementViewSet.as_view({
     'get': 'available'
 })
+host_list = views.HostManagementViewSet.as_view({
+    'post': 'create'
+})
 
 
 urlpatterns = [
@@ -105,4 +108,5 @@ urlpatterns = [
         r'^hosts/available/(?P<host>.*)/$',
         host_single_check, name='check-host'
     ),
+    url(r'^hosts/$', host_list, name='host-list'),
 ]
