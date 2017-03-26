@@ -1,3 +1,4 @@
+from django_logging import log
 from ..utilities.rpc_client import EppRpcClient
 from application import settings
 
@@ -33,3 +34,26 @@ class EppEntity(object):
             return ";".join(return_status)
         except Exception as e:
             log.error({"msg": "Problem parsing status", "error": e})
+
+    def process_availability_item(self,
+                                  check_data,
+                                  entity_type=None,):
+        """
+        Process check domain items.
+
+        :check_data: item from a set of check entity results
+        :returns: availability with epp attributes renamed
+
+        """
+        name_key = ":".join([entity_type, "name"])
+        reason_key = ":".join([entity_type, "reason"])
+
+        domain = check_data[name_key]['$t']
+        response = {entity_type: domain, "available": False}
+        available = check_data[name_key]["avail"]
+        if available and int(available) == 1:
+            response["available"] = True
+        else:
+            response["available"] = False
+            response["reason"] = check_data[reason_key]
+        return response

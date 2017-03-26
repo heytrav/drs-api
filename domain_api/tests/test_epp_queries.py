@@ -1,12 +1,17 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 from unittest.mock import patch
-from domain_api.epp.queries import ContactQuery
+from domain_api.epp.queries import (
+    ContactQuery,
+    HostQuery
+)
 from domain_api.epp.entity import EppRpcClient
 from domain_api.models import (
     Contact,
     DomainProvider,
-    AccountDetail
+    AccountDetail,
+    TopLevelDomainProvider,
+    TopLevelDomain,
 )
 import domain_api
 
@@ -14,17 +19,6 @@ import domain_api
 class MockRpcClient(domain_api.epp.entity.EppRpcClient):
     def __init__(self, host=None):
         pass
-
-
-class TestCheckDomain(TestCase):
-
-    """
-    Test processing of check domain.
-    """
-
-    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
-    def test_bulk_check_domain(self):
-        self.assertTrue(True)
 
 
 class TestInfoContact(TestCase):
@@ -133,3 +127,52 @@ class TestInfoContact(TestCase):
                              info_data.registry_id,
                              "contact id is expected value")
             self.assertEqual(info_data.country, "US", "Expected country US")
+
+
+class TestNameserver(TestCase):
+
+    """
+    Test processing Nameserver queries/management
+    """
+
+    def setUp(self):
+        """
+        Setup test suite
+
+        """
+        tld = TopLevelDomain.objects.create(
+            zone="tld",
+            description="Test TLD"
+        )
+        provider = DomainProvider.objects.create(
+            name="Provider One",
+            slug="provider1"
+        )
+        TopLevelDomainProvider.objects.create(
+            tld=tld,
+            provider=provider
+        )
+
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
+    def test_check_host_query(self):
+        """TODO: Docstring for test_check_host_query.
+        :returns: TODO
+
+        """
+        check_host_response = {
+            "host:chkData": {
+                "host:cd":  {
+                    "$t": "ns1.whatever.tld",
+                    "avail": 1
+                }
+            }
+        }
+        # Shouldn't need a queryset yet
+        host_query = HostQuery()
+        with patch.object(EppRpcClient,
+                          'call',
+                          return_value=check_host_response):
+            processed = host_query.check_host('ns1.whatever.tld')
+            results = processed["results"]
+            self.assertTrue(results[0]["available"],
+                            "Processed response from check host command")

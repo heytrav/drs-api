@@ -322,48 +322,76 @@ class DomainContact(models.Model):
                            'active')
 
 
-class NameserverHost(models.Model):
+#class Nameserver(models.Model):
 
-    """
-    Nameserver
+    #"""
+    #Nameserver object.
+    #"""
+    #idn_host = models.CharField(max_length=255, unique=True)
+    #domain_nameservers = models.ManyToManyField(
+        #RegisteredDomain,
+        #related_name='ns'
+    #)
 
-    i.e. ns1.something.com
-    """
-    host = models.CharField(max_length=255, unique=True)
-    domain_nameservers = models.ManyToManyField(RegisteredDomain,
-                                                related_name='ns')
-    default = models.BooleanField(default=False)
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
+    #def _get_nameserver(self):
+        #"""
+        #Return unicode version of host
+        #:returns: str
+
+        #"""
+        #return idna.decode(self.idn_host)
+
+    #host = property(_get_nameserver)
+
+    #def save(self, *args, **kwargs):
+        #self.idn_host = idna.encode(self.idn_host, uts46=True).decode('ascii')
+        #super(Nameserver, self).save(*args, **kwargs)
 
 
-class IpAddress(models.Model):
+#class NameserverHost(models.Model):
 
-    """
-    IP address.
-    """
+    #"""
+    #Nameserver
 
-    V4 = 'v4'
-    V6 = 'v6'
-    IP_ADDRESS_TYPES = (
-        (V4, 'ipv4'),
-        (V6, 'ipv6'),
-    )
-    address = models.CharField(max_length=255, unique=True)
-    address_type = models.CharField(
-        max_length=2,
-        choices=IP_ADDRESS_TYPES,
-        default=V4
-    )
-    nameserver_host = models.ManyToManyField(NameserverHost)
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='ip_addresses',
-                                   on_delete=models.CASCADE)
+    #i.e. ns1.something.com
+    #"""
+    #nameserver = models.ForeignKey(Nameserver)
+    #tld_provider = models.ForeignKey(TopLevelDomainProvider)
+    #default = models.BooleanField(default=False)
+    #created = models.DateTimeField(auto_now_add=True)
+    #updated = models.DateTimeField(auto_now=True)
+    #project_id = models.ForeignKey('auth.User',
+                                   #related_name='nameserver_hosts',
+                                   #on_delete=models.CASCADE)
 
-    def __str__(self):
-        return self.address + " - " + self.address_type
+
+#class IpAddress(models.Model):
+
+    #"""
+    #IP address.
+    #"""
+
+    #V4 = 'v4'
+    #V6 = 'v6'
+    #IP_ADDRESS_TYPES = (
+        #(V4, 'ipv4'),
+        #(V6, 'ipv6'),
+    #)
+    #address = models.CharField(max_length=255, unique=True)
+    #address_type = models.CharField(
+        #max_length=2,
+        #choices=IP_ADDRESS_TYPES,
+        #default=V4
+    #)
+    #nameserver_host = models.ForeignKey(NameserverHost)
+    #created = models.DateTimeField(auto_now_add=True)
+    #updated = models.DateTimeField(auto_now=True)
+    #project_id = models.ForeignKey('auth.User',
+                                   #related_name='ip_addresses',
+                                   #on_delete=models.CASCADE)
+
+    #def __str__(self):
+        #return self.address + " - " + self.address_type
 
 
 class DefaultAccountTemplate(models.Model):

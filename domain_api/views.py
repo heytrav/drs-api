@@ -148,8 +148,6 @@ class CreateUserView(generics.CreateAPIView):
     permission_classes = [ permissions.AllowAny,]
     serializer_class = UserSerializer
 
-
-
 class ContactManagementViewSet(viewsets.GenericViewSet):
     """
     Handle contact related queries.
@@ -251,7 +249,6 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
         serializer = InfoContactSerializer(contacts, many=True)
         return Response(serializer.data)
 
-
 class RegistrantManagementViewSet(ContactManagementViewSet):
     """
     Handle registrant related queries.
@@ -259,7 +256,6 @@ class RegistrantManagementViewSet(ContactManagementViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = PrivateInfoContactSerializer
     queryset = Registrant.objects.all()
-
 
 class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
     """

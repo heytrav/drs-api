@@ -23,25 +23,6 @@ class Domain(EppEntity):
         """
         super().__init__(queryset)
 
-    def process_availability_item(self, check_data):
-        """
-        Process check domain items.
-
-        :check_data: item from a set of check domain results
-        :returns: availability with epp attributes renamed
-
-        """
-
-        domain = check_data["domain:name"]['$t']
-        response = {"domain": domain, "available": False}
-        available = check_data["domain:name"]["avail"]
-        if available and int(available) == 1:
-            response["available"] = True
-        else:
-            response["available"] = False
-            response["reason"] = check_data["domain:reason"]
-        return response
-
     def process_contact_set(self, contacts):
         """
         Process a set of 1 or more contacts
@@ -88,9 +69,9 @@ class Domain(EppEntity):
         results = []
         if isinstance(check_data, list):
             for item in check_data:
-                results.append(self.process_availability_item(item))
+                results.append(self.process_availability_item(item, "domain"))
         else:
-            results.append(self.process_availability_item(check_data))
+            results.append(self.process_availability_item(check_data, "domain"))
 
         availability = {
             "result": results
@@ -285,3 +266,39 @@ class ContactQuery(EppEntity):
             raise e
         log.debug({"processed_info": processed_info_data})
         return self.queryset.get(pk=contact.id)
+
+class HostQuery(EppEntity):
+
+    """
+    Nameserver EPP operations
+    """
+
+    def __init__(self, queryset=None):
+        super().__init__(queryset)
+
+
+    def check_host(self, *args):
+        """
+        Send a check host request to the registry
+
+        :*args: list of host names to check
+        :returns: dict EPP check host response
+
+        """
+        registry = get_domain_registry(args[0])
+        data = {"host": [idna.encode(i, uts46=True).decode('ascii') for i in args]}
+        log.debug(data)
+        response_data = self.rpc_client.call(registry.slug, 'checkHost', data)
+        log.debug({"response data": response_data})
+        check_data = response_data["host:chkData"]["host:cd"]
+        results = []
+        if isinstance(check_data, list):
+            for item in check_data:
+                results.append(self.process_availability_item(item, "host"))
+        else:
+            results.append(self.process_availability_item(check_data, "host"))
+
+        availability = {
+            "result": results
+        }
+        return availability
