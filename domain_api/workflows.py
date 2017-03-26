@@ -5,7 +5,9 @@ from .tasks import (
     create_registrant,
     create_registry_contact,
     create_domain,
-    connect_domain
+    connect_domain,
+    check_host,
+    create_host,
 )
 from domain_api.models import (
     DefaultAccountTemplate,
@@ -141,6 +143,19 @@ class Workflow(object):
 
         self.workflow.append(create_domain.s(self.registry))
         self.workflow.append(connect_domain.s())
+        return self.workflow
+
+    def create_host(self, data, user):
+        """
+        Set up workflow for creating a host
+
+        :data: dict create host data
+        :user: user object
+        :returns: dict response returned by registry
+
+        """
+        self.workflow.append(check_host.s(data["host"]))
+        self.workflow.append(create_host.s(data))
         return self.workflow
 
 

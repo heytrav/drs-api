@@ -16,7 +16,8 @@ from .models import (
 )
 from .entity_management.contacts import RegistrantManager, ContactManager
 from .epp.actions.domain import Domain as DomainAction
-from .epp.queries import Domain as DomainQuery
+from .epp.actions.host import Host as HostAction
+from .epp.queries import Domain as DomainQuery, HostQuery
 from .utilities.domain import parse_domain, get_domain_registry
 from .exceptions import (
     DomainNotAvailable,
@@ -186,3 +187,28 @@ def connect_domain(create_data, user=None):
     except Exception as e:
         log.error({"error": e})
         raise e
+
+@shared_task
+def check_domain(host):
+    """
+    Check if a host exists.
+
+    :host: host fqdn to check
+    :returns: boolean
+
+    """
+    query = HostQuery()
+    availability = query.check_host(
+        idna.encode(host, uts46=True).decode('ascii')
+    )
+    available = availability["result"][0]["available"]
+    log.info({"available": available})
+    if str(available) == "1" or str(available) == "true" or available == True:
+        return True
+    raise DomainNotAvailable("%s not available" % host)
+
+@shared_task
+def create_host(epp):
+    action = HostAction()
+    result = action.create(epp)
+    return result

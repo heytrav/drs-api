@@ -303,6 +303,48 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         except Exception as e:
             raise e
 
+    def create(self, request):
+        """
+        Register a nameserver host.
+
+        :request: Request object with JSON payload
+        :returns: Response from registry
+        """
+        data = request.data
+        chain_res = None
+        try:
+            # See if this TLD is provided by one of our registries.
+            registry = get_domain_registry(data["host"])
+            workflow_manager = workflow_factory(registry)()
+
+            log.debug({"msg": "About to call workflow_manager.create_domain"})
+            workflow = workflow_manager.create_host(data, request.user)
+            # run chained workflow and register the domain
+            chained_workflow = chain(workflow)()
+            chain_res = process_workflow_chain(chained_workflow)
+            serializer = InfoDomainSerializer(data=chain_res)
+            if serializer.is_valid():
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                log.error(serializer.errors)
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(chain_res)
+        except DomainNotAvailable:
+            return Response("Domain not available",
+                            status=status.HTTP_400_BAD_REQUEST)
+        except NotObjectOwner:
+            return Response("Not owner of object",
+                            status=status.HTTP_400_BAD_REQUEST)
+        except KeyError as e:
+            log.error(ErrorLogObject(request, e))
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except TopLevelDomainProvider.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            log.error(ErrorLogObject(request, e))
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
     """
     Handle domain related queries.
