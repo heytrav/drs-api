@@ -15,7 +15,6 @@ class Host(EppEntity):
         """
         super().__init__()
 
-
     def create(self, host_data):
         """
         Create a host at a given registry.
