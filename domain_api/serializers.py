@@ -315,6 +315,7 @@ class DomainAvailabilitySerializer(serializers.Serializer):
     available = serializers.BooleanField(required=True)
     reason = serializers.CharField(required=False)
 
+
 class HostAvailabilitySerializer(serializers.Serializer):
     host = serializers.CharField(required=True, allow_blank=False)
     available = serializers.BooleanField(required=True)
@@ -387,13 +388,20 @@ class InfoDomainSerializer(serializers.Serializer):
     created = serializers.DateTimeField(required=False)
     anniversary = serializers.DateTimeField(required=False)
 
-class AddrSetSerializer(serializers.ListField):
-    v4 = serializers.CharField(required=False)
-    v6 = serializers.CharField(required=False)
+
+class IpAddressSerializer(serializers.Serializer):
+    ip = serializers.CharField(required=True)
+    addr_type = serializers.CharField(required=False)
+
+
+class AddressSetField(serializers.ListField):
+    child = IpAddressSerializer()
+
 
 class InfoHostSerializer(serializers.Serializer):
     host = serializers.CharField(required=True, allow_blank=False)
-    addr = AddrSetSerializer()
+    addr = AddressSetField(min_length=1)
+
 
 class InfoDomainListSerializer(serializers.ListField):
 

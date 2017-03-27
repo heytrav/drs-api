@@ -308,8 +308,8 @@ class HostQuery(EppEntity):
         """
         Process a host info address item
 
-        :item: TODO
-        :returns: TODO
+        :item: dict IP addr item
+        :returns: dict with stuff parsed out
 
         """
         processed = {}

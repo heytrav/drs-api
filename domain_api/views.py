@@ -45,7 +45,6 @@ from domain_api.serializers import (
     DomainRegistrantSerializer,
     DomainContactSerializer,
     InfoDomainSerializer,
-    OwnerInfoDomainSerializer,
     PrivateInfoDomainSerializer,
     InfoContactSerializer,
     PrivateInfoContactSerializer,
@@ -146,14 +145,16 @@ def registry_contact(request, registry, contact_type="contact"):
         log.error(ErrorLogObject(request, e))
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 class CreateUserView(generics.CreateAPIView):
 
     """
     Create a user.
     """
     model = get_user_model()
-    permission_classes = [ permissions.AllowAny,]
+    permission_classes = [permissions.AllowAny, ]
     serializer_class = UserSerializer
+
 
 class ContactManagementViewSet(viewsets.GenericViewSet):
     """
@@ -256,6 +257,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
         serializer = InfoContactSerializer(contacts, many=True)
         return Response(serializer.data)
 
+
 class RegistrantManagementViewSet(ContactManagementViewSet):
     """
     Handle registrant related queries.
@@ -263,6 +265,7 @@ class RegistrantManagementViewSet(ContactManagementViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = PrivateInfoContactSerializer
     queryset = Registrant.objects.all()
+
 
 class HostManagementViewSet(viewsets.GenericViewSet):
 
@@ -298,7 +301,9 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             availability = query.check_host(
                 idna.encode(host, uts46=True).decode('ascii')
             )
-            serializer = HostAvailabilitySerializer(data=availability["result"][0])
+            serializer = HostAvailabilitySerializer(
+                data=availability["result"][0]
+            )
             if serializer.is_valid():
                 return Response(serializer.data)
         except EppError as epp_e:
@@ -310,16 +315,13 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         except Exception as e:
             raise e
 
-
     def info(self, request, host):
         """
         Query EPP with a infoHost request.
 
-
         :request: HTTP request
         :host: str host name to check
         :returns: JSON response with details about a host
-
         """
         try:
             # Fetch registry for host
@@ -395,7 +397,6 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         except Exception as e:
             log.error(ErrorLogObject(request, e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
     """
