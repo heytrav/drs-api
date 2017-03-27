@@ -89,6 +89,7 @@ class TopLevelDomain(models.Model):
         self.zone = idna.encode(self.zone, uts46=True).decode('ascii')
         super(TopLevelDomain, self).save(*args, **kwargs)
 
+
 class DomainProvider(models.Model):
     """
     Registries/rars providing top level domain services
@@ -159,6 +160,7 @@ class Registrant(models.Model):
                                                                self.provider.slug,
                                                                self.account_template.id)
 
+
 class Contact(models.Model):
     """
     Registry identifier for a contact registry_id.
@@ -208,12 +210,12 @@ class Contact(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-
     def __str__(self):
         return "%s - %s  provider: %s account_template: %s" % (self.pk,
                                                                self.name,
                                                                self.provider.slug,
                                                                self.account_template.id)
+
 
 class TopLevelDomainProvider(models.Model):
     """

@@ -365,38 +365,42 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         :returns: Response from registry
         """
         data = request.data
-        chain_res = None
-        try:
-            # See if this TLD is provided by one of our registries.
-            registry = get_domain_registry(data["host"])
-            workflow_manager = workflow_factory(registry.slug)()
+        log.info(data)
+        serializer = self.serializer_class(data=data)
+        if serializer.is_valid():
+            chain_res = None
+            try:
+                # See if this TLD is provided by one of our registries.
+                registry = get_domain_registry(data["host"])
+                workflow_manager = workflow_factory(registry.slug)()
 
-            log.debug({"msg": "About to call workflow_manager.create_host"})
-            workflow = workflow_manager.create_host(data, request.user)
-            # run chained workflow and register the domain
-            chained_workflow = chain(workflow)()
-            chain_res = process_workflow_chain(chained_workflow)
-            serializer = InfoDomainSerializer(data=chain_res)
-            if serializer.is_valid():
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                log.error(serializer.errors)
+                log.debug({"msg": "About to call workflow_manager.create_host"})
+                workflow = workflow_manager.create_host(data, request.user)
+                # run chained workflow and register the domain
+                chained_workflow = chain(workflow)()
+                chain_res = process_workflow_chain(chained_workflow)
+                serializer = InfoDomainSerializer(data=chain_res)
+                if serializer.is_valid():
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                else:
+                    log.error(serializer.errors)
+                    return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response(chain_res)
+            except DomainNotAvailable:
+                return Response("Domain not available",
+                                status=status.HTTP_400_BAD_REQUEST)
+            except NotObjectOwner:
+                return Response("Not owner of object",
+                                status=status.HTTP_400_BAD_REQUEST)
+            except KeyError as e:
+                log.error(ErrorLogObject(request, e))
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            except TopLevelDomainProvider.DoesNotExist:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                log.error(ErrorLogObject(request, e))
                 return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            return Response(chain_res)
-        except DomainNotAvailable:
-            return Response("Domain not available",
-                            status=status.HTTP_400_BAD_REQUEST)
-        except NotObjectOwner:
-            return Response("Not owner of object",
-                            status=status.HTTP_400_BAD_REQUEST)
-        except KeyError as e:
-            log.error(ErrorLogObject(request, e))
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        except TopLevelDomainProvider.DoesNotExist:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            log.error(ErrorLogObject(request, e))
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
     """
