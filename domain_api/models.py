@@ -377,7 +377,7 @@ class IpAddress(models.Model):
         (V4, 'ipv4'),
         (V6, 'ipv6'),
     )
-    address = models.CharField(max_length=255, unique=True)
+    ip = models.CharField(max_length=255, unique=True)
     address_type = models.CharField(
         max_length=2,
         choices=IP_ADDRESS_TYPES,
