@@ -109,7 +109,7 @@ def synchronise_host(info_data, host_id):
     for addr in info_data["addr"]:
         address_type = addr["addr_type"]
         ip = addr["ip"]
-        if not IpAddress.objects.filter(ip=ip).exists():
+        if not IpAddress.objects.filter(ip=ip, nameserver_host=nshost_obj).exists():
             IpAddress.objects.get_or_create(
                 ip=ip,
                 nameserver_host=nshost_obj,

@@ -381,7 +381,7 @@ class IpAddress(models.Model):
         (V4, 'ipv4'),
         (V6, 'ipv6'),
     )
-    ip = models.CharField(max_length=255, unique=True)
+    ip = models.CharField(max_length=255)
     address_type = models.CharField(
         max_length=2,
         choices=IP_ADDRESS_TYPES,
@@ -394,6 +394,8 @@ class IpAddress(models.Model):
                                    related_name='ip_addresses',
                                    on_delete=models.CASCADE)
 
+    class Meta:
+        unique_together = ('ip', 'nameserver_host')
     def __str__(self):
         return self.ip + " - " + self.address_type
 
