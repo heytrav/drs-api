@@ -1,4 +1,5 @@
 from __future__ import absolute_import, unicode_literals
+import idna
 from celery import shared_task
 from django.contrib.auth.models import User
 from django_logging import log, ErrorLogObject
@@ -12,11 +13,13 @@ from .models import (
     RegisteredDomain,
     Registrant,
     TopLevelDomain,
-    TopLevelDomainProvider
+    TopLevelDomainProvider,
+    Nameserver
 )
 from .entity_management.contacts import RegistrantManager, ContactManager
 from .epp.actions.domain import Domain as DomainAction
-from .epp.queries import Domain as DomainQuery
+from .epp.actions.host import Host as HostAction
+from .epp.queries import Domain as DomainQuery, HostQuery
 from .utilities.domain import parse_domain, get_domain_registry
 from .exceptions import (
     DomainNotAvailable,
@@ -186,3 +189,53 @@ def connect_domain(create_data, user=None):
     except Exception as e:
         log.error({"error": e})
         raise e
+
+@shared_task
+def check_host(host):
+    """
+    Check if a host exists.
+
+    :host: host fqdn to check
+    :returns: boolean
+
+    """
+    query = HostQuery()
+    availability = query.check_host(
+        idna.encode(host, uts46=True).decode('ascii')
+    )
+    available = availability["result"][0]["available"]
+    log.info({"available": available})
+    if str(available) == "1" or str(available) == "true" or available == True:
+        return True
+    raise DomainNotAvailable("%s not available" % host)
+
+@shared_task
+def create_host(epp):
+    action = HostAction()
+    result = action.create(epp)
+    return result
+
+@shared_task
+def connect_host(host_data, user=None):
+    log.info(host_data)
+    user_obj = User.objects.get(pk=user)
+    host = host_data["host"]
+    addresses = host_data["addr"]
+
+    parsed_domain = parse_domain(host)
+    tld_provider = TopLevelDomainProvider.objects.get(
+        zone__zone=parsed_domain["zone"]
+    )
+    ns = Nameserver.objects.create(idn_host=host)
+    ns_host = ns.nameserverhost_set.create(
+        tld_provider=tld_provider,
+        project_id=user_obj
+    )
+    for i in addresses:
+        address_type = 'v4'
+        if 'addr_type' in i:
+            address_type = i["addr_type"]
+            ns_host.ipaddress_set.create(ip=i["ip"],
+                                         address_type=address_type,
+                                         project_id=user_obj)
+            return host_data

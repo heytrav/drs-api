@@ -23,25 +23,6 @@ class Domain(EppEntity):
         """
         super().__init__(queryset)
 
-    def process_availability_item(self, check_data):
-        """
-        Process check domain items.
-
-        :check_data: item from a set of check domain results
-        :returns: availability with epp attributes renamed
-
-        """
-
-        domain = check_data["domain:name"]['$t']
-        response = {"domain": domain, "available": False}
-        available = check_data["domain:name"]["avail"]
-        if available and int(available) == 1:
-            response["available"] = True
-        else:
-            response["available"] = False
-            response["reason"] = check_data["domain:reason"]
-        return response
-
     def process_contact_set(self, contacts):
         """
         Process a set of 1 or more contacts
@@ -88,9 +69,9 @@ class Domain(EppEntity):
         results = []
         if isinstance(check_data, list):
             for item in check_data:
-                results.append(self.process_availability_item(item))
+                results.append(self.process_availability_item(item, "domain"))
         else:
-            results.append(self.process_availability_item(check_data))
+            results.append(self.process_availability_item(check_data, "domain"))
 
         availability = {
             "result": results
@@ -285,3 +266,98 @@ class ContactQuery(EppEntity):
             raise e
         log.debug({"processed_info": processed_info_data})
         return self.queryset.get(pk=contact.id)
+
+
+class HostQuery(EppEntity):
+
+    """
+    Nameserver EPP operations
+    """
+
+    def __init__(self, queryset=None):
+        super().__init__(queryset)
+
+
+    def check_host(self, *args):
+        """
+        Send a check host request to the registry
+
+        :*args: list of host names to check
+        :returns: dict EPP check host response
+
+        """
+        registry = get_domain_registry(args[0])
+        data = {"host": [idna.encode(i, uts46=True).decode('ascii') for i in args]}
+        log.debug(data)
+        response_data = self.rpc_client.call(registry.slug, 'checkHost', data)
+        log.debug({"response data": response_data})
+        check_data = response_data["host:chkData"]["host:cd"]
+        results = []
+        if isinstance(check_data, list):
+            for item in check_data:
+                results.append(self.process_availability_item(item, "host"))
+        else:
+            results.append(self.process_availability_item(check_data, "host"))
+
+        availability = {
+            "result": results
+        }
+        return availability
+
+    def process_addr_item(self, item):
+        """
+        Process a host info address item
+
+        :item: dict IP addr item
+        :returns: dict with stuff parsed out
+
+        """
+        processed = {}
+        if "$t" in item:
+            processed["addr_type"] = item["ip"]
+            processed["ip"] = item["$t"]
+        return processed
+
+    def process_addresses(self, addresses):
+        """
+        Process of a set host addresses
+
+        :addresses: TODO
+        :returns: TODO
+
+        """
+        if isinstance(addresses, list):
+            return [self.process_addr_item(i) for i in addresses]
+        return [self.process_addr_item(addresses)]
+
+
+    def info(self, host, user=None):
+        """
+        Get info for a host
+
+        :host: str host name to query
+        :returns: dict with info about host
+
+        """
+        registry = get_domain_registry(host)
+        registered_hosts = self.queryset.filter(
+            nameserver__idn_host=idna.encode(host, uts46=True).decode('ascii'),
+        )
+        registered_host = None
+        if registered_hosts.exists():
+            registered_host = registered_hosts.first()
+
+        data = {"name": host}
+        response_data = self.rpc_client.call(registry.slug, 'infoHost', data)
+        info_data = response_data["host:infData"]
+        return_data = {
+            "host": info_data["host:name"],
+            "addr": self.process_addresses(info_data["host:addr"]),
+            "status": self.process_status(info_data["host:status"]),
+            "roid": info_data["host:roid"]
+        }
+        if "host:authInfo" in info_data:
+            return_data["authcode"] = info_data["host:authInfo"]["host:pw"]
+            return_data["roid"] = info_data["host:roid"]
+        log.info(return_data)
+        return (return_data, registered_host)

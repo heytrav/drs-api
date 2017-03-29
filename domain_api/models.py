@@ -89,6 +89,7 @@ class TopLevelDomain(models.Model):
         self.zone = idna.encode(self.zone, uts46=True).decode('ascii')
         super(TopLevelDomain, self).save(*args, **kwargs)
 
+
 class DomainProvider(models.Model):
     """
     Registries/rars providing top level domain services
@@ -159,6 +160,7 @@ class Registrant(models.Model):
                                                                self.provider.slug,
                                                                self.account_template.id)
 
+
 class Contact(models.Model):
     """
     Registry identifier for a contact registry_id.
@@ -208,12 +210,12 @@ class Contact(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-
     def __str__(self):
         return "%s - %s  provider: %s account_template: %s" % (self.pk,
                                                                self.name,
                                                                self.provider.slug,
                                                                self.account_template.id)
+
 
 class TopLevelDomainProvider(models.Model):
     """
@@ -322,6 +324,32 @@ class DomainContact(models.Model):
                            'active')
 
 
+class Nameserver(models.Model):
+
+    """
+    Nameserver object.
+    """
+    idn_host = models.CharField(max_length=255, unique=True)
+    domain_nameservers = models.ManyToManyField(
+        RegisteredDomain,
+        related_name='ns'
+    )
+
+    def _get_nameserver(self):
+        """
+        Return unicode version of host
+        :returns: str
+
+        """
+        return idna.decode(self.idn_host)
+
+    host = property(_get_nameserver)
+
+    def save(self, *args, **kwargs):
+        self.idn_host = idna.encode(self.idn_host, uts46=True).decode('ascii')
+        super(Nameserver, self).save(*args, **kwargs)
+
+
 class NameserverHost(models.Model):
 
     """
@@ -329,12 +357,16 @@ class NameserverHost(models.Model):
 
     i.e. ns1.something.com
     """
-    host = models.CharField(max_length=255, unique=True)
-    domain_nameservers = models.ManyToManyField(RegisteredDomain,
-                                                related_name='ns')
+    nameserver = models.ForeignKey(Nameserver)
+    tld_provider = models.ForeignKey(TopLevelDomainProvider)
     default = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=200, null=True)
+    roid = models.CharField(max_length=100, null=True)
+    project_id = models.ForeignKey('auth.User',
+                                   related_name='nameserver_hosts',
+                                   on_delete=models.CASCADE)
 
 
 class IpAddress(models.Model):
@@ -349,21 +381,23 @@ class IpAddress(models.Model):
         (V4, 'ipv4'),
         (V6, 'ipv6'),
     )
-    address = models.CharField(max_length=255, unique=True)
+    ip = models.CharField(max_length=255)
     address_type = models.CharField(
         max_length=2,
         choices=IP_ADDRESS_TYPES,
         default=V4
     )
-    nameserver_host = models.ManyToManyField(NameserverHost)
+    nameserver_host = models.ForeignKey(NameserverHost)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     project_id = models.ForeignKey('auth.User',
                                    related_name='ip_addresses',
                                    on_delete=models.CASCADE)
 
+    class Meta:
+        unique_together = ('ip', 'nameserver_host')
     def __str__(self):
-        return self.address + " - " + self.address_type
+        return self.ip + " - " + self.address_type
 
 
 class DefaultAccountTemplate(models.Model):

@@ -26,7 +26,8 @@ from domain_api.models import (
     DomainRegistrant,
     DomainContact,
     TopLevelDomainProvider,
-    DefaultAccountTemplate
+    DefaultAccountTemplate,
+    NameserverHost,
 )
 from domain_api.serializers import (
     UserSerializer,
@@ -40,19 +41,21 @@ from domain_api.serializers import (
     DomainSerializer,
     RegisteredDomainSerializer,
     DomainAvailabilitySerializer,
+    HostAvailabilitySerializer,
     DomainRegistrantSerializer,
     DomainContactSerializer,
     InfoDomainSerializer,
-    OwnerInfoDomainSerializer,
     PrivateInfoDomainSerializer,
     InfoContactSerializer,
     PrivateInfoContactSerializer,
     DefaultAccountTemplateSerializer,
+    InfoHostSerializer,
+    PrivateInfoHostSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
 )
-from .epp.queries import Domain as DomainQuery, ContactQuery
+from .epp.queries import Domain as DomainQuery, ContactQuery, HostQuery
 from .exceptions import (
     EppError,
     InvalidTld,
@@ -63,9 +66,30 @@ from .exceptions import (
     EppObjectDoesNotExist
 )
 from domain_api.entity_management.contacts import ContactFactory
-from domain_api.utilities.domain import parse_domain, synchronise_domain
+from domain_api.utilities.domain import (
+    parse_domain,
+    synchronise_domain,
+    get_domain_registry,
+    synchronise_host,
+)
 from .workflows import workflow_factory
 
+
+def get_registered_domain_queryset(user):
+    """
+    Return appropriate queryset depending on user roles.
+
+    :user: User object
+    :returns: RegisteredDomainQuerySet
+
+    """
+    queryset = RegisteredDomain.objects.all()
+    if user.groups.filter(name='admin').exists():
+        return queryset
+    return queryset.filter(
+        Q(registrant__registrant__project_id=user) |
+        Q(contacts__contact__project_id=user)
+    ).distinct()
 
 def process_workflow_chain(chained_workflow):
     """
@@ -139,15 +163,15 @@ def registry_contact(request, registry, contact_type="contact"):
         log.error(ErrorLogObject(request, e))
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 class CreateUserView(generics.CreateAPIView):
 
     """
     Create a user.
     """
     model = get_user_model()
-    permission_classes = [ permissions.AllowAny,]
+    permission_classes = [permissions.AllowAny, ]
     serializer_class = UserSerializer
-
 
 
 class ContactManagementViewSet(viewsets.GenericViewSet):
@@ -261,6 +285,185 @@ class RegistrantManagementViewSet(ContactManagementViewSet):
     queryset = Registrant.objects.all()
 
 
+class HostManagementViewSet(viewsets.GenericViewSet):
+
+    """
+    Handle nameserver related queries.
+    """
+
+    serializer_class = InfoHostSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def is_admin_or_owner(self, host=None):
+        """
+        Determine if the current logged in user is admin or the owner of
+        the object.
+
+        :domain: Contact/Registrant object
+        :returns: True or False
+
+        """
+        user = self.request.user
+        # Check if user is admin
+        if user.groups.filter(name='admin').exists():
+            return True
+        # otherwise check if user is registrant of contact for domain
+        if host:
+            if host.project_id == user:
+                return True
+        return False
+
+
+    def get_registered_domain(self, host):
+        """
+        Retrieve registered domain for host. If the parent domain is not
+        available to this user, throw an exception.
+
+        :host: str host fqdn
+        :returns: registered_domain instance
+
+        """
+        parsed_domain = parse_domain(host)
+        domain_queryset = get_registered_domain_queryset(self.request.user)
+        return domain_queryset.get(
+            domain__name=parsed_domain["domain"],
+            tld__zone=parsed_domain["zone"],
+            active=True
+        )
+
+    def get_queryset(self):
+        """
+        Return queryset
+        :returns: queryset object
+
+        """
+        queryset = NameserverHost.objects.all()
+        user = self.request.user
+        if user.groups.filter(name='admin').exists():
+            return queryset
+        return queryset.filter(project_id=user).distinct()
+
+    def available(self, request, host=None):
+        """
+        Check availability of host.
+
+        :request: HTTP request
+        :returns: availability of host object
+
+        """
+        try:
+            query = HostQuery()
+            availability = query.check_host(
+                idna.encode(host, uts46=True).decode('ascii')
+            )
+            serializer = HostAvailabilitySerializer(
+                data=availability["result"][0]
+            )
+            if serializer.is_valid():
+                return Response(serializer.data)
+        except EppError as epp_e:
+            log.error(ErrorLogObject(request, epp_e))
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except KeyError as ke:
+            log.error(ErrorLogObject(request, ke))
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            raise e
+
+    def host_set(self, request):
+        """
+        Query for domains linked to a particular registry contact
+        :returns: JSON response with details about a contact
+
+        """
+        try:
+            # Limit registered domain query to "owned" domains
+            hosts = self.get_queryset().filter()
+            serializer = PrivateInfoHostSerializer(hosts, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            log.error(ErrorLogObject(request, e))
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def info(self, request, host):
+        """
+        Query EPP with a infoHost request.
+
+        :request: HTTP request
+        :host: str host name to check
+        :returns: JSON response with details about a host
+        """
+        try:
+            # Fetch registry for host
+            query = HostQuery(self.get_queryset())
+            info, registered_host = query.info(host)
+            log.info(info)
+            if registered_host and self.is_admin_or_owner(registered_host):
+                synchronise_host(info, registered_host.id)
+                serializer = PrivateInfoHostSerializer(
+                    self.get_queryset().get(pk=registered_host.id)
+                )
+                return Response(serializer.data)
+            serializer = InfoHostSerializer(data=info)
+            if serializer.is_valid():
+                return Response(serializer.data)
+            else:
+                return Response(serializer.errors,
+                                status=status.HTTP_400_BAD_REQUEST)
+        except EppObjectDoesNotExist as epp_e:
+            log.error(ErrorLogObject(request, epp_e))
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except EppError as epp_e:
+            log.error(ErrorLogObject(request, epp_e))
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            log.error(ErrorLogObject(request, e))
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def create(self, request):
+        """
+        Register a nameserver host.
+
+        :request: Request object with JSON payload
+        :returns: Response from registry
+        """
+        data = request.data
+        log.info(data)
+        serializer = self.serializer_class(data=data)
+        if serializer.is_valid():
+            chain_res = None
+            try:
+                # Check that the domain parent exists and user has access to it.
+                self.get_registered_domain(data["host"])
+
+                # See if this TLD is provided by one of our registries.
+                registry = get_domain_registry(data["host"])
+                workflow_manager = workflow_factory(registry.slug)()
+
+                log.debug({"msg": "About to call workflow_manager.create_host"})
+                workflow = workflow_manager.create_host(data, request.user)
+                # run chained workflow and register the domain
+                chained_workflow = chain(workflow)()
+                chain_res = process_workflow_chain(chained_workflow)
+                serializer = InfoHostSerializer(data=chain_res)
+                if serializer.is_valid():
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                else:
+                    log.error(serializer.errors)
+                    return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response(chain_res)
+            except InvalidTld as e:
+                log.error(ErrorLogObject(request, e))
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            except RegisteredDomain.DoesNotExist as e:
+                return Response({"host": data["host"],
+                                 "msg": "Parent domain not available."},
+                                status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                log.error(ErrorLogObject(request, e))
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
     """
     Handle domain related queries.
@@ -273,14 +476,8 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         Return queryset
         :returns: RegisteredDomain set
         """
-        queryset = RegisteredDomain.objects.all()
         user = self.request.user
-        if user.groups.filter(name='admin').exists():
-            return queryset
-        return queryset.filter(
-            Q(registrant__registrant__project_id=user) |
-            Q(contacts__contact__project_id=user)
-        ).distinct()
+        return get_registered_domain_queryset(user)
 
     def is_admin_or_owner(self, domain=None):
         """

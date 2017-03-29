@@ -60,6 +60,17 @@ registrant_list = views.RegistrantManagementViewSet.as_view({
     'get': 'list'
 })
 
+host_single_check = views.HostManagementViewSet.as_view({
+    'get': 'available'
+})
+host_list = views.HostManagementViewSet.as_view({
+    'get': 'host_set',
+    'post': 'create'
+})
+host_detail = views.HostManagementViewSet.as_view({
+    'get': 'info',
+})
+
 
 urlpatterns = [
     url(r'^', include(router.urls, namespace='domain_api')),
@@ -97,4 +108,10 @@ urlpatterns = [
     url(r'^account/default/$', default_account, name='default-account'),
     url(r'^account/default/(?P<default_id>.*)/$', default_account_manage,
         name='default-account-manage'),
+    url(
+        r'^hosts/available/(?P<host>.*)/$',
+        host_single_check, name='check-host'
+    ),
+    url(r'^hosts/$', host_list, name='host-list'),
+    url(r'^hosts/(?P<host>.*)/$', host_detail, name='host-info'),
 ]

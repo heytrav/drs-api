@@ -14,6 +14,7 @@ from domain_api.models import (
     DomainRegistrant,
     DomainContact,
     DefaultAccountTemplate,
+    NameserverHost,
 )
 
 UserModel = get_user_model()
@@ -316,6 +317,12 @@ class DomainAvailabilitySerializer(serializers.Serializer):
     reason = serializers.CharField(required=False)
 
 
+class HostAvailabilitySerializer(serializers.Serializer):
+    host = serializers.CharField(required=True, allow_blank=False)
+    available = serializers.BooleanField(required=True)
+    reason = serializers.CharField(required=False)
+
+
 class CheckDomainResponseSerializer(serializers.Serializer):
     result = DomainAvailabilitySerializer(many=True)
 
@@ -334,6 +341,48 @@ class HandleSetSerializer(serializers.ListField):
     tech = serializers.CharField(required=False)
     billing = serializers.CharField(required=False)
     zone = serializers.CharField(required=False)
+
+class PrivateInfoHostSerializer(serializers.ModelSerializer):
+
+    host = serializers.SerializerMethodField()
+    idn_host = serializers.SerializerMethodField()
+    addr = serializers.SerializerMethodField()
+    roid = serializers.CharField(required=False)
+
+    class Meta:
+        model = NameserverHost
+        fields = ('host', 'idn_host', 'addr', 'created', 'updated',
+                  'status', 'roid', 'project_id')
+        read_only_fields = ('status', 'project_id', 'created', 'updated',
+                            'roid')
+
+    def get_host(self, obj):
+        """
+        Return the host
+
+        :obj: object
+        :returns: str host
+        """
+        return obj.nameserver.host
+
+    def get_idn_host(self, obj):
+        """
+        Return the idn host name
+
+        :obj: object
+        :returns: str internationalised host
+        """
+        return obj.nameserver.idn_host
+
+    def get_addr(self, obj):
+        """
+        Return the set of addresses
+
+        :obj: TODO
+        :returns: TODO
+        """
+        ipaddress_set = obj.ipaddress_set.all()
+        return [{"ip": i.ip, "addr_type": i.address_type} for i in ipaddress_set]
 
 
 class PrivateInfoDomainSerializer(serializers.ModelSerializer):
@@ -381,6 +430,20 @@ class InfoDomainSerializer(serializers.Serializer):
     status = serializers.CharField(required=False, allow_blank=True)
     created = serializers.DateTimeField(required=False)
     anniversary = serializers.DateTimeField(required=False)
+
+
+class IpAddressSerializer(serializers.Serializer):
+    ip = serializers.CharField(required=True)
+    addr_type = serializers.CharField(required=False)
+
+
+class AddressSetField(serializers.ListField):
+    child = IpAddressSerializer()
+
+
+class InfoHostSerializer(serializers.Serializer):
+    host = serializers.CharField(required=True, allow_blank=False)
+    addr = AddressSetField(min_length=1)
 
 
 class InfoDomainListSerializer(serializers.ListField):

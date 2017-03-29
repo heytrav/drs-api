@@ -5,7 +5,10 @@ from .tasks import (
     create_registrant,
     create_registry_contact,
     create_domain,
-    connect_domain
+    connect_domain,
+    check_host,
+    create_host,
+    connect_host,
 )
 from domain_api.models import (
     DefaultAccountTemplate,
@@ -141,6 +144,46 @@ class Workflow(object):
 
         self.workflow.append(create_domain.s(self.registry))
         self.workflow.append(connect_domain.s())
+        return self.workflow
+
+    def process_host_addresses(self, addresses):
+        """
+        Preprocess address set for hosts to make compatible with
+        nodepp.
+
+        Because of Python using "type" as a reserved word, I've chosen
+        to make that field "addr_type" for API requests
+
+        :addresses: list of addresses submitted via API
+        :returns: list of addresses with "addr_type" -> "type"
+
+        """
+        result = []
+        for addr in addresses:
+            address = {"ip": addr["ip"]}
+            if "addr_type" in addr:
+                address["type"] = addr["addr_type"]
+            result.append(address)
+        return result
+
+
+    def create_host(self, data, user):
+        """
+        Set up workflow for creating a host
+
+        :data: dict create host data
+        :user: user object
+        :returns: dict response returned by registry
+
+        """
+        self.workflow.append(check_host.s(data["host"]))
+        # Need to modify outgoing data slightly
+        host_data = {
+            "host": data["host"],
+            "addr": self.process_host_addresses(data["addr"])
+        }
+        self.workflow.append(create_host.si(host_data))
+        self.workflow.append(connect_host.si(data, user.id))
         return self.workflow
 
 

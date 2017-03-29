@@ -18,6 +18,7 @@ from .models import (
     DefaultAccountContact,
     NameserverHost,
     IpAddress,
+    Nameserver
 )
 
 
