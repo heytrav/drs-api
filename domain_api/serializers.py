@@ -442,7 +442,6 @@ class AddressSetField(serializers.ListField):
 class InfoHostSerializer(serializers.Serializer):
     host = serializers.CharField(required=True, allow_blank=False)
     addr = AddressSetField(min_length=1)
-    status = serializers.CharField()
 
 
 class InfoDomainListSerializer(serializers.ListField):
