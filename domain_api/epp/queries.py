@@ -340,16 +340,24 @@ class HostQuery(EppEntity):
 
         """
         registry = get_domain_registry(host)
+        registered_hosts = self.queryset.filter(
+            nameserver__idn_host=idna.encode(host, uts46=True).decode('ascii'),
+        )
+        registered_host = None
+        if registered_hosts.exists():
+            registered_host = registered_hosts.first()
+
         data = {"name": host}
         response_data = self.rpc_client.call(registry.slug, 'infoHost', data)
         info_data = response_data["host:infData"]
         return_data = {
             "host": info_data["host:name"],
             "addr": self.process_addresses(info_data["host:addr"]),
-            "status": self.process_status(info_data["host:status"])
+            "status": self.process_status(info_data["host:status"]),
+            "roid": info_data["host:roid"]
         }
         if "host:authInfo" in info_data:
             return_data["authcode"] = info_data["host:authInfo"]["host:pw"]
             return_data["roid"] = info_data["host:roid"]
         log.info(return_data)
-        return return_data
+        return (return_data, registered_host)

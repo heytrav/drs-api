@@ -4,7 +4,9 @@ from ..models import (
     Domain,
     TopLevelDomain,
     TopLevelDomainProvider,
-    RegisteredDomain
+    RegisteredDomain,
+    NameserverHost,
+    IpAddress,
 )
 
 
@@ -89,3 +91,28 @@ def synchronise_domain(info_data, domain_id):
         roid=info_data["roid"],
         status=info_data["status"]
     )
+
+def synchronise_host(info_data, host_id):
+    """
+    Synchronise data in info host response from upstream registry.
+
+    :info_data: dict containing info data from the registry
+    :host_id: int primary key of host
+
+    """
+    nshost = NameserverHost.objects.filter(pk=host_id)
+    nshost.update(
+        status=info_data["status"],
+        roid=info_data["roid"]
+    )
+    nshost_obj = nshost.get(pk=host_id)
+    for addr in info_data["addr"]:
+        address_type = addr["addr_type"]
+        ip = addr["ip"]
+        if not IpAddress.objects.filter(ip=ip).exists():
+            IpAddress.objects.get_or_create(
+                ip=ip,
+                nameserver_host=nshost_obj,
+                address_type=address_type,
+                project_id=nshost_obj.project_id
+            )

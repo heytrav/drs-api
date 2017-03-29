@@ -347,12 +347,14 @@ class PrivateInfoHostSerializer(serializers.ModelSerializer):
     host = serializers.SerializerMethodField()
     idn_host = serializers.SerializerMethodField()
     addr = serializers.SerializerMethodField()
+    roid = serializers.CharField(required=False)
 
     class Meta:
         model = NameserverHost
         fields = ('host', 'idn_host', 'addr', 'created', 'updated',
-                  'status', 'project_id')
-        read_only_fields = ('status', 'project_id', 'created', 'updated')
+                  'status', 'roid', 'project_id')
+        read_only_fields = ('status', 'project_id', 'created', 'updated',
+                            'roid')
 
     def get_host(self, obj):
         """

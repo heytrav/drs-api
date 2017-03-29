@@ -70,6 +70,7 @@ from domain_api.utilities.domain import (
     parse_domain,
     synchronise_domain,
     get_domain_registry,
+    synchronise_host,
 )
 from .workflows import workflow_factory
 
@@ -293,6 +294,25 @@ class HostManagementViewSet(viewsets.GenericViewSet):
     serializer_class = InfoHostSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def is_admin_or_owner(self, host=None):
+        """
+        Determine if the current logged in user is admin or the owner of
+        the object.
+
+        :domain: Contact/Registrant object
+        :returns: True or False
+
+        """
+        user = self.request.user
+        # Check if user is admin
+        if user.groups.filter(name='admin').exists():
+            return True
+        # otherwise check if user is registrant of contact for domain
+        if host:
+            if host.project_id == user:
+                return True
+        return False
+
 
     def get_registered_domain(self, host):
         """
@@ -376,27 +396,20 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         try:
             # Fetch registry for host
             query = HostQuery(self.get_queryset())
-            #info, registered_host = query.info(host)
-            info = query.info(host)
+            info, registered_host = query.info(host)
             log.info(info)
-            #if registered_host and self.is_admin_or_owner(registered_host):
-                #synchronise_host(info, registered_host.id)
-                #serializer = self.serializer_class(
-                    #self.get_queryset().get(pk=registered_host.id)
-                #)
-                #return Response(serializer.data)
+            if registered_host and self.is_admin_or_owner(registered_host):
+                synchronise_host(info, registered_host.id)
+                serializer = PrivateInfoHostSerializer(
+                    self.get_queryset().get(pk=registered_host.id)
+                )
+                return Response(serializer.data)
             serializer = InfoHostSerializer(data=info)
             if serializer.is_valid():
                 return Response(serializer.data)
             else:
                 return Response(serializer.errors,
                                 status=status.HTTP_400_BAD_REQUEST)
-        except InvalidTld as e:
-            log.error(ErrorLogObject(request, e))
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        except UnsupportedTld as e:
-            log.error(ErrorLogObject(request, e))
-            return Response(status=status.HTTP_400_BAD_REQUEST)
         except EppObjectDoesNotExist as epp_e:
             log.error(ErrorLogObject(request, epp_e))
             return Response(status=status.HTTP_404_NOT_FOUND)

@@ -235,7 +235,7 @@ def connect_host(host_data, user=None):
         address_type = 'v4'
         if 'addr_type' in i:
             address_type = i["addr_type"]
-        ns_host.ipaddress_set.create(ip=i["ip"],
-                                        address_type=address_type,
-                                        project_id=user_obj)
-    return host_data
+            ns_host.ipaddress_set.create(ip=i["ip"],
+                                         address_type=address_type,
+                                         project_id=user_obj)
+            return host_data
