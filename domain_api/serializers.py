@@ -14,6 +14,7 @@ from domain_api.models import (
     DomainRegistrant,
     DomainContact,
     DefaultAccountTemplate,
+    NameserverHost,
 )
 
 UserModel = get_user_model()
@@ -341,6 +342,46 @@ class HandleSetSerializer(serializers.ListField):
     billing = serializers.CharField(required=False)
     zone = serializers.CharField(required=False)
 
+class PrivateInfoHostSerializer(serializers.ModelSerializer):
+
+    host = serializers.SerializerMethodField()
+    idn_host = serializers.SerializerMethodField()
+    addr = serializers.SerializerMethodField()
+
+    class Meta:
+        model = NameserverHost
+        fields = ('host', 'idn_host', 'addr', 'created', 'updated',
+                  'status', 'project_id')
+        read_only_fields = ('status', 'project_id', 'created', 'updated')
+
+    def get_host(self, obj):
+        """
+        Return the host
+
+        :obj: object
+        :returns: str host
+        """
+        return obj.nameserver.host
+
+    def get_idn_host(self, obj):
+        """
+        Return the idn host name
+
+        :obj: object
+        :returns: str internationalised host
+        """
+        return obj.nameserver.idn_host
+
+    def get_addr(self, obj):
+        """
+        Return the set of addresses
+
+        :obj: TODO
+        :returns: TODO
+        """
+        ipaddress_set = obj.ipaddress_set.all()
+        return [{"ip": i.ip, "addr_type": i.address_type} for i in ipaddress_set]
+
 
 class PrivateInfoDomainSerializer(serializers.ModelSerializer):
     domain = serializers.SerializerMethodField('get_fqdn')
@@ -401,6 +442,7 @@ class AddressSetField(serializers.ListField):
 class InfoHostSerializer(serializers.Serializer):
     host = serializers.CharField(required=True, allow_blank=False)
     addr = AddressSetField(min_length=1)
+    status = serializers.CharField()
 
 
 class InfoDomainListSerializer(serializers.ListField):

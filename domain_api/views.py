@@ -50,6 +50,7 @@ from domain_api.serializers import (
     PrivateInfoContactSerializer,
     DefaultAccountTemplateSerializer,
     InfoHostSerializer,
+    PrivateInfoHostSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
@@ -348,6 +349,21 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             raise e
+
+    def host_set(self, request):
+        """
+        Query for domains linked to a particular registry contact
+        :returns: JSON response with details about a contact
+
+        """
+        try:
+            # Limit registered domain query to "owned" domains
+            hosts = self.get_queryset().filter()
+            serializer = PrivateInfoHostSerializer(hosts, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            log.error(ErrorLogObject(request, e))
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def info(self, request, host):
         """

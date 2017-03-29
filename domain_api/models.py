@@ -362,6 +362,7 @@ class NameserverHost(models.Model):
     default = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=200, null=True)
     project_id = models.ForeignKey('auth.User',
                                    related_name='nameserver_hosts',
                                    on_delete=models.CASCADE)

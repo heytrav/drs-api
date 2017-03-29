@@ -64,6 +64,7 @@ host_single_check = views.HostManagementViewSet.as_view({
     'get': 'available'
 })
 host_list = views.HostManagementViewSet.as_view({
+    'get': 'host_set',
     'post': 'create'
 })
 host_detail = views.HostManagementViewSet.as_view({
