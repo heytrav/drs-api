@@ -13,7 +13,8 @@ from .models import (
     RegisteredDomain,
     Registrant,
     TopLevelDomain,
-    TopLevelDomainProvider
+    TopLevelDomainProvider,
+    Nameserver
 )
 from .entity_management.contacts import RegistrantManager, ContactManager
 from .epp.actions.domain import Domain as DomainAction
@@ -213,3 +214,28 @@ def create_host(epp):
     action = HostAction()
     result = action.create(epp)
     return result
+
+@shared_task
+def connect_host(host_data, user=None):
+    log.info(host_data)
+    user_obj = User.objects.get(pk=user)
+    host = host_data["host"]
+    addresses = host_data["addr"]
+
+    parsed_domain = parse_domain(host)
+    tld_provider = TopLevelDomainProvider.objects.get(
+        zone__zone=parsed_domain["zone"]
+    )
+    ns = Nameserver.objects.create(idn_host=host)
+    ns_host = ns.nameserverhost_set.create(
+        tld_provider=tld_provider,
+        project_id=user_obj
+    )
+    for i in addresses:
+        address_type = 'v4'
+        if 'addr_type' in i:
+            address_type = i["addr_type"]
+        ns_host.ipaddress_set.create(ip=i["ip"],
+                                        address_type=address_type,
+                                        project_id=user_obj)
+    return host_data

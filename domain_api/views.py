@@ -73,6 +73,22 @@ from domain_api.utilities.domain import (
 from .workflows import workflow_factory
 
 
+def get_registered_domain_queryset(user):
+    """
+    Return appropriate queryset depending on user roles.
+
+    :user: User object
+    :returns: RegisteredDomainQuerySet
+
+    """
+    queryset = RegisteredDomain.objects.all()
+    if user.groups.filter(name='admin').exists():
+        return queryset
+    return queryset.filter(
+        Q(registrant__registrant__project_id=user) |
+        Q(contacts__contact__project_id=user)
+    ).distinct()
+
 def process_workflow_chain(chained_workflow):
     """
     Process results of workflow chain.
@@ -276,6 +292,24 @@ class HostManagementViewSet(viewsets.GenericViewSet):
     serializer_class = InfoHostSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+
+    def get_registered_domain(self, host):
+        """
+        Retrieve registered domain for host. If the parent domain is not
+        available to this user, throw an exception.
+
+        :host: str host fqdn
+        :returns: registered_domain instance
+
+        """
+        parsed_domain = parse_domain(host)
+        domain_queryset = get_registered_domain_queryset(self.request.user)
+        return domain_queryset.get(
+            domain__name=parsed_domain["domain"],
+            tld__zone=parsed_domain["zone"],
+            active=True
+        )
+
     def get_queryset(self):
         """
         Return queryset
@@ -370,6 +404,9 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         if serializer.is_valid():
             chain_res = None
             try:
+                # Check that the domain parent exists and user has access to it.
+                self.get_registered_domain(data["host"])
+
                 # See if this TLD is provided by one of our registries.
                 registry = get_domain_registry(data["host"])
                 workflow_manager = workflow_factory(registry.slug)()
@@ -379,24 +416,20 @@ class HostManagementViewSet(viewsets.GenericViewSet):
                 # run chained workflow and register the domain
                 chained_workflow = chain(workflow)()
                 chain_res = process_workflow_chain(chained_workflow)
-                serializer = InfoDomainSerializer(data=chain_res)
+                serializer = InfoHostSerializer(data=chain_res)
                 if serializer.is_valid():
                     return Response(serializer.data, status=status.HTTP_201_CREATED)
                 else:
                     log.error(serializer.errors)
                     return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 return Response(chain_res)
-            except DomainNotAvailable:
-                return Response("Domain not available",
-                                status=status.HTTP_400_BAD_REQUEST)
-            except NotObjectOwner:
-                return Response("Not owner of object",
-                                status=status.HTTP_400_BAD_REQUEST)
-            except KeyError as e:
+            except InvalidTld as e:
                 log.error(ErrorLogObject(request, e))
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            except TopLevelDomainProvider.DoesNotExist:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+            except RegisteredDomain.DoesNotExist as e:
+                return Response({"host": data["host"],
+                                 "msg": "Parent domain not available."},
+                                status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
                 log.error(ErrorLogObject(request, e))
                 return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -414,14 +447,8 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         Return queryset
         :returns: RegisteredDomain set
         """
-        queryset = RegisteredDomain.objects.all()
         user = self.request.user
-        if user.groups.filter(name='admin').exists():
-            return queryset
-        return queryset.filter(
-            Q(registrant__registrant__project_id=user) |
-            Q(contacts__contact__project_id=user)
-        ).distinct()
+        return get_registered_domain_queryset(user)
 
     def is_admin_or_owner(self, domain=None):
         """

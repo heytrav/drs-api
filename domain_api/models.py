@@ -393,7 +393,7 @@ class IpAddress(models.Model):
                                    on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.address + " - " + self.address_type
+        return self.ip + " - " + self.address_type
 
 
 class DefaultAccountTemplate(models.Model):

@@ -81,10 +81,8 @@ def synchronise_domain(info_data, domain_id):
     """
     Synchronise data in info domain response with upstream registry.
 
-    :info_data: TODO
-    :registered_domain: TODO
-    :returns: TODO
-
+    :info_data: dict containing info data from registry
+    :registered_domain: int primary key of domain
     """
     RegisteredDomain.objects.filter(pk=domain_id).update(
         authcode=info_data["authcode"],

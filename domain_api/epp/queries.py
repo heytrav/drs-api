@@ -314,7 +314,7 @@ class HostQuery(EppEntity):
         """
         processed = {}
         if "$t" in item:
-            processed["type"] = item["ip"]
+            processed["addr_type"] = item["ip"]
             processed["ip"] = item["$t"]
         return processed
 
