@@ -166,7 +166,7 @@ def connect_domain(create_data, user=None):
             tld=tld,
             tld_provider=tld_provider,
             registration_period=1,
-            anniversary=create_data["expiration_date"],
+            expiration=create_data["expiration_date"],
             created=create_data["create_date"],
             active=True
         )

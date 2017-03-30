@@ -47,7 +47,7 @@ class TestCheckDomainTask(TestCase):
         tld_provider = TopLevelDomainProvider(
             zone=tld,
             provider=test_registry,
-            anniversary_notification_period_days=30
+            expiration_notification_period_days=30
         )
         tld_provider.save()
 

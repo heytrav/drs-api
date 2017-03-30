@@ -197,7 +197,7 @@ class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = TopLevelDomainProvider
-        fields = ('zone', 'provider', 'anniversary_notification_period_days',
+        fields = ('zone', 'provider', 'expiration_notification_period_days',
                   'renewal_period', 'grace_period_days', 'url')
 
 
@@ -242,7 +242,7 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = RegisteredDomain
         fields = ('domain', 'tld', 'tld_provider', 'active', 'auto_renew',
-                  'registration_period', 'anniversary', 'created',
+                  'registration_period', 'expiration', 'created',
                   'updated', 'registrant', 'contacts', 'url')
 
 
@@ -393,8 +393,8 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegisteredDomain
         fields = ('domain', 'contacts', 'registrant', 'roid', 'ns',
-                  'status', 'authcode', 'created', 'anniversary')
-        read_only_fields = ('roid', 'anniversary', 'created', 'authcode',
+                  'status', 'authcode', 'created', 'expiration')
+        read_only_fields = ('roid', 'expiration', 'created', 'authcode',
                             'status')
 
     def get_registrant(self, obj):
@@ -418,7 +418,7 @@ class OwnerInfoDomainSerializer(serializers.Serializer):
     authcode = serializers.CharField(required=False, allow_blank=True)
     roid = serializers.CharField(required=False, allow_blank=True)
     created = serializers.DateTimeField(required=False)
-    anniversary = serializers.DateTimeField(required=False)
+    expiration = serializers.DateTimeField(required=False)
 
 
 class InfoDomainSerializer(serializers.Serializer):
@@ -429,7 +429,7 @@ class InfoDomainSerializer(serializers.Serializer):
     ns = NsHostObjectListSerializer(required=False)
     status = serializers.CharField(required=False, allow_blank=True)
     created = serializers.DateTimeField(required=False)
-    anniversary = serializers.DateTimeField(required=False)
+    expiration = serializers.DateTimeField(required=False)
 
 
 class IpAddressSerializer(serializers.Serializer):
@@ -493,7 +493,7 @@ class InfoContactSerializer(serializers.Serializer):
 class ContactDomainSerializer(serializers.Serializer):
     domain = serializers.CharField(required=True)
     created = serializers.DateTimeField(required=True)
-    anniversary = serializers.DateTimeField(required=True)
+    expiration = serializers.DateTimeField(required=True)
 
 
 class ContactDomainSetSerializer(serializers.ListField):

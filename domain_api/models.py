@@ -224,7 +224,7 @@ class TopLevelDomainProvider(models.Model):
 
     zone = models.ForeignKey(TopLevelDomain)
     provider = models.ForeignKey(DomainProvider)
-    anniversary_notification_period_days = models.IntegerField(default=30)
+    expiration_notification_period_days = models.IntegerField(default=30)
     renewal_period = models.IntegerField(default=30)
     grace_period_days = models.IntegerField(default=30)
 
@@ -279,7 +279,7 @@ class RegisteredDomain(models.Model):
     authcode = models.CharField(max_length=100, null=True)
     roid = models.CharField(max_length=100, null=True)
     status = models.CharField(max_length=200, null=True)
-    anniversary = models.DateTimeField(null=True)
+    expiration = models.DateTimeField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 

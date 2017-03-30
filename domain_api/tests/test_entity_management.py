@@ -56,7 +56,7 @@ class TestEntityManager(TestCase):
         tld_centralnic_test = TopLevelDomainProvider(
             zone=tld,
             provider=self.centralnic_test,
-            anniversary_notification_period_days=10
+            expiration_notification_period_days=10
         )
         tld_centralnic_test.save()
         self.user = User.objects.create_user(
