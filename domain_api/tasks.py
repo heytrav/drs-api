@@ -238,4 +238,4 @@ def connect_host(host_data, user=None):
             ns_host.ipaddress_set.create(ip=i["ip"],
                                          address_type=address_type,
                                          project_id=user_obj)
-            return host_data
+    return host_data
