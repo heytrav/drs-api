@@ -127,6 +127,8 @@ class Workflow(object):
         if "ns" in data:
             epp["ns"] = data["ns"]
 
+        if "period" in data:
+            epp["period"] = data["period"]
         registrant = self.fetch_registrant(data, user)
 
         self.workflow.append(check_domain.s(data["domain"]))
