@@ -9,27 +9,6 @@ class MockRpcClient(domain_api.epp.entity.EppRpcClient):
         pass
 
 
-class TestAPIAuth(TestApiClient):
-
-    def setUp(self):
-        super().setUp()
-
-    def api_login(self):
-        """
-        Log client in using api-token-auth endpoint
-        :returns: str token
-        """
-        credentials = {
-            "username": "testcustomer",
-            "password": "secret"
-        }
-        response = self.client.post('/api-token-auth',
-                                    secure=True,
-                                    data=credentials)
-        data = response.data
-        return 'JWT ' + data["token"]
-
-
 class TestBasicQueries(TestAPIAuth):
 
     def test_unauthenticated_endpoint_denied(self):
