@@ -1,6 +1,5 @@
-from django.test import TestCase
-from django.contrib.auth.models import User
 from unittest.mock import patch
+from .test_setup import TestSetup
 from ..tasks import (
     check_domain,
     create_registrant,
@@ -9,18 +8,11 @@ from ..tasks import (
     RegistrantManager
 )
 from ..exceptions import EppError
-from domain_api.epp.entity import EppRpcClient
 from ..models import (
-    AccountDetail,
-    DomainProvider,
     Contact,
-    TopLevelDomain,
-    TopLevelDomainProvider,
     Registrant,
-    ContactType,
-    DefaultAccountContact,
-    DefaultAccountTemplate
 )
+from domain_api.epp.entity import EppRpcClient
 import domain_api
 
 
@@ -29,27 +21,7 @@ class MockRpcClient(domain_api.epp.entity.EppRpcClient):
         pass
 
 
-class TestCheckDomainTask(TestCase):
-
-    def setUp(self):
-        super().setUp()
-        test_registry = DomainProvider(
-            name="Provider1",
-            slug="test-registry",
-            description="Provide some domains"
-        )
-        test_registry.save()
-        tld = TopLevelDomain(
-            zone="tld",
-            description="Test TLD"
-        )
-        tld.save()
-        tld_provider = TopLevelDomainProvider(
-            zone=tld,
-            provider=test_registry,
-            expiration_notification_period_days=30
-        )
-        tld_provider.save()
+class TestCheckDomainTask(TestSetup):
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_domain_available(self):
@@ -88,75 +60,11 @@ class TestCheckDomainTask(TestCase):
                 check_domain("somedomain.tld", "test-registry")
 
 
-class ContactOperation(TestCase):
-
-    """
-    Set up some basic stuff to handle a domain registration.
-    """
-
-    def setUp(self):
-        super().setUp()
-        self.provider = DomainProvider.objects.create(
-            name="Provider One",
-            slug="provider-one",
-            description="Provide some domains"
-        )
-        self.admin_user = User.objects.create_user(
-            username="admin",
-            email="admin@test.com",
-            password="secret"
-        )
-        self.user = User.objects.create_user(
-            username="testcustomer",
-            email="testcustomer@test.com",
-            password="secret"
-        )
-        self.joe_user = AccountDetail.objects.create(
-            first_name="Joe",
-            surname="User",
-            email="joeuser@test.com",
-            telephone="+1.8175551234",
-            house_number="10",
-            street1="Evergreen Terrace",
-            city="Springfield",
-            state="State",
-            country="US",
-            project_id=self.user
-        )
-        self.bob_user = AccountDetail.objects.create(
-            first_name="bob",
-            surname="User",
-            email="bobuser@test.com",
-            telephone="+1.8175551234",
-            house_number="10",
-            street1="Evergreen Terrace",
-            city="Springfield",
-            state="State",
-            country="US",
-            project_id=self.user
-        )
-
-
-class TestCreateRegistrant(ContactOperation):
+class TestCreateRegistrant(TestSetup):
 
     """
     Test creation of a regsitrant object.
     """
-
-    def setUp(self):
-        super().setUp()
-        self.default_registrant = DefaultAccountTemplate.objects.create(
-            project_id=self.user,
-            account_template=self.joe_user,
-            provider=self.provider
-        )
-        self.generic_registrant = Registrant.objects.create(
-            provider=self.provider,
-            registry_id='registrant-231',
-            name='Bob User',
-            project_id=self.user,
-            account_template=self.bob_user
-        )
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_create_registrant(self):
@@ -176,7 +84,7 @@ class TestCreateRegistrant(ContactOperation):
             processed_epp = create_registrant(epp,
                                               self.joe_user.id,
                                               'provider-one',
-                                              self.user.id)
+                                              self.test_customer_user.id)
             self.assertIn('registrant',
                           processed_epp,
                           "Registrant added to epp")
@@ -202,7 +110,7 @@ class TestCreateRegistrant(ContactOperation):
                 create_registrant({},
                                   self.joe_user.id,
                                   'provider-one',
-                                  self.user.id)
+                                  self.test_customer_user.id)
 
     def test_must_create_new_registrant(self):
         """
@@ -211,15 +119,15 @@ class TestCreateRegistrant(ContactOperation):
         """
         with patch.object(RegistrantManager,
                           'create_registry_contact',
-                          return_value=self.generic_registrant) as mocked:
+                          return_value=self.joe_user_registrant) as mocked:
             create_registrant({},
                               self.joe_user.id,
                               'provider-one',
-                              self.user.id)
+                              self.test_customer_user.id)
             self.assertTrue(mocked.called)
 
 
-class TestCreateContact(ContactOperation):
+class TestCreateContact(TestSetup):
 
     """
     Test creation of a regsitrant object.
@@ -227,58 +135,6 @@ class TestCreateContact(ContactOperation):
 
     def setUp(self):
         super().setUp()
-        self.admin_acct1 = AccountDetail.objects.create(
-            first_name="Ada",
-            surname="min",
-            email="admin@test.com",
-            telephone="+1.8175551234",
-            house_number="10",
-            street1="Evergreen Terrace",
-            city="Springfield",
-            state="State",
-            country="US",
-            postal_info_type="loc",
-            project_id=self.admin_user
-        )
-        self.tech_acct1 = AccountDetail.objects.create(
-            first_name="Tech",
-            surname="Guy",
-            email="tech@test.com",
-            telephone="+1.8175551234",
-            house_number="10",
-            street1="Evergreen Terrace",
-            city="Springfield",
-            state="State",
-            country="US",
-            postal_info_type="loc",
-            disclose_name=False,
-            disclose_telephone=False,
-            project_id=self.admin_user
-        )
-        admin_type = ContactType.objects.create(name='admin',
-                                                description='Admin contact')
-        tech_type = ContactType.objects.create(name='tech',
-                                               description='Admin contact')
-
-        self.default_admin = DefaultAccountContact.objects.create(
-            project_id=self.admin_user,
-            account_template=self.admin_acct1,
-            provider=self.provider,
-            contact_type=admin_type,
-        )
-        self.default_tech = DefaultAccountContact.objects.create(
-            project_id=self.admin_user,
-            account_template=self.tech_acct1,
-            provider=self.provider,
-            contact_type=tech_type,
-        )
-        self.generic_admin_contact = Contact.objects.create(
-            provider=self.provider,
-            registry_id='contact-123',
-            name='Some Admin',
-            project_id=self.user,
-            account_template=self.admin_acct1
-        )
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_create_contact(self):
@@ -299,7 +155,7 @@ class TestCreateContact(ContactOperation):
                                                     self.joe_user.id,
                                                     'provider-one',
                                                     'tech',
-                                                    self.user.id)
+                                                    self.test_customer_user.id)
             self.assertIn('contact',
                           processed_epp,
                           "Contact added to epp")
@@ -329,7 +185,7 @@ class TestCreateContact(ContactOperation):
                                     self.joe_user.id,
                                     'provider-one',
                                     'tech',
-                                    self.user.id)
+                                    self.test_customer_user.id)
             self.assertTrue(mocked.called)
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
@@ -345,17 +201,4 @@ class TestCreateContact(ContactOperation):
                                         self.joe_user.id,
                                         'provider-one',
                                         'admin',
-                                        self.user.id)
-
-
-class TestConnectTask(TestCase):
-
-    """Docstring for TestConnectTask. """
-
-    def setUp(self):
-        """
-        Set up test suite
-        :returns: TODO
-
-        """
-        super().setUp()
+                                        self.test_customer_user.id)
