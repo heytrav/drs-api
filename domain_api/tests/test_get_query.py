@@ -335,7 +335,6 @@ class TestBasicQueries(TestSetup):
         path = "/v1/account-detail/%s/" % joes_id
         response = self.client.get(path,
                                    HTTP_AUTHORIZATION=jwt_header)
-        joe_user = self.joe_user
         self.assertEqual(response.status_code,
                          200,
                          "Allowed to request endpoint with JWT.")
