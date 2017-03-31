@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from .test_api_interaction import TestApiClient
+from .test_setup import TestSetup
 from ..epp.entity import EppRpcClient
 import domain_api
 
@@ -9,7 +9,7 @@ class MockRpcClient(domain_api.epp.entity.EppRpcClient):
         pass
 
 
-class TestBasicQueries(TestAPIAuth):
+class TestBasicQueries(TestSetup):
 
     def test_unauthenticated_endpoint_denied(self):
         """

@@ -1,8 +1,8 @@
-from django.test import TestCase
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
+from .test_setup import TestSetup
 
 
-class TestUserManagement(TestCase):
+class TestUserManagement(TestSetup):
 
     """
     Test user creation.
@@ -14,7 +14,6 @@ class TestUserManagement(TestCase):
 
         """
         super().setUp()
-        Group.objects.create(name='customer')
 
     def test_create_user(self):
         """

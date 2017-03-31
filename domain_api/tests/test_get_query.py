@@ -6,7 +6,7 @@ from ..models import (
 )
 from domain_api.epp.entity import EppRpcClient
 from ..exceptions import EppError
-from .test_api_interaction import TestApiClient
+from .test_setup import TestSetup
 
 
 class MockRpcClient(domain_api.epp.entity.EppRpcClient):
@@ -14,7 +14,7 @@ class MockRpcClient(domain_api.epp.entity.EppRpcClient):
         pass
 
 
-class TestCheckDomain(TestApiClient):
+class TestCheckDomain(TestSetup):
 
     def setUp(self):
         """
@@ -66,7 +66,7 @@ class TestCheckDomain(TestApiClient):
                             "Serialised a check_domain response")
 
 
-class TestInfoDomain(TestApiClient):
+class TestInfoDomain(TestSetup):
 
     """
     Test info domain functionality
@@ -107,7 +107,7 @@ class TestInfoDomain(TestApiClient):
                              "Epp returned normally")
 
 
-class TestContact(TestApiClient):
+class TestContact(TestSetup):
 
     def setUp(self):
         """
@@ -265,7 +265,7 @@ class TestContact(TestApiClient):
 
 
 
-class TestRegistrant(TestApiClient):
+class TestRegistrant(TestSetup):
 
     def setUp(self):
         """

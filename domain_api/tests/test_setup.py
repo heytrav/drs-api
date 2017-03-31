@@ -1,5 +1,5 @@
 from django.test import TestCase
-from django.contrib.auth.models import User, Client
+from django.contrib.auth.models import User, Client, Group
 from ..models import (
     TopLevelDomain,
     TopLevelDomainProvider,
@@ -25,6 +25,8 @@ class TestSetup(TestCase):
             email="admin@test.com",
             password="secret"
         )
+        Group.objects.create(name='customer')
+        Group.objects.create(name='admin')
         self.user = User.objects.create_user(
             username="testcustomer",
             email="testcustomer@test.com",
@@ -93,10 +95,18 @@ class TestSetup(TestCase):
         """
         credentials = {
             "username": username,
-            "password": secret
+            "password": password
         }
         response = self.client.post('/api-token-auth',
                                     secure=True,
                                     data=credentials)
         data = response.data
         return 'JWT ' + data["token"]
+
+    def login_client(self):
+        """
+        Log user in to API.
+
+        :returns: logged in session
+        """
+        self.client.login(username="testcustomer", password="secret")
