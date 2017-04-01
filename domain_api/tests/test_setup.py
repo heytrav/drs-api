@@ -78,6 +78,10 @@ class TestSetup(TestCase):
             country="US",
             postal_info_type="loc",
             disclose_name=False,
+            disclose_company=False,
+            disclose_address=False,
+            disclose_fax=False,
+            disclose_email=False,
             disclose_telephone=False,
             project_id=self.test_customer_user
         )
@@ -115,6 +119,11 @@ class TestSetup(TestCase):
         )
         self.joe_user_registrant = Registrant.objects.create(
             registry_id='registrant-123',
+            name="Joe User",
+            street1="754 Evergreen Terrace",
+            country="US",
+            status="ok",
+            telephone="1.8175551252",
             project_id=self.test_customer_user,
             provider=self.provider_one,
             account_template=self.joe_user

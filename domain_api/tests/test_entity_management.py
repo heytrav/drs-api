@@ -20,7 +20,7 @@ class TestContactManager(TestSetup):
     """
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
-    def test_contact_payload(self):
+    def test_create_contact_payload(self):
         registrant_factory = RegistrantManager(
             provider=self.provider_one,
             template=self.joe_user,
@@ -67,6 +67,49 @@ class TestContactManager(TestSetup):
                              registrant.account_template.id,
                              'Account template is equal')
 
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
+    def test_update_postal_data(self):
+        registrant_factory = RegistrantManager(registrant="registrant-123")
+        update_return_value = {}
+        update_contact_data = {
+            "name": "Joe Luser",
+            "city": "Shelbeyville",
+            "state": "Flyover",
+            "telephone": "+1.8172221233",
+            "disclose_email": True,
+            "status": "ok;clientHappy;linked"
+        }
+
+        with patch.object(ContactAction,
+                          'update',
+                          return_value=update_return_value) as mocked:
+            import pdb; pdb.set_trace()  # XXX BREAKPOINT
+            registrant = registrant_factory.update_contact(update_contact_data)
+
+            actual_data = {
+                'id': "registrant-123",
+                'chg': {
+                    'postalInfo': {
+                        'name': 'Joe Luser',
+                        'type': 'loc',
+                        'addr': {
+                            'city': 'Shelbeyville',
+                            'sp': 'Flyover',
+                            'cc': 'US'}
+                    },
+                    'disclose': {
+                        'flag': 0,
+                        'disclosing': [
+                            {'name': 'name', 'type': 'loc'},
+                            {'name': 'org', 'type': 'loc'},
+                            {'name': 'addr', 'type': 'loc'},
+                            'voice',
+                            'fax'
+                        ]
+                    }
+                }
+            }
+            mocked.assert_called_with('provider-one', actual_data)
 
 class TestDomainManager(TestSetup):
     """

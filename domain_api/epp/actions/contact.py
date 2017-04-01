@@ -14,7 +14,6 @@ class Contact(EppEntity):
         """
         super().__init__()
 
-
     def create(self, registry, contact_data):
         """
         Create a contact at a given registry.
@@ -31,3 +30,15 @@ class Contact(EppEntity):
             "id": create_data["contact:id"],
             "create_date": create_data["contact:crDate"]
         }
+
+    def update(self, registry, update_data):
+        """
+        Update a contact at a given registry
+
+        :registry: TODO
+        :update_data: TODO
+        :returns: TODO
+
+        """
+        result = self.rpc_client.call(registry, 'updateContact', update_data)
+        return result
