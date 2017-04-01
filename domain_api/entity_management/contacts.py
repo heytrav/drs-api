@@ -323,15 +323,15 @@ class RegistrantManager(ContactFactory):
     """
 
     def __init__(self,
-                 registrant=None,
+                 contact=None,
                  provider=None,
                  template=None,
                  user=None):
         """
         Initialise factory.
         """
-        if registrant:
-            self.contact_object = Registrant.objects.get(registry_id=registrant)
+        if contact:
+            self.contact_object = Registrant.objects.get(registry_id=contact)
             super().__init__(
                 provider=self.contact_object.provider,
                 user=self.contact_object.project_id

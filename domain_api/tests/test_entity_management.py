@@ -69,7 +69,7 @@ class TestContactManager(TestSetup):
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_update_postal_data(self):
-        registrant_factory = RegistrantManager(registrant="registrant-123")
+        registrant_factory = RegistrantManager(contact="registrant-123")
         update_return_value = {}
         update_contact_data = {
             "name": "Joe Luser",
@@ -95,7 +95,8 @@ class TestContactManager(TestSetup):
                         'addr': {
                             'city': 'Shelbeyville',
                             'sp': 'Flyover',
-                            'cc': 'US'}
+                            'cc': 'US'
+                        }
                     },
                     'voice':  '+1.8172221233',
                     'disclose': {
@@ -111,6 +112,7 @@ class TestContactManager(TestSetup):
                 }
             }
             mocked.assert_called_with('provider-one', actual_data)
+
 
 class TestDomainManager(TestSetup):
     """

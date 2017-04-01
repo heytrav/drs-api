@@ -48,13 +48,15 @@ domain_bulk_check = views.DomainRegistryManagementViewSet.as_view({
 })
 
 contact_detail = views.ContactManagementViewSet.as_view({
-    'get': 'info'
+    'get': 'info',
+    'patch': 'update'
 })
 contact_list = views.ContactManagementViewSet.as_view({
     'get': 'list'
 })
 registrant_detail = views.RegistrantManagementViewSet.as_view({
-    'get': 'info'
+    'get': 'info',
+    'patch': 'update'
 })
 registrant_list = views.RegistrantManagementViewSet.as_view({
     'get': 'list'

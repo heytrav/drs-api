@@ -65,7 +65,11 @@ from .exceptions import (
     NotObjectOwner,
     EppObjectDoesNotExist
 )
-from domain_api.entity_management.contacts import ContactFactory
+from domain_api.entity_management.contacts import (
+    ContactFactory,
+    RegistrantManager,
+    ContactManager
+)
 from domain_api.utilities.domain import (
     parse_domain,
     synchronise_domain,
@@ -90,6 +94,7 @@ def get_registered_domain_queryset(user):
         Q(registrant__registrant__project_id=user) |
         Q(contacts__contact__project_id=user)
     ).distinct()
+
 
 def process_workflow_chain(chained_workflow):
     """
@@ -181,6 +186,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = PrivateInfoContactSerializer
     queryset = Contact.objects.all()
+    manager = ContactManager
 
     def is_admin_or_owner(self, contact=None):
         """
@@ -260,6 +266,27 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
             log.error(ErrorLogObject(request, e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def update(self, request, registry_id, registry=None):
+        """
+        Update a contact object
+
+        :request: HTTP request
+        :registry_id: registry id
+        :registry: TODO
+        :returns: TODO
+
+        """
+        contact = get_object_or_404(self.queryset, registry_id=registry_id)
+        if self.is_admin_or_owner(contact):
+            try:
+                manager = self.manager(contact=registry_id)
+                response = manager.update_contact(request.data)
+                return Response(response)
+            except Exception as e:
+                log.error(ErrorLogObject(request, e))
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
     def list(self, request):
         """
         List out contact/registrant objects
@@ -283,6 +310,7 @@ class RegistrantManagementViewSet(ContactManagementViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = PrivateInfoContactSerializer
     queryset = Registrant.objects.all()
+    manager = RegistrantManager
 
 
 class HostManagementViewSet(viewsets.GenericViewSet):
@@ -312,7 +340,6 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             if host.project_id == user:
                 return True
         return False
-
 
     def get_registered_domain(self, host):
         """
@@ -463,6 +490,7 @@ class HostManagementViewSet(viewsets.GenericViewSet):
                 log.error(ErrorLogObject(request, e))
                 return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
     """
