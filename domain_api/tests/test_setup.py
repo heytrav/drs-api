@@ -122,7 +122,7 @@ class TestSetup(TestCase):
             name="Joe User",
             street1="754 Evergreen Terrace",
             country="US",
-            status="ok",
+            status="ok;linked",
             telephone="1.8175551252",
             project_id=self.test_customer_user,
             provider=self.provider_one,

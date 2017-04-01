@@ -83,11 +83,11 @@ class TestContactManager(TestSetup):
         with patch.object(ContactAction,
                           'update',
                           return_value=update_return_value) as mocked:
-            import pdb; pdb.set_trace()  # XXX BREAKPOINT
-            registrant = registrant_factory.update_contact(update_contact_data)
+            registrant_factory.update_contact(update_contact_data)
 
             actual_data = {
                 'id': "registrant-123",
+                'add': ['clientHappy'],
                 'chg': {
                     'postalInfo': {
                         'name': 'Joe Luser',
@@ -97,6 +97,7 @@ class TestContactManager(TestSetup):
                             'sp': 'Flyover',
                             'cc': 'US'}
                     },
+                    'voice':  '+1.8172221233',
                     'disclose': {
                         'flag': 0,
                         'disclosing': [
