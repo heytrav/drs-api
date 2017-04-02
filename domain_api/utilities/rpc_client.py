@@ -57,4 +57,6 @@ class EppRpcClient(object):
             raise EppObjectDoesNotExist(response_data["result"]["msg"])
         if result_code >= 2000:
             raise EppError(response_data["result"]["msg"])
-        return response_data["data"]
+        if "data" in response_data:
+            return response_data["data"]
+        return response_data["result"]["msg"]

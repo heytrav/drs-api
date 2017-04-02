@@ -488,6 +488,7 @@ class InfoContactSerializer(serializers.Serializer):
                   'street2', 'street3', 'city', 'telephone', 'fax',
                   'house_number', 'state', 'country', 'postcode',
                   'postal_info_type',)
+        read_only_fields = ('registry_id', 'postal_info_type')
 
 
 class ContactDomainSerializer(serializers.Serializer):

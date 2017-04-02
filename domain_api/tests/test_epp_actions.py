@@ -1,9 +1,7 @@
-
 from django.test import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from domain_api.epp.actions.contact import Contact
 from domain_api.epp.entity import EppRpcClient
-from ..exceptions import EppError
 import re
 import domain_api
 
@@ -11,6 +9,7 @@ import domain_api
 class MockRpcClient(domain_api.epp.entity.EppRpcClient):
     def __init__(self, host=None):
         pass
+
 
 class TestCreateContact(TestCase):
 
@@ -34,7 +33,9 @@ class TestCreateContact(TestCase):
             }
         }
         contact = Contact()
-        with patch.object(EppRpcClient, 'call', return_value=create_contact_response):
+        with patch.object(EppRpcClient,
+                          'call',
+                          return_value=create_contact_response):
             contact_data = {
                 "id": 'A1234',
                 "voice": '+1.12345678',

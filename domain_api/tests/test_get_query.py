@@ -1,12 +1,9 @@
 from unittest.mock import patch
+import json
 import domain_api
-from ..models import (
-    Contact,
-    Registrant,
-)
 from domain_api.epp.entity import EppRpcClient
 from ..exceptions import EppError
-from .test_api_interaction import TestApiClient
+from .test_setup import TestSetup
 
 
 class MockRpcClient(domain_api.epp.entity.EppRpcClient):
@@ -14,7 +11,7 @@ class MockRpcClient(domain_api.epp.entity.EppRpcClient):
         pass
 
 
-class TestCheckDomain(TestApiClient):
+class TestCheckDomain(TestSetup):
 
     def setUp(self):
         """
@@ -66,7 +63,7 @@ class TestCheckDomain(TestApiClient):
                             "Serialised a check_domain response")
 
 
-class TestInfoDomain(TestApiClient):
+class TestInfoDomain(TestSetup):
 
     """
     Test info domain functionality
@@ -107,27 +104,7 @@ class TestInfoDomain(TestApiClient):
                              "Epp returned normally")
 
 
-class TestContact(TestApiClient):
-
-    def setUp(self):
-        """
-        Set up test suite
-        """
-        super().setUp()
-        self.contact = Contact(
-            registry_id='contact-123',
-            project_id=self.user,
-            provider=self.provider,
-            account_template=self.joe_user
-        )
-        self.contact.save()
-        self.contact2 = Contact(
-            registry_id='contact-124',
-            project_id=self.user2,
-            provider=self.provider,
-            account_template=self.other_user
-        )
-        self.contact2.save()
+class TestContact(TestSetup):
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_info_contact(self):
@@ -246,9 +223,9 @@ class TestContact(TestApiClient):
                 "contact:upID": "catalyst_ote",
                 "contact:disclose": {
                     "flag": "0",
-                    "contact:name": [ { "type": "loc" }, { "type": "int" } ],
-                    "contact:org": [ { "type": "loc" }, { "type": "int" } ],
-                    "contact:addr": [ { "type": "loc" }, { "type": "int" } ],
+                    "contact:name": [{"type": "loc"}, {"type": "int"}],
+                    "contact:org": [{"type": "loc"}, {"type": "int"}],
+                    "contact:addr": [{"type": "loc"}, {"type": "int"}],
                     "contact:voice": {},
                     "contact:fax": {},
                     "contact:email": {}
@@ -265,20 +242,7 @@ class TestContact(TestApiClient):
 
 
 
-class TestRegistrant(TestApiClient):
-
-    def setUp(self):
-        """
-        Set up test suite
-        """
-        super().setUp()
-        self.contact = Registrant(
-            registry_id='registrant-123',
-            project_id=self.user,
-            provider=self.provider,
-            account_template=self.joe_user
-        )
-        self.contact.save()
+class TestRegistrant(TestSetup):
 
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
@@ -347,3 +311,108 @@ class TestRegistrant(TestApiClient):
             self.assertEqual(response.status_code,
                              200,
                              "Info contact returned normal response")
+
+
+class TestBasicQueries(TestSetup):
+
+    def test_unauthenticated_endpoint_denied(self):
+        """
+        Test accessing an endpoint without JWT is denied.
+
+        """
+        response = self.client.get('/v1/account-detail/1/')
+        self.assertEqual(response.status_code,
+                         403,
+                         "Not allowed to access endoint without JWT")
+
+    def test_authenticateded_endpoint_accepted(self):
+        """
+        Test accessing an endpoint with JWT is allowed.
+
+        """
+        jwt_header = self.api_login()
+        joes_id = self.joe_user.pk
+        path = "/v1/account-detail/%s/" % joes_id
+        response = self.client.get(path,
+                                   HTTP_AUTHORIZATION=jwt_header)
+        self.assertEqual(response.status_code,
+                         200,
+                         "Allowed to request endpoint with JWT.")
+
+    def test_unauthorized_endpoint_denied(self):
+        """
+        Test access to admin level object denied.
+        """
+        jwt_header = self.api_login()
+        response = self.client.get('/v1/tld-provider/',
+                                   HTTP_AUTHORIZATION=jwt_header)
+        self.assertEqual(response.status_code,
+                         403,
+                         "Normal logged in user cannot  access tld-provider")
+
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
+    def test_check_domain_response(self):
+        """
+        Check domain using JWT to authenticate
+
+        """
+        jwt_header = self.api_login()
+        return_data = {
+            "domain:chkData": {
+                "domain:cd": {
+                    "domain:name": {
+                        "avail": 1,
+                        "$t": "whatever.tld"
+                    }
+                }
+            }
+        }
+        with patch.object(EppRpcClient, 'call', return_value=return_data):
+            response = self.client.get(
+                '/v1/domains/available/whatever.tld/',
+                HTTP_AUTHORIZATION=jwt_header
+            )
+            self.assertEqual(response.status_code,
+                             200,
+                             "Epp returned normally")
+            data = response.data
+            self.assertTrue(data["available"],
+                            "Serialised a check_domain response")
+
+
+class TestHostApi(TestSetup):
+
+    """
+    Test api interaction to manage host objects
+    """
+
+    def setUp(self):
+        """
+        Setup test suite
+
+        """
+        super().setUp()
+
+    def test_create_incorrect_data(self):
+        """
+        Should get an error when incorrectly structured host request sent to
+        api.
+
+        """
+        bad_create_host = {
+            "host": "ns1.somehost.com",
+            "addr": [
+                {"ip_addr": "23.34.45.67"},
+            ]
+        }
+        jwt_header = self.api_login()
+        response = self.client.post('/v1/hosts/',
+                                    data=json.dumps(bad_create_host),
+                                    content_type="application/json",
+                                    HTTP_AUTHORIZATION=jwt_header)
+        self.assertEqual(response.status_code,
+                         400,
+                         "incorrect create host datastructure returns 400")
+        self.assertEqual('This field is required.',
+                         response.data['addr']['ip'][0],
+                         "ip field is required")
