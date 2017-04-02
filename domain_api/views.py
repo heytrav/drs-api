@@ -28,6 +28,7 @@ from domain_api.models import (
     TopLevelDomainProvider,
     DefaultAccountTemplate,
     NameserverHost,
+    DefaultAccountContact,
 )
 from domain_api.serializers import (
     UserSerializer,
@@ -105,7 +106,8 @@ def process_workflow_chain(chained_workflow):
 
     """
     try:
-        values = [node.get() for node in reversed(list(workflow_scan(chained_workflow)))]
+        reversed_workflow = reversed(list(workflow_scan(chained_workflow)))
+        values = [node.get() for node in reversed_workflow]
         return values[-1]
     except KeyError as e:
         log.error({"keyerror": str(e)})
@@ -205,6 +207,39 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
             return True
         return False
 
+    def get_disclosed_contact_data(self, contact):
+        """
+        Prepare data to be returned with request. Check if dislosure is allowed.
+
+        :contact: TODO
+        :returns: TODO
+
+        """
+        contact_data = {
+            "registry_id": contact.registry_id,
+        }
+        if contact.disclose_name:
+            contact_data["name"] = contact.name
+        if contact.disclose_email:
+            contact_data["email"] = contact.email
+        if contact.disclose_telephone:
+            contact_data["telephone"] = contact.telephone
+        if contact.disclose_fax:
+            contact_data["fax"] = contact.fax
+        if contact.disclose_company:
+            contact_data["company"] = contact.company
+        if contact.disclose_address:
+            contact_data["street1"] = contact.street1
+            contact_data["street2"] = contact.street2
+            contact_data["street3"] = contact.street3
+            contact_data["city"] = contact.city
+            contact_data["house_number"] = contact.house_number
+            contact_data["country"] = contact.country
+            contact_data["state"] = contact.state
+            contact_data["postcode"] = contact.postcode
+            contact_data["postal_info_type"] = contact.postal_info_type
+        return contact_data
+
     def info(self, request, registry_id, registry=None):
         """
         Retrieve info about a contact
@@ -225,29 +260,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
                 return Response(serializer.data)
             else:
                 log.debug({"msg": "Returning basic contact info"})
-                contact_data = {
-                    "registry_id": contact.registry_id,
-                }
-                if contact.disclose_name:
-                    contact_data["name"] = contact.name
-                if contact.disclose_email:
-                    contact_data["email"] = contact.email
-                if contact.disclose_telephone:
-                    contact_data["telephone"] = contact.telephone
-                if contact.disclose_fax:
-                    contact_data["fax"] = contact.fax
-                if contact.disclose_company:
-                    contact_data["company"] = contact.company
-                if contact.disclose_address:
-                    contact_data["street1"] = contact.street1
-                    contact_data["street2"] = contact.street2
-                    contact_data["street3"] = contact.street3
-                    contact_data["city"] = contact.city
-                    contact_data["house_number"] = contact.house_number
-                    contact_data["country"] = contact.country
-                    contact_data["state"] = contact.state
-                    contact_data["postcode"] = contact.postcode
-                    contact_data["postal_info_type"] = contact.postal_info_type
+                contact_data = self.get_disclosed_contact_data(contact)
                 serializer = InfoContactSerializer(data=contact_data)
                 if serializer.is_valid():
                     log.debug(serializer.data)
@@ -474,10 +487,13 @@ class HostManagementViewSet(viewsets.GenericViewSet):
                 chain_res = process_workflow_chain(chained_workflow)
                 serializer = InfoHostSerializer(data=chain_res)
                 if serializer.is_valid():
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    return Response(serializer.data,
+                                    status=status.HTTP_201_CREATED)
                 else:
                     log.error(serializer.errors)
-                    return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    return Response(
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
                 return Response(chain_res)
             except InvalidTld as e:
                 log.error(ErrorLogObject(request, e))
@@ -522,7 +538,10 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             return True
         # otherwise check if user is registrant of contact for domain
         if domain:
-            if domain.registrant.filter(active=True, registrant__project_id=user):
+            if domain.registrant.filter(
+                active=True,
+                registrant__project_id=user
+            ):
                 return True
             if domain.contacts.contact.filter(project_id=user).exists():
                 return True
@@ -543,7 +562,9 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             availability = query.check_domain(
                 idna.encode(domain, uts46=True).decode('ascii')
             )
-            serializer = DomainAvailabilitySerializer(data=availability["result"][0])
+            serializer = DomainAvailabilitySerializer(
+                data=availability["result"][0]
+            )
             if serializer.is_valid():
                 return Response(serializer.data)
         except EppError as epp_e:
@@ -590,7 +611,8 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             for i in registry_result:
                 check_result += i
             log.info({"result": check_result})
-            serializer = DomainAvailabilitySerializer(data=check_result, many=True)
+            serializer = DomainAvailabilitySerializer(data=check_result,
+                                                      many=True)
             if serializer.is_valid():
                 return Response(serializer.data)
             else:
@@ -707,6 +729,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         except Exception as e:
             log.error(ErrorLogObject(request, e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class AccountDetailViewSet(viewsets.ModelViewSet):
     serializer_class = AccountDetailSerializer
@@ -879,7 +902,6 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,
                           permissions.DjangoModelPermissionsOrAnonReadOnly)
 
-
     def create(self, request):
         """
         Create a new default template
@@ -919,7 +941,6 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
                                              pk=data["account_template"])
         default_account_template.update(account_template=account_template,
                                         provider=data["provider"])
-
 
     def delete(self, request, default_id):
         """
@@ -972,7 +993,6 @@ class DefaultAccountContactViewSet(viewsets.ModelViewSet):
     serializer_class = DefaultAccountTemplateSerializer
     permission_classes = (permissions.IsAdminUser,)
 
-
     def get_queryset(self):
         """
         Filter domain handles on logged in user.
@@ -983,10 +1003,3 @@ class DefaultAccountContactViewSet(viewsets.ModelViewSet):
         if user.is_staff:
             return DefaultAccountContact.objects.all()
         return DefaultAccountContact.objects.filter(project_id=user)
-
-    #def perform_create(self, serializer):
-
-        #data = self.request.data
-        #provider_slug = data["provider"]
-        #provider = DomainProvider.objects.get(slug=provider_slug)
-        #serializer.save(project_id=self.request.user, provider=provider)
