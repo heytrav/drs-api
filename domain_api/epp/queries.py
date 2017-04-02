@@ -209,6 +209,10 @@ class ContactQuery(EppEntity):
         for epp_attr, item in contact_attributes.items():
             if epp_attr in raw_disclose_data:
                 disclose[item] = flag
+            else:
+                # If item not in returned set, its display status is opposite
+                # everything else.
+                disclose[item] =  not flag
         return disclose
 
     def info(self, contact):
