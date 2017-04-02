@@ -100,13 +100,9 @@ class TestContactManager(TestSetup):
                     },
                     'voice':  '+1.8172221233',
                     'disclose': {
-                        'flag': 0,
+                        'flag': 1,
                         'disclosing': [
-                            {'name': 'name', 'type': 'loc'},
-                            {'name': 'org', 'type': 'loc'},
-                            {'name': 'addr', 'type': 'loc'},
-                            'voice',
-                            'fax'
+                            'email'
                         ]
                     }
                 }
