@@ -172,9 +172,15 @@ class ContactFactory(object):
                     "cc": data.get('country', contact.country)
                 }
                 if any(k in data for k in self.street_fields):
-                    address["street"][0] = data.get('street1', contact.street1)
-                    address["street"][1] = data.get('street2', contact.street2)
-                    address["street"][2] = data.get('street3', contact.street3)
+                    address["street"] = []
+                    street1 = data.get('street1', contact.street1)
+                    street2 = data.get('street2', contact.street2)
+                    street3 = data.get('street3', contact.street3)
+                    address["street"].append(street1)
+                    if street2:
+                        address["street"].append(street2)
+                    if street3:
+                        address["street"].append(street3)
                 if "state" in data:
                     address["sp"] = data["state"]
                 if "postcode" in data:
@@ -195,35 +201,53 @@ class ContactFactory(object):
         if any(k in data for k in self.disclose_fields):
             contact = self.contact_object
             non_disclose = []
-            if not data.get("disclose_name", contact.disclose_name):
-                non_disclose.append(
-                    {
-                        "name": "name",
-                        "type": contact.postal_info_type
-                    }
-                )
-            if not data.get("disclose_company", contact.disclose_company):
-                non_disclose.append(
-                    {
-                        "name": "org",
-                        "type": contact.postal_info_type
-                    }
-                )
-            if not data.get("disclose_address", contact.disclose_address):
-                non_disclose.append(
-                    {
-                        "name": "addr",
-                        "type": contact.postal_info_type
-                    }
-                )
-            if not data.get("disclose_telephone", contact.disclose_telephone):
-                non_disclose.append("voice")
-            if not data.get("disclose_fax", contact.disclose_fax):
-                non_disclose.append("fax")
-            if not data.get("disclose_email", contact.disclose_email):
-                non_disclose.append("email")
-            return non_disclose
-        return None
+            pro_disclose = []
+            if "disclose_name" in data and data["disclose_name"] != contact.disclose_name:
+                change_data = {
+                    "name": "name",
+                    "type": contact.postal_info_type
+                }
+                if data["disclose_name"]:
+                    pro_disclose.append(change_data)
+                else:
+                    non_disclose.append(change_data)
+            if "disclose_company" in data and data["disclose_company"] != contact.disclose_company:
+                change_data = {
+                    "name": "org",
+                    "type": contact.postal_info_type
+                }
+                if data["disclose_company"]:
+                    pro_disclose.append(change_data)
+                else:
+                    non_disclose.append(change_data)
+            if "disclose_address" in data and data["disclose_address"] != contact.disclose_address:
+                change_data = {
+                    "name": "addr",
+                    "type": contact.postal_info_type
+                }
+                if data["disclose_address"]:
+                    pro_disclose.append(change_data)
+                else:
+                    non_disclose.append(change_data)
+            if "disclose_telephone" in data and data["disclose_telephone"] != contact.disclose_telephone:
+                if data["disclose_telephone"]:
+                    pro_disclose.append("voice")
+                else:
+                    non_disclose.append("voice")
+            if "disclose_fax" in data and data["disclose_fax"] != contact.disclose_fax:
+                if data["disclose_fax"]:
+                    pro_disclose.append("fax")
+                else:
+                    non_disclose.append("fax")
+            if "disclose_email" in data and data["disclose_email"] != contact.disclose_email:
+                if data["disclose_email"]:
+                    pro_disclose.append("email")
+                else:
+                    non_disclose.append("email")
+            if len(pro_disclose) >= len(non_disclose):
+                return (pro_disclose, 1)
+            return (non_disclose, 0)
+        return None, _
 
     def process_contact_change(self, data):
         """
@@ -250,11 +274,11 @@ class ContactFactory(object):
             if "email" in data:
                 change["email"] = data["email"]
 
-            non_disclose = self.process_disclose_change(data)
-            if non_disclose:
+            disclose_set, flag = self.process_disclose_change(data)
+            if disclose_set:
                 change["disclose"] = {
-                    "flag": 0,
-                    "disclosing": non_disclose
+                    "flag": flag,
+                    "disclosing": disclose_set
                 }
 
             return change
@@ -291,7 +315,6 @@ class ContactFactory(object):
                 return delta
         return None
 
-
     def update_contact(self, data):
         """
         Send an update contact command to the registry.
@@ -313,7 +336,6 @@ class ContactFactory(object):
         response = contact.update(self.provider.slug, update_data)
         log.debug(response)
         return response
-
 
 
 class RegistrantManager(ContactFactory):
