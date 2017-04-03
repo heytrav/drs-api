@@ -55,5 +55,6 @@ class EppEntity(object):
             response["available"] = True
         else:
             response["available"] = False
-            response["reason"] = check_data[reason_key]
+            if reason_key in check_data:
+                response["reason"] = check_data[reason_key]
         return response
