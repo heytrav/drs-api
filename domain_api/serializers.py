@@ -106,7 +106,8 @@ class TopLevelDomainSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = TopLevelDomain
         fields = ('zone', 'tld', 'description', 'created',
-                  'updated', 'url',)
+                  'updated', 'url', 'slug',)
+        read_only_fields = ('slug',)
 
 
 class DomainProviderSerializer(serializers.HyperlinkedModelSerializer):
@@ -187,7 +188,7 @@ class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
     )
     zone = serializers.HyperlinkedRelatedField(
         view_name="domain_api:topleveldomain-detail",
-        lookup_field="zone",
+        lookup_field="slug",
         read_only=True
     )
     url = serializers.HyperlinkedIdentityField(
