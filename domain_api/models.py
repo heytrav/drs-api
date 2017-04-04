@@ -1,5 +1,6 @@
 from django.db import models
 import idna
+import re
 
 
 class AccountDetail(models.Model):
@@ -83,6 +84,10 @@ class TopLevelDomain(models.Model):
     def _get_tld(self):
         return idna.decode(self.zone)
 
+    def _get_slug(self):
+        return re.sub('\.', '', self.zone)
+
+    slug = property(_get_slug)
     tld = property(_get_tld)
 
     def save(self, *args, **kwargs):

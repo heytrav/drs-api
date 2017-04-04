@@ -78,6 +78,7 @@ from domain_api.utilities.domain import (
     synchronise_host,
 )
 from .workflows import workflow_factory
+from .permissions import IsAdmin
 
 
 def get_registered_domain_queryset(user):
@@ -781,7 +782,7 @@ class TopLevelDomainViewSet(viewsets.ModelViewSet):
     queryset = TopLevelDomain.objects.all()
     serializer_class = TopLevelDomainSerializer
     permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
-    lookup_field = 'zone'
+    lookup_field = "slug"
 
 
 class DomainProviderViewSet(viewsets.ModelViewSet):
@@ -848,7 +849,8 @@ class RegistrantViewSet(viewsets.ModelViewSet):
 class DomainViewSet(viewsets.ModelViewSet):
 
     serializer_class = DomainSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,
+                          IsAdmin,)
     queryset = Domain.objects.all()
     lookup_field = 'name'
 
@@ -857,7 +859,7 @@ class RegisteredDomainViewSet(viewsets.ModelViewSet):
 
     serializer_class = RegisteredDomainSerializer
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissionsOrAnonReadOnly,)
+                          IsAdmin,)
     queryset = RegisteredDomain.objects.all()
 
 

@@ -100,13 +100,13 @@ class TopLevelDomainSerializer(serializers.HyperlinkedModelSerializer):
     """
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:topleveldomain-detail",
-        lookup_field="zone"
+        lookup_field="slug"
     )
 
     class Meta:
         model = TopLevelDomain
         fields = ('zone', 'tld', 'description', 'created',
-                  'updated', 'url')
+                  'updated', 'url',)
 
 
 class DomainProviderSerializer(serializers.HyperlinkedModelSerializer):
@@ -127,11 +127,11 @@ class DomainProviderSerializer(serializers.HyperlinkedModelSerializer):
 class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:registrant-detail",
-        lookup_field="registry_id"
+        lookup_field="registry_id",
     )
     provider = serializers.HyperlinkedRelatedField(
         view_name="domain_api:domainprovider-detail",
-        lookup_field="pk",
+        lookup_field="slug",
         read_only=True
     )
     project_id = serializers.HyperlinkedRelatedField(

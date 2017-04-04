@@ -1,4 +1,28 @@
 from rest_framework import permissions
+from django_logging import log
+
+
+class IsAdmin(permissions.BasePermission):
+
+    """
+    Custom permission to allow restrict view to members of 'admin' group.
+    """
+
+    def has_permission(self, request, view):
+        """
+        See if user has 'admin' permissions
+
+        :request: HTTP request object
+        :view: view to check
+        :obj: TODO
+        :returns: TODO
+
+        """
+        log.debug({"msg": "Checking if %s has admin permission" % request.user})
+        if request.user.groups.filter(name='admin').exists():
+            return True
+        return False
+
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
 
@@ -22,6 +46,3 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
         # Write permissions are only allowed to the owner of the object
         return obj.owner == request.user
-
-
-
