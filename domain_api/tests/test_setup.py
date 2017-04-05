@@ -15,6 +15,9 @@ from ..models import (
 
 class TestSetup(TestCase):
 
+    fixtures = ["auth.json", "contact_types.json", "providers.json",
+                "tlds.json", "tld_providers.json"]
+
     """
     Set up users, providers, tlds, etc. for testing.
     """

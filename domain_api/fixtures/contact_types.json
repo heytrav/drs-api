@@ -1,0 +1,18 @@
+[
+{
+    "model": "domain_api.contacttype",
+    "pk": 1,
+    "fields": {
+        "name": "admin",
+        "description": "Admin user"
+    }
+},
+{
+    "model": "domain_api.contacttype",
+    "pk": 2,
+    "fields": {
+        "name": "tech",
+        "description": "Tech contact"
+    }
+}
+]
