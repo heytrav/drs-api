@@ -1,0 +1,79 @@
+[
+{
+    "model": "domain_api.defaultaccountcontact",
+    "pk": 1,
+    "fields": {
+        "project_id": 1,
+        "account_template": 4,
+        "contact_type": 1,
+        "provider": 3,
+        "mandatory": true
+    }
+},
+{
+    "model": "domain_api.defaultaccountcontact",
+    "pk": 2,
+    "fields": {
+        "project_id": 1,
+        "account_template": 2,
+        "contact_type": 2,
+        "provider": 3,
+        "mandatory": true
+    }
+},
+{
+    "model": "domain_api.defaultaccountcontact",
+    "pk": 7,
+    "fields": {
+        "project_id": 1,
+        "account_template": 4,
+        "contact_type": 1,
+        "provider": 4,
+        "mandatory": true
+    }
+},
+{
+    "model": "domain_api.defaultaccountcontact",
+    "pk": 8,
+    "fields": {
+        "project_id": 1,
+        "account_template": 2,
+        "contact_type": 2,
+        "provider": 4,
+        "mandatory": true
+    }
+},
+{
+    "model": "domain_api.defaultaccountcontact",
+    "pk": 9,
+    "fields": {
+        "project_id": 8,
+        "account_template": 8,
+        "contact_type": 1,
+        "provider": 3,
+        "mandatory": false
+    }
+},
+{
+    "model": "domain_api.defaultaccountcontact",
+    "pk": 10,
+    "fields": {
+        "project_id": 8,
+        "account_template": 9,
+        "contact_type": 2,
+        "provider": 3,
+        "mandatory": false
+    }
+},
+{
+    "model": "domain_api.defaultaccountcontact",
+    "pk": 11,
+    "fields": {
+        "project_id": 4,
+        "account_template": 8,
+        "contact_type": 1,
+        "provider": 3,
+        "mandatory": false
+    }
+}
+]
