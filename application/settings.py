@@ -52,16 +52,22 @@ INSTALLED_APPS = [
     'domain_api.apps.DomainApiConfig',
     'django.contrib.admin',
     'django.contrib.auth',
+    'django.contrib.sites',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
+    'allauth',
+    'allauth.account',
+    'rest_auth.registration',
     'django_nose',
     'rest_framework_swagger',
     'django_celery_results',
     'raven.contrib.django.raven_compat',
 ]
+SITE_ID = 1
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 MIDDLEWARE_CLASSES = [
@@ -200,8 +206,11 @@ CACHES = {
     }
 }
 
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+REST_USE_JWT = True
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'localhost')
 RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', 5672)
 RABBITMQ_USER = os.environ.get('RABBITMQ_DEFAULT_USER', 'guest')

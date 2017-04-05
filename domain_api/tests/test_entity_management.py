@@ -22,7 +22,7 @@ class TestContactManager(TestSetup):
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_create_contact_payload(self):
         registrant_factory = RegistrantManager(
-            provider=self.provider_one,
+            provider=self.centralnic_test,
             template=self.joe_user,
             user=self.test_customer_user
         )
@@ -62,7 +62,7 @@ class TestContactManager(TestSetup):
                     ]
                 }
             }
-            mocked.assert_called_with('provider-one', actual_data)
+            mocked.assert_called_with('centralnic-test', actual_data)
             self.assertEqual(self.joe_user.id,
                              registrant.account_template.id,
                              'Account template is equal')
@@ -105,9 +105,10 @@ class TestContactManager(TestSetup):
                             'email'
                         ]
                     }
-                }
+                },
+                'add': ['clientHappy', 'linked']
             }
-            mocked.assert_called_with('provider-one', actual_data)
+            mocked.assert_called_with('centralnic-test', actual_data)
 
 
 class TestDomainManager(TestSetup):
@@ -120,12 +121,12 @@ class TestDomainManager(TestSetup):
         Request for domains with a specific tld should return a manager
         that can handle the tld.
         """
-        parsed_domain = parse_domain("somedomain.tld")
+        parsed_domain = parse_domain("somedomain.ote")
         self.assertEqual(parsed_domain["domain"], "somedomain")
-        self.assertEqual(parsed_domain["zone"], "tld")
-        parsed_domain = parse_domain("some.other.tld")
+        self.assertEqual(parsed_domain["zone"], "ote")
+        parsed_domain = parse_domain("some.other.ote")
         self.assertEqual(parsed_domain["domain"], "other")
-        self.assertEqual(parsed_domain["zone"], "tld")
+        self.assertEqual(parsed_domain["zone"], "ote")
 
     def test_invalid_tld(self):
         """

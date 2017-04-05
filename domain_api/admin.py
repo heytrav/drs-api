@@ -47,11 +47,11 @@ class DomainAdmin(admin.ModelAdmin):
     ]
 
 class TopLevelDomainAdmin(admin.ModelAdmin):
-    list_display = ('tld', 'zone', 'description')
-    readonly_fields = ('tld',)
+    list_display = ('tld', 'slug', 'zone', 'description')
+    readonly_fields = ('tld', 'slug',)
 
     fieldsets = [
-        (None, {'fields': ['tld', 'zone']}),
+        (None, {'fields': ['tld', 'zone', 'slug']}),
         ('Description', {'fields': ['description']})
     ]
 

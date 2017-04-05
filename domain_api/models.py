@@ -1,5 +1,6 @@
 from django.db import models
 import idna
+import re
 
 
 class AccountDetail(models.Model):
@@ -73,6 +74,7 @@ class TopLevelDomain(models.Model):
     """
     # TLD
     zone = models.CharField(max_length=100, unique=True)
+    slug = models.CharField(max_length=100, unique=True)
     description = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -83,10 +85,14 @@ class TopLevelDomain(models.Model):
     def _get_tld(self):
         return idna.decode(self.zone)
 
+    def _get_slug(self):
+        return re.sub('\.', '', self.zone)
+
     tld = property(_get_tld)
 
     def save(self, *args, **kwargs):
         self.zone = idna.encode(self.zone, uts46=True).decode('ascii')
+        self.slug = re.sub('\.', '', self.zone)
         super(TopLevelDomain, self).save(*args, **kwargs)
 
 

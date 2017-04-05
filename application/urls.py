@@ -35,5 +35,6 @@ urlpatterns = [
     url(r'^api-token-refresh', refresh_jwt_token),
     url(r'^api-token-verify', verify_jwt_token),
     url(r'^schema/$', schema_view),
-    url(r'^register/$', CreateUserView.as_view(), name="create-user"),
+    url(r'^rest-auth/', include('rest_auth.urls')),
+    url(r'^rest-auth/registration/', include('rest_auth.registration.urls'))
 ]

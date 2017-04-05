@@ -1,0 +1,222 @@
+[
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 1,
+    "fields": {
+        "zone": "bar",
+        "slug": "bar",
+        "description": "For pubs",
+        "created": "2017-03-14T06:57:13.278Z",
+        "updated": "2017-04-04T22:47:56.854Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 2,
+    "fields": {
+        "zone": "xyz",
+        "slug": "xyz",
+        "description": "Dot XYZ domains",
+        "created": "2017-03-14T06:57:27.350Z",
+        "updated": "2017-04-04T22:47:53.050Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 3,
+    "fields": {
+        "zone": "wiki",
+        "slug": "wiki",
+        "description": "Dot Wiki domains",
+        "created": "2017-03-14T06:57:41.442Z",
+        "updated": "2017-04-04T22:47:48.977Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 4,
+    "fields": {
+        "zone": "website",
+        "slug": "website",
+        "description": "Generic website domains",
+        "created": "2017-03-14T06:57:58.751Z",
+        "updated": "2017-04-04T22:47:45.174Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 5,
+    "fields": {
+        "zone": "college",
+        "slug": "college",
+        "description": "Dot College domains",
+        "created": "2017-03-14T06:58:54.941Z",
+        "updated": "2017-04-04T22:47:41.246Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 6,
+    "fields": {
+        "zone": "host",
+        "slug": "host",
+        "description": "Host TLD",
+        "created": "2017-03-14T06:59:28.949Z",
+        "updated": "2017-04-04T22:47:35.469Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 7,
+    "fields": {
+        "zone": "rest",
+        "slug": "rest",
+        "description": "Restaurant tlds",
+        "created": "2017-03-14T06:59:42.886Z",
+        "updated": "2017-04-04T22:47:30.793Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 8,
+    "fields": {
+        "zone": "ink",
+        "slug": "ink",
+        "description": "Dot Ink",
+        "created": "2017-03-14T06:59:59.758Z",
+        "updated": "2017-04-04T22:47:26.442Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 9,
+    "fields": {
+        "zone": "pw",
+        "slug": "pw",
+        "description": "Professional Website",
+        "created": "2017-03-14T07:00:13.621Z",
+        "updated": "2017-04-04T22:47:22.158Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 10,
+    "fields": {
+        "zone": "la",
+        "slug": "la",
+        "description": "Los Angeles",
+        "created": "2017-03-14T07:00:25.845Z",
+        "updated": "2017-04-04T22:47:17.991Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 11,
+    "fields": {
+        "zone": "ote",
+        "slug": "ote",
+        "description": "Online test environment",
+        "created": "2017-03-14T07:00:52.916Z",
+        "updated": "2017-04-04T22:47:13.782Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 12,
+    "fields": {
+        "zone": "cx",
+        "slug": "cx",
+        "description": "Christmas Island",
+        "created": "2017-03-14T07:01:08.710Z",
+        "updated": "2017-04-04T22:47:08.616Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 13,
+    "fields": {
+        "zone": "press",
+        "slug": "press",
+        "description": "Dot Press",
+        "created": "2017-03-14T07:01:45.917Z",
+        "updated": "2017-04-04T22:47:04.648Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 14,
+    "fields": {
+        "zone": "xn--zckzah",
+        "slug": "xn--zckzah",
+        "description": "Chinese TLD",
+        "created": "2017-03-24T08:49:46.245Z",
+        "updated": "2017-04-04T22:47:00.619Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 15,
+    "fields": {
+        "zone": "xn--80akhbyknj4f",
+        "slug": "xn--80akhbyknj4f",
+        "description": "Russian TLD",
+        "created": "2017-03-24T08:50:26.378Z",
+        "updated": "2017-04-04T22:46:54.304Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 16,
+    "fields": {
+        "zone": "nz",
+        "slug": "nz",
+        "description": "NZ",
+        "created": "2017-04-03T01:05:22.931Z",
+        "updated": "2017-04-04T22:46:49.647Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 17,
+    "fields": {
+        "zone": "co.nz",
+        "slug": "conz",
+        "description": "Co.nz",
+        "created": "2017-04-03T01:05:33.950Z",
+        "updated": "2017-04-04T22:46:42.206Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 18,
+    "fields": {
+        "zone": "net.nz",
+        "slug": "netnz",
+        "description": "Net nz",
+        "created": "2017-04-03T01:05:44.451Z",
+        "updated": "2017-04-04T22:46:34.313Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 19,
+    "fields": {
+        "zone": "geek.nz",
+        "slug": "geeknz",
+        "description": "Geek NZ domains",
+        "created": "2017-04-04T22:50:08.228Z",
+        "updated": "2017-04-04T22:50:08.228Z"
+    }
+},
+{
+    "model": "domain_api.topleveldomain",
+    "pk": 20,
+    "fields": {
+        "zone": "org.nz",
+        "slug": "orgnz",
+        "description": "Organisational domains in NZ",
+        "created": "2017-04-04T23:06:52.893Z",
+        "updated": "2017-04-04T23:06:52.893Z"
+    }
+}
+]
