@@ -14,6 +14,7 @@ from domain_api.models import (
     TopLevelDomain,
 )
 import domain_api
+from .test_setup import TestSetup
 
 
 class MockRpcClient(domain_api.epp.entity.EppRpcClient):
@@ -21,7 +22,7 @@ class MockRpcClient(domain_api.epp.entity.EppRpcClient):
         pass
 
 
-class TestInfoContact(TestCase):
+class TestInfoContact(TestSetup):
 
     """
     Test processing info contact.
@@ -29,36 +30,6 @@ class TestInfoContact(TestCase):
 
     def setUp(self):
         super().setUp()
-        self.user = User.objects.create_user(
-            username="testcustomer",
-            email="testcustomer@test.com",
-            password="secret"
-        )
-        self.provider = DomainProvider.objects.create(
-            name="Provider One",
-            slug="provider1"
-        )
-        self.joe_user = AccountDetail.objects.create(
-            first_name="Joe",
-            surname="User",
-            email="joeuser@test.com",
-            telephone="+1.8175551234",
-            house_number="10",
-            street1="Evergreen Terrace",
-            city="Springfield",
-            state="State",
-            country="US",
-            postal_info_type="loc",
-            disclose_name=False,
-            disclose_telephone=False,
-            project_id=self.user
-        )
-        self.contact = Contact.objects.create(
-            registry_id='test-contact',
-            project_id=self.user,
-            provider=self.provider,
-            account_template=self.joe_user
-        )
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_info_domain(self):
@@ -88,7 +59,7 @@ class TestInfoContact(TestCase):
                     "contact:voice": {},
                     "flag": "1"
                 },
-                "contact:email": "joe-test@testerson.com",
+                "contact:email": "admin@test.com",
                 "contact:fax": {},
                 "contact:id": "reg-20",
                 "contact:postalInfo": {
@@ -118,9 +89,9 @@ class TestInfoContact(TestCase):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=info_contact_response):
-            contact = Contact.objects.get(registry_id='test-contact')
+            contact = Contact.objects.get(registry_id='contact-123')
             info_data = contact_query.info(contact)
-            self.assertEqual("joe-test@testerson.com",
+            self.assertEqual("admin@test.com",
                              info_data.email,
                              "Response from info request contains email")
             self.assertEqual("reg-20",
@@ -129,7 +100,7 @@ class TestInfoContact(TestCase):
             self.assertEqual(info_data.country, "US", "Expected country US")
 
 
-class TestNameserver(TestCase):
+class TestNameserver(TestSetup):
 
     """
     Test processing Nameserver queries/management
@@ -140,18 +111,6 @@ class TestNameserver(TestCase):
         Setup test suite
 
         """
-        tld = TopLevelDomain.objects.create(
-            zone="tld",
-            description="Test TLD"
-        )
-        provider = DomainProvider.objects.create(
-            name="Provider One",
-            slug="provider1"
-        )
-        TopLevelDomainProvider.objects.create(
-            zone=tld,
-            provider=provider
-        )
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_check_host_query(self):
@@ -163,7 +122,7 @@ class TestNameserver(TestCase):
             "host:chkData": {
                 "host:cd":  {
                     "host:name": {
-                        "$t": "ns1.whatever.tld",
+                        "$t": "ns1.whatever.ote",
                         "avail": 1
                     }
                 }
@@ -174,7 +133,7 @@ class TestNameserver(TestCase):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=check_host_response):
-            processed = host_query.check_host('ns1.whatever.tld')
+            processed = host_query.check_host('ns1.whatever.ote')
             results = processed["result"]
             self.assertTrue(results[0]["available"],
                             "Processed response from check host command")

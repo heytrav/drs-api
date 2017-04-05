@@ -29,7 +29,7 @@ class TestCheckDomainTask(TestSetup):
             "domain:chkData": {
                 "domain:cd": {
                     "domain:name": {
-                        "$t": "somedomain.tld",
+                        "$t": "somedomain.ote",
                         "avail": 1
                     }
                 }
@@ -38,7 +38,7 @@ class TestCheckDomainTask(TestSetup):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=check_domain_response):
-            available = check_domain("somedomain.tld")
+            available = check_domain("somedomain.ote")
             self.assertTrue(available, "Domain is available")
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
@@ -83,7 +83,7 @@ class TestCreateRegistrant(TestSetup):
                           return_value=create_contact_response):
             processed_epp = create_registrant(epp,
                                               self.joe_user.id,
-                                              'provider-one',
+                                              'centralnic-test',
                                               self.test_customer_user.id)
             self.assertIn('registrant',
                           processed_epp,
@@ -109,7 +109,7 @@ class TestCreateRegistrant(TestSetup):
             with self.assertRaises(EppError):
                 create_registrant({},
                                   self.joe_user.id,
-                                  'provider-one',
+                                  'centralnic-test',
                                   self.test_customer_user.id)
 
     def test_must_create_new_registrant(self):
@@ -122,7 +122,7 @@ class TestCreateRegistrant(TestSetup):
                           return_value=self.joe_user_registrant) as mocked:
             create_registrant({},
                               self.joe_user.id,
-                              'provider-one',
+                              'centralnic-test',
                               self.test_customer_user.id)
             self.assertTrue(mocked.called)
 
@@ -153,7 +153,7 @@ class TestCreateContact(TestSetup):
                           return_value=create_contact_response):
             processed_epp = create_registry_contact(epp,
                                                     self.joe_user.id,
-                                                    'provider-one',
+                                                    'centralnic-test',
                                                     'tech',
                                                     self.test_customer_user.id)
             self.assertIn('contact',
@@ -183,7 +183,7 @@ class TestCreateContact(TestSetup):
                           return_value=self.generic_admin_contact) as mocked:
             create_registry_contact({},
                                     self.joe_user.id,
-                                    'provider-one',
+                                    'centralnic-test',
                                     'tech',
                                     self.test_customer_user.id)
             self.assertTrue(mocked.called)
@@ -199,6 +199,6 @@ class TestCreateContact(TestSetup):
             with self.assertRaises(EppError):
                 create_registry_contact({},
                                         self.joe_user.id,
-                                        'provider-one',
+                                        'centralnic-test',
                                         'admin',
                                         self.test_customer_user.id)

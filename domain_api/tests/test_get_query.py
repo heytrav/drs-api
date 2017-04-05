@@ -29,7 +29,7 @@ class TestCheckDomain(TestSetup):
 
         with patch.object(EppRpcClient, 'call', side_effect=EppError("FAIL")):
             response = self.client.get(
-                '/v1/domains/available/whatever.tld/'
+                '/v1/domains/available/whatever.ote/'
             )
             self.assertEqual(response.status_code,
                              400,
@@ -46,14 +46,14 @@ class TestCheckDomain(TestSetup):
                 "domain:cd": {
                     "domain:name": {
                         "avail": 1,
-                        "$t": "whatever.tld"
+                        "$t": "whatever.ote"
                     }
                 }
             }
         }
         with patch.object(EppRpcClient, 'call', return_value=return_data):
             response = self.client.get(
-                '/v1/domains/available/whatever.tld/'
+                '/v1/domains/available/whatever.ote/'
             )
             self.assertEqual(response.status_code,
                              200,
@@ -82,7 +82,7 @@ class TestInfoDomain(TestSetup):
         self.login_client()
         return_value = {
             "domain:infData": {
-                "domain:name": "whatever.tld",
+                "domain:name": "whatever.ote",
                 "domain:status": "ok",
                 "domain:registrant": "R1234",
                 "domain:ns": [
@@ -97,7 +97,7 @@ class TestInfoDomain(TestSetup):
         }
         with patch.object(EppRpcClient, 'call', return_value=return_value):
             response = self.client.get(
-                '/v1/domains/whatever.tld/'
+                '/v1/domains/whatever.ote/'
             )
             self.assertEqual(response.status_code,
                              200,
@@ -235,7 +235,7 @@ class TestContact(TestSetup):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=info_contact_response):
-            response = self.client.get('/v1/contacts/contact-124/')
+            response = self.client.get('/v1/contacts/contact-321/')
             self.assertEqual(response.status_code,
                              200,
                              "Info contact returned normal response")
@@ -362,14 +362,14 @@ class TestBasicQueries(TestSetup):
                 "domain:cd": {
                     "domain:name": {
                         "avail": 1,
-                        "$t": "whatever.tld"
+                        "$t": "whatever.ote"
                     }
                 }
             }
         }
         with patch.object(EppRpcClient, 'call', return_value=return_data):
             response = self.client.get(
-                '/v1/domains/available/whatever.tld/',
+                '/v1/domains/available/whatever.ote/',
                 HTTP_AUTHORIZATION=jwt_header
             )
             self.assertEqual(response.status_code,
