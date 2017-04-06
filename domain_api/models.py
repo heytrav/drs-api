@@ -47,6 +47,7 @@ class AccountDetail(models.Model):
     disclose_telephone = models.BooleanField(default=False)
     disclose_fax = models.BooleanField(default=False)
     disclose_email = models.BooleanField(default=False)
+    default_registrant = models.NullBooleanField(null=True, unique=True)
     project_id = models.ForeignKey('auth.User',
                                    related_name='personal_details',
                                    on_delete=models.CASCADE)

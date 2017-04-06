@@ -11,6 +11,7 @@ from .tasks import (
     connect_host,
 )
 from domain_api.models import (
+    AccountDetail,
     DefaultAccountTemplate,
     DefaultAccountContact,
 )
@@ -42,7 +43,8 @@ class Workflow(object):
 
     def fetch_registrant(self, data, user):
         """
-        Return either the default registrant or whatever user specified.
+        Return account_detail for either the default registrant or
+        whatever user specified.
 
         :user: request user
         :data: request data
@@ -51,6 +53,12 @@ class Workflow(object):
         """
         if "registrant" in data:
             return data["registrant"]
+        default_registrant_set = AccountDetail.objects.filter(
+            default_registrant=True,
+            project_id=user
+        )
+        if default_registrant_set.exists():
+            return default_registrant_set.first().id
         default_registrant = DefaultAccountTemplate.objects.get(
             provider__slug=self.registry,
             project_id=user
