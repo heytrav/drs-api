@@ -102,6 +102,7 @@ class DomainProvider(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.CharField(max_length=100, unique=True)
     description = models.TextField()
+    active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -232,6 +233,7 @@ class TopLevelDomainProvider(models.Model):
     expiration_notification_period_days = models.IntegerField(default=30)
     renewal_period = models.IntegerField(default=30)
     grace_period_days = models.IntegerField(default=30)
+    active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.zone.zone + " " + self.provider.name

@@ -122,7 +122,7 @@ class DomainProviderSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = DomainProvider
-        fields = ('name', 'description', 'slug', 'url',)
+        fields = ('name', 'description', 'slug', 'url', 'active',)
 
 
 class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
@@ -199,6 +199,7 @@ class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = TopLevelDomainProvider
         fields = ('zone', 'provider', 'expiration_notification_period_days',
+                  'active',
                   'renewal_period', 'grace_period_days', 'url')
 
 
