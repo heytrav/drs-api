@@ -38,12 +38,12 @@ class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = AccountDetail
         fields = ('url', 'first_name', 'surname', 'middle_name', 'email',
-                  'email2', 'email3', 'telephone', 'fax', 'company',
+                  'telephone', 'fax', 'company',
                   'house_number', 'street1', 'street2', 'street3', 'city',
                   'suburb', 'state', 'postcode', 'country', 'postal_info_type',
                   'disclose_name', 'disclose_company', 'disclose_address',
                   'disclose_telephone', 'disclose_fax', 'disclose_email',
-                  'created', 'updated', 'project_id',)
+                  'created', 'updated', 'project_id', 'default_registrant',)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -122,7 +122,7 @@ class DomainProviderSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = DomainProvider
-        fields = ('name', 'description', 'slug', 'url',)
+        fields = ('name', 'description', 'slug', 'url', 'active',)
 
 
 class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
@@ -199,6 +199,7 @@ class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = TopLevelDomainProvider
         fields = ('zone', 'provider', 'expiration_notification_period_days',
+                  'active',
                   'renewal_period', 'grace_period_days', 'url')
 
 

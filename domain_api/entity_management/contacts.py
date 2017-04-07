@@ -247,7 +247,7 @@ class ContactFactory(object):
             if len(pro_disclose) >= len(non_disclose):
                 return (pro_disclose, 1)
             return (non_disclose, 0)
-        return None, _
+        return (None, None)
 
     def process_contact_change(self, data):
         """

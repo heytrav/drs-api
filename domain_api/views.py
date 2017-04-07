@@ -286,8 +286,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
         :request: HTTP request
         :registry_id: registry id
-        :registry: TODO
-        :returns: TODO
+        :registry: str registry to perform update at
 
         """
         contact = get_object_or_404(self.queryset, registry_id=registry_id)
@@ -586,21 +585,36 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
 
         """
         try:
-            providers = DomainProvider.objects.all()
+            providers = DomainProvider.objects.filter(active=True)
             registry_workflows = []
             for provider in providers.all():
                 provider_slug = provider.slug
+                log.debug(
+                    {
+                        "msg": "Adding registry to check",
+                        "registry": provider_slug
+                    }
+                )
                 workflow_manager = workflow_factory(provider_slug)()
-                tld_providers = provider.topleveldomainprovider_set.all()
+                tld_providers = provider.topleveldomainprovider_set.filter(
+                    active=True
+                )
                 fqdn_list = []
                 for tld_provider in tld_providers.all():
                     zone = tld_provider.zone.zone
-                    fqdn_list.append(".".join(
-                        [
-                            idna.encode(name, uts46=True).decode('ascii'),
-                            zone
-                        ]
+                    fqdn_list.append(
+                        ".".join(
+                            [
+                                idna.encode(name, uts46=True).decode('ascii'),
+                                zone
+                            ]
+                        )
                     )
+                    log.debug(
+                        {
+                            "msg": "Adding tld to check",
+                            "tld": zone
+                        }
                     )
                 check_task = workflow_manager.check_domains(
                     fqdn_list

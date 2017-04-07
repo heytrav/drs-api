@@ -19,12 +19,10 @@ class AccountDetail(models.Model):
     surname = models.CharField(max_length=200)
     middle_name = models.CharField(max_length=200, blank=True)
     email = models.CharField(max_length=200)
-    email2 = models.CharField(max_length=200, blank=True)
-    email3 = models.CharField(max_length=200, blank=True)
     telephone = models.CharField(max_length=200, blank=True)
     fax = models.CharField(max_length=200, blank=True)
     company = models.CharField(max_length=200, blank=True)
-    house_number = models.CharField(max_length=10)
+    house_number = models.CharField(max_length=10, null=True)
     street1 = models.CharField(max_length=200)
     street2 = models.CharField(max_length=200, blank=True)
     street3 = models.CharField(max_length=200, blank=True)
@@ -47,6 +45,7 @@ class AccountDetail(models.Model):
     disclose_telephone = models.BooleanField(default=False)
     disclose_fax = models.BooleanField(default=False)
     disclose_email = models.BooleanField(default=False)
+    default_registrant = models.NullBooleanField(null=True, unique=True)
     project_id = models.ForeignKey('auth.User',
                                    related_name='personal_details',
                                    on_delete=models.CASCADE)
@@ -103,6 +102,7 @@ class DomainProvider(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.CharField(max_length=100, unique=True)
     description = models.TextField()
+    active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -233,6 +233,7 @@ class TopLevelDomainProvider(models.Model):
     expiration_notification_period_days = models.IntegerField(default=30)
     renewal_period = models.IntegerField(default=30)
     grace_period_days = models.IntegerField(default=30)
+    active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.zone.zone + " " + self.provider.name

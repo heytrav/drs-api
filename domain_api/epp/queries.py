@@ -170,11 +170,12 @@ class ContactQuery(EppEntity):
         """
         addr = item["contact:addr"]
         contact_street = []
-        raw_street = addr["contact:street"]
-        if isinstance(raw_street, list):
-            contact_street += raw_street
-        else:
-            contact_street.append(raw_street)
+        if "contact:street" in addr:
+            raw_street = addr["contact:street"]
+            if isinstance(raw_street, list):
+                contact_street += raw_street
+            else:
+                contact_street.append(raw_street)
         return {
             "name": item["contact:name"],
             "company": item.get("contact:org", ""),
