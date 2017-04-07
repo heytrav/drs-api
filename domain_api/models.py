@@ -50,6 +50,9 @@ class AccountDetail(models.Model):
                                    related_name='personal_details',
                                    on_delete=models.CASCADE)
 
+    class Meta:
+        unique_together = ('project_id', 'default_registrant',)
+
     def __str__(self):
         return self.surname + ', ' + self.first_name
 
