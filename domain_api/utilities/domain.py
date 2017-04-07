@@ -87,9 +87,9 @@ def synchronise_domain(info_data, domain_id):
     :registered_domain: int primary key of domain
     """
     RegisteredDomain.objects.filter(pk=domain_id).update(
-        authcode=info_data["authcode"],
-        roid=info_data["roid"],
-        status=info_data["status"]
+        authcode=info_data.get("authcode", None),
+        roid=info_data.get("roid", None),
+        status=info_data.get("status", None)
     )
 
 def synchronise_host(info_data, host_id):
