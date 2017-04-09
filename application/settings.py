@@ -152,13 +152,45 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-DJANGO_LOGGING = {
-    "CONSOLE_LOG": True,
-    "LOGLEVEL": os.environ.get("DJANGO_LOG_LEVEL", "INFO"),
-    "CONTENT_JSON_ONLY": True
-
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'logzioFormat': {
+            'format': '{"additional_field": "value"}'
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
+            'formatter': 'verbose'
+        },
+        'logzio': {
+            'class': 'logzio.handler.LogzioHandler',
+            'level': 'INFO',
+            'formatter': 'logzioFormat',
+            'token': read_secret_file(os.environ.get('LOGZIO_TOKEN_FILE', None)),
+            'logzio_type': "django",
+            'logs_drain_timeout': 5,
+            'url': 'https://listener.logz.io:8071',
+            'debug': True
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', ],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO')
+        },
+        'domain_api': {
+            'handlers': ['console', 'logzio'],
+            'level': 'INFO'
+        }
+    }
 }
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/

@@ -1,6 +1,7 @@
-from django_logging import log
+import logging
 from ..entity import EppEntity
 
+log = logging.getLogger(__name__)
 
 class Domain(EppEntity):
 
@@ -23,15 +24,9 @@ class Domain(EppEntity):
         :returns: Result from EPP client
 
         """
-        log.debug(
-            {
-                "called": "domain_api.epp.actions.domain.create",
-                "registry": registry,
-                "data": data
-            }
-        )
+        log.debug("Create a domain at %s" % registry)
         result = self.rpc_client.call(registry, 'createDomain', data)
-        log.debug(result)
+        log.debug("{!r}".format(result))
         create_data = result["domain:creData"]
         return {
             "create_date": create_data["domain:crDate"],

@@ -15,7 +15,9 @@ from domain_api.models import (
     DefaultAccountTemplate,
     DefaultAccountContact,
 )
-from django_logging import log
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class Workflow(object):

@@ -31,6 +31,7 @@ ipython-genutils==0.1.0
 itypes==1.1.0
 Jinja2==2.9.5
 kombu==4.0.2
+logzio-python-handler==2.0.0
 Markdown==2.6.8
 MarkupSafe==1.0
 mysql-connector==2.1.4

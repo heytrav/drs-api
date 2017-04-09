@@ -1,5 +1,5 @@
 from django.db.models import Q
-from django_logging import log
+import logging
 from ..utilities.domain import parse_domain, get_domain_registry
 from ..exceptions import UnknownContact, UnknownRegistry
 from ..models import (
@@ -9,6 +9,8 @@ from ..models import (
 )
 import idna
 from .entity import EppEntity
+
+log = logging.getLogger(__name__)
 
 
 class Domain(EppEntity):
@@ -59,12 +61,11 @@ class Domain(EppEntity):
         :returns: dict with set of results indicating availability
 
         """
-        log.debug({"args": args[0]})
         registry = get_domain_registry(args[0])
         data = {"domain": [idna.encode(i, uts46=True).decode('ascii') for i in args]}
-        log.debug(data)
+        log.debug("{!r}".format(data))
         response_data = self.rpc_client.call(registry.slug, 'checkDomain', data)
-        log.debug({"response data": response_data})
+        log.debug("response data {!r}".format(response_data))
         check_data = response_data["domain:chkData"]["domain:cd"]
         results = []
         if isinstance(check_data, list):
@@ -134,7 +135,7 @@ class Domain(EppEntity):
         if "domain:authInfo" in info_data:
             return_data["authcode"] = info_data["domain:authInfo"]["domain:pw"]
             return_data["roid"] = info_data["domain:roid"]
-        log.info(return_data)
+        log.info("Returning registered domain info")
         return (return_data, registered_domain)
 
 
@@ -230,7 +231,7 @@ class ContactQuery(EppEntity):
         data = {"contact": contact.registry_id}
         registry = contact.provider.slug
         response_data = self.rpc_client.call(registry, 'infoContact', data)
-        log.debug(response_data)
+        log.debug("Received info response")
         info_data = response_data["contact:infData"]
         disclose_data = {}
         if "contact:disclose" in info_data:
@@ -265,11 +266,9 @@ class ContactQuery(EppEntity):
                     contact_info_data[item] = ""
 
             self.queryset.filter(pk=contact.id).update(**contact_info_data)
-            log.info(contact_info_data)
         except Exception as e:
-            log.error({"error": e});
+            log.error("", exc_info=True);
             raise e
-        log.debug({"processed_info": processed_info_data})
         return self.queryset.get(pk=contact.id)
 
 
@@ -293,9 +292,7 @@ class HostQuery(EppEntity):
         """
         registry = get_domain_registry(args[0])
         data = {"host": [idna.encode(i, uts46=True).decode('ascii') for i in args]}
-        log.debug(data)
         response_data = self.rpc_client.call(registry.slug, 'checkHost', data)
-        log.debug({"response data": response_data})
         check_data = response_data["host:chkData"]["host:cd"]
         results = []
         if isinstance(check_data, list):
@@ -364,5 +361,4 @@ class HostQuery(EppEntity):
         if "host:authInfo" in info_data:
             return_data["authcode"] = info_data["host:authInfo"]["host:pw"]
             return_data["roid"] = info_data["host:roid"]
-        log.info(return_data)
         return (return_data, registered_host)

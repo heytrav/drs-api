@@ -1,7 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 import idna
 from celery import chain, group
-from django_logging import log, ErrorLogObject
+import logging
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 # Remove this
@@ -80,6 +80,8 @@ from domain_api.utilities.domain import (
 from .workflows import workflow_factory
 from .permissions import IsAdmin
 
+log = logging.getLogger(__name__)
+
 
 def get_registered_domain_queryset(user):
     """
@@ -145,7 +147,6 @@ def registry_contact(request, registry, contact_type="contact"):
     provider = get_object_or_404(DomainProvider.objects.all(), slug=registry)
 
     data = request.data
-    log.debug(data)
     person = None
     queryset = AccountDetail.objects.all()
     if "person" in data:
@@ -164,11 +165,11 @@ def registry_contact(request, registry, contact_type="contact"):
                                          context={"request": request})
         serializer = contact_factory.create_registry_contact(person)
         return Response(serializer.data)
-    except EppError as epp_e:
-        log.error(ErrorLogObject(request, epp_e))
+    except EppError:
+        log.error("", exc_info=True)
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        log.error(ErrorLogObject(request, e))
+    except Exception:
+        log.error("", exc_info=True)
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -201,10 +202,10 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
         """
         if self.request.user.groups.filter(name='admin').exists():
-            log.debug({"msg": "User is admin"})
+            log.debug("Is admin for contact %s" % contact.registry_id)
             return True
         if contact and contact.project_id == self.request.user:
-            log.debug({"msg": "Contact exists and owns " + contact.registry_id})
+            log.debug("User owns %s " % contact.registry_id)
             return True
         return False
 
@@ -254,30 +255,30 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
             contact = self.get_queryset().get(registry_id=registry_id)
 
             if self.is_admin_or_owner(contact):
-                log.debug({"msg": "Performing info query"})
+                log.debug("Performing info for %s as owner." % registry_id)
                 query = ContactQuery(self.get_queryset())
                 contact = query.info(contact)
                 serializer = self.serializer_class(contact)
                 return Response(serializer.data)
             else:
-                log.debug({"msg": "Returning basic contact info"})
+                log.debug("Basic contact query for %s" % registry_id)
                 contact_data = self.get_disclosed_contact_data(contact)
                 serializer = InfoContactSerializer(data=contact_data)
                 if serializer.is_valid():
-                    log.debug(serializer.data)
+                    log.debug("Serialized data is valid.")
                     return Response(serializer.data)
                 else:
-                    log.error(serializer.errors)
+                    log.warning("Serialized data is not valid.")
                     return Response(serializer.errors)
 
-        except UnknownRegistry as e:
-            log.error(ErrorLogObject(request, e))
+        except UnknownRegistry:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except EppError as epp_e:
-            log.error(ErrorLogObject(request, epp_e))
+        except EppError:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            log.error(ErrorLogObject(request, e))
+        except Exception:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def update(self, request, registry_id, registry=None):
@@ -295,8 +296,8 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
                 manager = self.manager(contact=registry_id)
                 response = manager.update_contact(request.data)
                 return Response(response)
-            except Exception as e:
-                log.error(ErrorLogObject(request, e))
+            except Exception:
+                log.error("", exc_info=True)
                 return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -401,11 +402,11 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             )
             if serializer.is_valid():
                 return Response(serializer.data)
-        except EppError as epp_e:
-            log.error(ErrorLogObject(request, epp_e))
+        except EppError:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except KeyError as ke:
-            log.error(ErrorLogObject(request, ke))
+        except KeyError:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             raise e
@@ -421,8 +422,8 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             hosts = self.get_queryset().filter()
             serializer = PrivateInfoHostSerializer(hosts, many=True)
             return Response(serializer.data)
-        except Exception as e:
-            log.error(ErrorLogObject(request, e))
+        except Exception:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def info(self, request, host):
@@ -437,7 +438,6 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             # Fetch registry for host
             query = HostQuery(self.get_queryset())
             info, registered_host = query.info(host)
-            log.info(info)
             if registered_host and self.is_admin_or_owner(registered_host):
                 synchronise_host(info, registered_host.id)
                 serializer = PrivateInfoHostSerializer(
@@ -450,14 +450,14 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             else:
                 return Response(serializer.errors,
                                 status=status.HTTP_400_BAD_REQUEST)
-        except EppObjectDoesNotExist as epp_e:
-            log.error(ErrorLogObject(request, epp_e))
+        except EppObjectDoesNotExist:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_404_NOT_FOUND)
-        except EppError as epp_e:
-            log.error(ErrorLogObject(request, epp_e))
+        except EppError:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            log.error(ErrorLogObject(request, e))
+        except Exception:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request):
@@ -480,7 +480,7 @@ class HostManagementViewSet(viewsets.GenericViewSet):
                 registry = get_domain_registry(data["host"])
                 workflow_manager = workflow_factory(registry.slug)()
 
-                log.debug({"msg": "About to call workflow_manager.create_host"})
+                log.debug("About to call workflow_manager.create_host")
                 workflow = workflow_manager.create_host(data, request.user)
                 # run chained workflow and register the domain
                 chained_workflow = chain(workflow)()
@@ -495,15 +495,15 @@ class HostManagementViewSet(viewsets.GenericViewSet):
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR
                     )
                 return Response(chain_res)
-            except InvalidTld as e:
-                log.error(ErrorLogObject(request, e))
+            except InvalidTld:
+                log.error("", exc_info=True)
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            except RegisteredDomain.DoesNotExist as e:
+            except RegisteredDomain.DoesNotExist:
                 return Response({"host": data["host"],
                                  "msg": "Parent domain not available."},
                                 status=status.HTTP_400_BAD_REQUEST)
-            except Exception as e:
-                log.error(ErrorLogObject(request, e))
+            except Exception:
+                log.error("", exc_info=True)
                 return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -567,11 +567,11 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             )
             if serializer.is_valid():
                 return Response(serializer.data)
-        except EppError as epp_e:
-            log.error(ErrorLogObject(request, epp_e))
+        except EppError:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except KeyError as ke:
-            log.error(ErrorLogObject(request, ke))
+        except KeyError:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @detail_route(methods=['get'])
@@ -589,12 +589,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             registry_workflows = []
             for provider in providers.all():
                 provider_slug = provider.slug
-                log.debug(
-                    {
-                        "msg": "Adding registry to check",
-                        "registry": provider_slug
-                    }
-                )
+                log.debug("Adding registry to check %s" % provider_slug)
                 workflow_manager = workflow_factory(provider_slug)()
                 tld_providers = provider.topleveldomainprovider_set.filter(
                     active=True
@@ -634,11 +629,11 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
                 return Response(serializer.errors,
                                 status=status.HTTP_400_BAD_REQUEST)
 
-        except EppError as epp_e:
-            log.error(ErrorLogObject(request, epp_e))
+        except EppError:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except KeyError as ke:
-            log.error(ErrorLogObject(request, ke))
+        except KeyError:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def domain_set(self, request):
@@ -653,8 +648,8 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             contact_domains = registered_domain_set.filter(active=True)
             serializer = self.serializer_class(contact_domains, many=True)
             return Response(serializer.data)
-        except Exception as e:
-            log.error(ErrorLogObject(request, e))
+        except Exception:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def info(self, request, domain):
@@ -684,20 +679,20 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             else:
                 return Response(serializer.errors,
                                 status=status.HTTP_400_BAD_REQUEST)
-        except InvalidTld as e:
-            log.error(ErrorLogObject(request, e))
+        except InvalidTld:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except UnsupportedTld as e:
-            log.error(ErrorLogObject(request, e))
+        except UnsupportedTld:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except EppObjectDoesNotExist as epp_e:
-            log.error(ErrorLogObject(request, epp_e))
+        except EppObjectDoesNotExist:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_404_NOT_FOUND)
-        except EppError as epp_e:
-            log.error(ErrorLogObject(request, epp_e))
+        except EppError:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            log.error(ErrorLogObject(request, e))
+        except Exception:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request):
@@ -736,13 +731,13 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         except NotObjectOwner:
             return Response("Not owner of object",
                             status=status.HTTP_400_BAD_REQUEST)
-        except KeyError as e:
-            log.error(ErrorLogObject(request, e))
+        except KeyError:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
         except TopLevelDomainProvider.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            log.error(ErrorLogObject(request, e))
+        except Exception:
+            log.error("", exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

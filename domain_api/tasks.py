@@ -2,7 +2,7 @@ from __future__ import absolute_import, unicode_literals
 import idna
 from celery import shared_task
 from django.contrib.auth.models import User
-from django_logging import log, ErrorLogObject
+import logging
 from .models import (
     Contact,
     ContactType,
@@ -25,6 +25,9 @@ from .exceptions import (
     DomainNotAvailable,
     NotObjectOwner
 )
+
+log = logging.getLogger(__name__)
+
 
 @shared_task
 def check_bulk_domain(domains):
@@ -51,13 +54,11 @@ def check_domain(domain):
     """
     provider = get_domain_registry(domain)
     registry = provider.slug
-    log.info({"command": "check_domain",
-              "domain": domain,
-              "registry": registry})
+    log.info("Check domain=%s at registry=%s" % (domain, registry))
     query = DomainQuery()
     availability = query.check_domain(domain)
     available = availability["result"][0]["available"]
-    log.info({"available": available})
+    log.info("domain %s available=%s" % (domain, available))
     if str(available) == "1" or str(available) == "true" or available == True:
         return True
     raise DomainNotAvailable("%s not available" % domain)
@@ -110,10 +111,6 @@ def create_registry_contact(epp,
 
     """
     contacts = epp.get("contact", [])
-    log.debug({"person": person_id, "registry": registry,
-               "contact_type": contact_type,
-               "user": user})
-
     provider = DomainProvider.objects.get(slug=registry)
     template = AccountDetail.objects.get(pk=person_id)
     user_obj = User.objects.get(pk=user)
@@ -125,7 +122,7 @@ def create_registry_contact(epp,
     if not contact_obj or force:
         contact_obj = contact_manager.create_registry_contact()
 
-    log.info({"contact_handle": contact_obj.registry_id})
+    log.info("Registered contact_handle=%s" % contact_obj.registry_id)
     contact = {}
     contact[contact_type] = contact_obj.registry_id
     contacts.append(contact)
@@ -211,7 +208,7 @@ def check_host(host):
         idna.encode(host, uts46=True).decode('ascii')
     )
     available = availability["result"][0]["available"]
-    log.info({"available": available})
+    log.info("host=%s available=%s" (host, available))
     if str(available) == "1" or str(available) == "true" or available == True:
         return True
     raise DomainNotAvailable("%s not available" % host)
@@ -224,7 +221,6 @@ def create_host(epp):
 
 @shared_task
 def connect_host(host_data, user=None):
-    log.info(host_data)
     user_obj = User.objects.get(pk=user)
     host = host_data["host"]
     addresses = host_data["addr"]

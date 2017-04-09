@@ -1,6 +1,7 @@
-from django_logging import log
+import logging
 from ..entity import EppEntity
 
+log = logging.getLogger(__name__)
 
 class Contact(EppEntity):
 
