@@ -1,7 +1,8 @@
-from django_logging import log
+import logging
 from ..utilities.rpc_client import EppRpcClient
 from application import settings
 
+log = logging.getLogger(__name__)
 
 class EppEntity(object):
 

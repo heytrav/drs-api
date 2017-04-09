@@ -1,5 +1,7 @@
 from rest_framework import permissions
-from django_logging import log
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class IsAdmin(permissions.BasePermission):
@@ -18,7 +20,7 @@ class IsAdmin(permissions.BasePermission):
         :returns: TODO
 
         """
-        log.debug({"msg": "Checking if %s has admin permission" % request.user})
+        log.debug("Checking if %s has admin permissions" % request.user)
         if request.user.groups.filter(name='admin').exists():
             return True
         return False

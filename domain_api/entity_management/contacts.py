@@ -1,8 +1,10 @@
 import uuid
 from itertools import chain
-from django_logging import log
+import logging
 from domain_api.epp.actions.contact import Contact as ContactAction
 from ..models import Contact, Registrant
+
+log = logging.getLogger(__name__)
 
 
 class ContactFactory(object):
@@ -53,7 +55,7 @@ class ContactFactory(object):
 
         """
         registry_id = eppdata["id"]
-        log.debug({"user": self.user.id})
+        log.debug("user=%s" % self.user.id)
         contact = self.related_contact_set.create(
             registry_id=registry_id,
             provider=self.provider,
@@ -93,7 +95,6 @@ class ContactFactory(object):
             non_disclose.append("fax")
         if not template.disclose_email:
             non_disclose.append("email")
-        log.debug({"nondisclose": non_disclose})
         if len(non_disclose) > 0:
             return non_disclose
         return None
@@ -140,10 +141,8 @@ class ContactFactory(object):
         }
         if non_disclose:
             contact_info["disclose"] = {"flag": 0, "disclosing": non_disclose}
-        log.info(contact_info)
         contact = ContactAction()
         response = contact.create(self.provider.slug, contact_info)
-        log.info(response)
         return self.create_local_contact(response)
 
     def process_postal_info_change(self, data):
@@ -334,7 +333,7 @@ class ContactFactory(object):
         log.info(update_data)
         contact = ContactAction()
         response = contact.update(self.provider.slug, update_data)
-        log.debug(response)
+        log.debug("Received response")
         return response
 
 
