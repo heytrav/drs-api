@@ -7,6 +7,7 @@ from ..models import (
     RegisteredDomain,
     NameserverHost,
     IpAddress,
+    Nameserver,
 )
 
 
@@ -79,6 +80,17 @@ def parse_domain(fqdn):
     return {"domain": domain_name, "zone": probable_tld.zone}
 
 
+def synchronise_domain_nameserver(registered_domain, nameserver):
+    """
+    Add a nameserver to registered domain.
+
+    :registered_domain: registered domain object
+    :nameserver: str ns host
+
+    """
+    ns, _ = Nameserver.objects.get_or_create(idn_host=nameserver)
+    registered_domain.ns.add(ns)
+
 def synchronise_domain(info_data, domain_id):
     """
     Synchronise data in info domain response with upstream registry.
@@ -86,11 +98,21 @@ def synchronise_domain(info_data, domain_id):
     :info_data: dict containing info data from registry
     :registered_domain: int primary key of domain
     """
-    RegisteredDomain.objects.filter(pk=domain_id).update(
+    filtered_domains = RegisteredDomain.objects.filter(pk=domain_id)
+    filtered_domains.update(
         authcode=info_data.get("authcode", None),
         roid=info_data.get("roid", None),
         status=info_data.get("status", None)
     )
+    registered_domain = filtered_domains.first()
+    if registered_domain and 'ns' in info_data:
+        if isinstance(info_data['ns'], list):
+            for ns in info_data['ns']:
+                synchronise_domain_nameserver(registered_domain, ns)
+        else:
+            synchronise_domain_nameserver(registered_domain,
+                                          info_data['ns'])
+
 
 def synchronise_host(info_data, host_id):
     """
