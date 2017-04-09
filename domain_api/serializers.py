@@ -391,6 +391,7 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
     domain = serializers.SerializerMethodField('get_fqdn')
     registrant = serializers.SerializerMethodField()
     contacts = serializers.SerializerMethodField()
+    ns = serializers.SerializerMethodField()
 
     class Meta:
         model = RegisteredDomain
@@ -408,6 +409,10 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
     def get_contacts(self, obj):
         active_contacts = obj.contacts.filter(active=True)
         return [{i.contact_type.name: i.contact.registry_id} for i in active_contacts]
+
+    def get_ns(self, obj):
+        ns = obj.ns
+        return [i.host for i in ns.all()]
 
 
 class OwnerInfoDomainSerializer(serializers.Serializer):
