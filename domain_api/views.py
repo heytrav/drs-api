@@ -620,7 +620,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             check_result = []
             for i in registry_result:
                 check_result += i
-            log.info({"result": check_result})
+            log.debug("Received check domain response")
             serializer = DomainAvailabilitySerializer(data=check_result,
                                                       many=True)
             if serializer.is_valid():
