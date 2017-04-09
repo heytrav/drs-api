@@ -106,6 +106,10 @@ def synchronise_domain(info_data, domain_id):
     )
     registered_domain = filtered_domains.first()
     if registered_domain and 'ns' in info_data:
+        current_nameservers = registered_domain.ns.all()
+        # Remove existing nameservers
+        for current_nameserver in current_nameservers:
+            registered_domain.ns.remove(current_nameserver)
         if isinstance(info_data['ns'], list):
             for ns in info_data['ns']:
                 synchronise_domain_nameserver(registered_domain, ns)
