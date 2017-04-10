@@ -108,7 +108,7 @@ class ContactFactory(object):
         :returns: serializer object
 
         """
-        contact = self.get_registry_id()
+        contact_id = self.get_registry_id()
         template = self.template
         street = [template.street1]
         if template.street2 != "":
@@ -133,7 +133,7 @@ class ContactFactory(object):
             }
         }
         contact_info = {
-            "id": contact,
+            "id": contact_id,
             "voice": template.telephone,
             "fax": template.fax,
             "email": template.email,
@@ -142,7 +142,9 @@ class ContactFactory(object):
         if non_disclose:
             contact_info["disclose"] = {"flag": 0, "disclosing": non_disclose}
         contact = ContactAction()
-        response = contact.create(self.provider.slug, contact_info)
+        registry = self.provider.slug
+        response = contact.create(registry, contact_info)
+        log.info("Created contact=%s at registry=%s" % (contact_id, registry))
         return self.create_local_contact(response)
 
     def process_postal_info_change(self, data):

@@ -152,6 +152,19 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGZIO_TOKEN = read_secret_file(os.environ.get('LOGZIO_TOKEN_FILE', None))
+LOGZIO_URL = 'https://listener.logz.io:8071'
+LOGZIO_DRAIN_TIMEOUT = 5
+
+def get_logzio_sender():
+    """
+    Return an instance of the Logzio sender
+    :returns: logzio.sender.LogzioSender object
+
+    """
+    from logzio.sender import LogzioSender
+    return LogzioSender(LOGZIO_TOKEN)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -173,10 +186,10 @@ LOGGING = {
             'class': 'logzio.handler.LogzioHandler',
             'level': 'INFO',
             'formatter': 'logzioFormat',
-            'token': read_secret_file(os.environ.get('LOGZIO_TOKEN_FILE', None)),
+            'token': LOGZIO_TOKEN,
             'logzio_type': "django",
-            'logs_drain_timeout': 5,
-            'url': 'https://listener.logz.io:8071',
+            'logs_drain_timeout': LOGZIO_DRAIN_TIMEOUT,
+            'url': LOGZIO_URL,
             'debug': True
         },
     },

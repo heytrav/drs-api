@@ -1,5 +1,6 @@
 import logging
 from ..entity import EppEntity
+from application.settings import get_logzio_sender
 
 log = logging.getLogger(__name__)
 

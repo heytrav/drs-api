@@ -25,6 +25,7 @@ from .exceptions import (
     DomainNotAvailable,
     NotObjectOwner
 )
+from application.settings import get_logzio_sender
 
 log = logging.getLogger(__name__)
 
@@ -39,6 +40,8 @@ def check_bulk_domain(domains):
     :returns: dict result from provider
 
     """
+    log.info("Executing bulk check domain")
+    get_logzio_sender().append(domains)
     query = DomainQuery()
     availability = query.check_domain(*domains)
     return availability["result"]
