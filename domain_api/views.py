@@ -538,7 +538,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         Determine if the current logged in user is admin or the owner of
         the object.
 
-        :domain: Contact/Registrant object
+        :domain: Registered domain object
         :returns: True or False
 
         """
@@ -553,7 +553,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
                 registrant__project_id=user
             ):
                 return True
-            if domain.contacts.contact.filter(project_id=user).exists():
+            if domain.contacts.filter(contact__project_id=user).exists():
                 return True
         return False
 
