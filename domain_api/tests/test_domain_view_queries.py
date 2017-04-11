@@ -1,4 +1,3 @@
-from unittest.mock import patch, ANY
 from django.contrib.auth.models import User
 from domain_api.views import DomainRegistryManagementViewSet
 from domain_api.models import (
