@@ -751,7 +751,8 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         except KeyError as e:
             log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except TopLevelDomainProvider.DoesNotExist:
+        except TopLevelDomainProvider.DoesNotExist as e:
+            log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             log.error(str(e), exc_info=True)
