@@ -53,10 +53,13 @@ class EppRpcClient(object):
             self.connection.process_data_events()
         response_data = json.loads(self.response.decode("utf-8"))
         result_code = int(response_data["result"]["code"])
+        msg = response_data["result"]["msg"]
+        if isinstance(msg, dict):
+            msg = msg["$t"]
         if result_code == 2303:
-            raise EppObjectDoesNotExist(response_data["result"]["msg"])
+            raise EppObjectDoesNotExist(msg)
         if result_code >= 2000:
-            raise EppError(response_data["result"]["msg"])
+            raise EppError(msg)
         if "data" in response_data:
             return response_data["data"]
-        return response_data["result"]["msg"]
+        return msg
