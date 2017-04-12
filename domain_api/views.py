@@ -310,7 +310,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
                 return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    def list(self, request):
+    def list_contacts(self, request):
         """
         List out contact/registrant objects
 
@@ -971,7 +971,7 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
         default_account_template.update(account_template=account_template,
                                         provider=data["provider"])
 
-    def delete(self, request, default_id):
+    def delete_account(self, request, default_id):
         """
         Delete a default template
 
@@ -992,7 +992,7 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
                                            context={"request": request})
         return Response(serializer.data)
 
-    def list(self, request):
+    def list_accounts(self, request):
         """
         Return list of default accounts
 

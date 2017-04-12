@@ -24,11 +24,11 @@ router.register(r'domain-contact', views.DomainContactViewSet, "domaincontact")
 router.register(r'users', views.UserViewSet)
 
 default_account = views.DefaultAccountTemplateViewSet.as_view({
-    'get': 'list',
+    'get': 'list_accounts',
     'post': 'create',
 })
 default_account_manage = views.DefaultAccountTemplateViewSet.as_view({
-    'delete': 'delete',
+    'delete': 'delete_account',
     'put': 'update',
     'get': 'detail'
 })
@@ -52,14 +52,14 @@ contact_detail = views.ContactManagementViewSet.as_view({
     'patch': 'update'
 })
 contact_list = views.ContactManagementViewSet.as_view({
-    'get': 'list'
+    'get': 'list_contacts'
 })
 registrant_detail = views.RegistrantManagementViewSet.as_view({
     'get': 'info',
     'patch': 'update'
 })
 registrant_list = views.RegistrantManagementViewSet.as_view({
-    'get': 'list'
+    'get': 'list_contacts'
 })
 
 host_single_check = views.HostManagementViewSet.as_view({
@@ -91,7 +91,6 @@ urlpatterns = [
         r'^domains/available/(?P<domain>.*)/$',
         domain_single_check, name='check-domain'
     ),
-    url(r'^domains/create/$', domain_list, name='domain-create'),
     url(r'^domains/(?P<domain>.*)/$', domain_detail, name='domain-info'),
     url(r'^contacts/(?P<registry_id>.*)/$',
         contact_detail,
