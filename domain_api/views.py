@@ -9,8 +9,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from rest_framework import status, permissions, viewsets, generics
 from rest_framework.decorators import (
-    api_view,
-    permission_classes,
     detail_route,
 )
 from rest_framework.response import Response
@@ -67,7 +65,6 @@ from .exceptions import (
     EppObjectDoesNotExist
 )
 from domain_api.entity_management.contacts import (
-    ContactFactory,
     RegistrantManager,
     ContactManager
 )
@@ -137,44 +134,6 @@ def workflow_scan(node):
         yield node
         node = node.parent
     yield node
-
-
-@api_view(['POST'])
-@permission_classes((permissions.IsAdminUser,))
-def registry_contact(request, registry, contact_type="contact"):
-    """
-    Create or view contacts for a particular registry.
-
-    :registry: Registry to add this contact for
-    :returns: A contact object
-    """
-    provider = get_object_or_404(DomainProvider.objects.all(), slug=registry)
-
-    data = request.data
-    person = None
-    queryset = AccountDetail.objects.all()
-    if "person" in data:
-        person = get_object_or_404(queryset, pk=data["person"])
-    else:
-        serializer = AccountDetailSerializer(data=data)
-        if serializer.is_valid():
-            person = serializer.save(project_id=request.user)
-        else:
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        contact_factory = ContactFactory(provider,
-                                         contact_type,
-                                         context={"request": request})
-        serializer = contact_factory.create_registry_contact(person)
-        return Response(serializer.data)
-    except EppError as e:
-        log.error(str(e), exc_info=True)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        log.error(str(e), exc_info=True)
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -290,7 +249,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
             log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def update(self, request, registry_id, registry=None):
+    def update(self, request, registry_id):
         """
         Update a contact object
 
@@ -587,7 +546,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
     @detail_route(methods=['get'])
     def bulk_available(self, request, name=None):
         """
-        Check availability of a domain name
+        Leave the tld away to check availability at all supported tld providers.
 
         :request: HTTP request
         :name: str domain name to check
@@ -829,7 +788,7 @@ class ContactViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = ContactSerializer
-    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,
+    permission_classes = (permissions.IsAdminUser,
                           permissions.IsAuthenticated)
     filter_backends = (IsPersonFilterBackend,)
     lookup_field = 'registry_id'
@@ -857,7 +816,8 @@ class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
 class RegistrantViewSet(viewsets.ModelViewSet):
 
     serializer_class = RegistrantSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.IsAdminUser)
     lookup_field = 'registry_id'
 
     def get_queryset(self):
