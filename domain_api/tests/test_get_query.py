@@ -320,7 +320,7 @@ class TestBasicQueries(TestSetup):
         Test accessing an endpoint without JWT is denied.
 
         """
-        response = self.client.get('/v1/account-detail/1/')
+        response = self.client.get('/v1/account-details/1/')
         self.assertEqual(response.status_code,
                          403,
                          "Not allowed to access endoint without JWT")
@@ -332,7 +332,7 @@ class TestBasicQueries(TestSetup):
         """
         jwt_header = self.api_login()
         joes_id = self.joe_user.pk
-        path = "/v1/account-detail/%s/" % joes_id
+        path = "/v1/account-details/%s/" % joes_id
         response = self.client.get(path,
                                    HTTP_AUTHORIZATION=jwt_header)
         self.assertEqual(response.status_code,
@@ -344,7 +344,7 @@ class TestBasicQueries(TestSetup):
         Test access to admin level object denied.
         """
         jwt_header = self.api_login()
-        response = self.client.get('/v1/tld-provider/',
+        response = self.client.get('/v1/tld-providers/',
                                    HTTP_AUTHORIZATION=jwt_header)
         self.assertEqual(response.status_code,
                          403,
