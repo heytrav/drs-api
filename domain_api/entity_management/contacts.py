@@ -22,8 +22,10 @@ class ContactFactory(object):
     postal_info_fields = ('name', 'company',)
     address_fields = ('city', 'state', 'postcode', 'country')
     street_fields = ('street1', 'street2', 'street3')
+    contact_model = Contact
 
     def __init__(self,
+                 contact=None,
                  provider=None,
                  template=None,
                  user=None):
@@ -33,6 +35,21 @@ class ContactFactory(object):
         self.provider = provider
         self.template = template
         self.user = user
+        if contact:
+            log.info("Creating manager with related_contact_set")
+            self.contact_object = self.contact_model.objects.get(
+                registry_id=contact
+            )
+            self.provider = self.contact_object.provider
+            self.user = self.contact_object.project_id
+
+        if self.template:
+            self.related_contact_set = self.contact_model.objects.filter(
+                domaincontact__active=True,
+                account_template=template,
+                domaincontact__contact_type__name=contact_type,
+                provider=provider
+            ).distinct()
 
     def fetch_existing_contact(self):
         """
@@ -346,33 +363,7 @@ class RegistrantManager(ContactFactory):
     Manage registrant creation.
     """
 
-    def __init__(self,
-                 contact=None,
-                 provider=None,
-                 template=None,
-                 user=None):
-        """
-        Initialise factory.
-        """
-        if contact is not None:
-            log.info("Creating manager with related_contact_set")
-            self.contact_object = Registrant.objects.get(registry_id=contact)
-            super().__init__(
-                provider=self.contact_object.provider,
-                user=self.contact_object.project_id
-            )
-        else:
-            log.info("Creating manager with related_contact_set")
-            super().__init__(
-                provider=provider,
-                template=template,
-                user=user
-            )
-            self.related_contact_set = Registrant.objects.filter(
-                domainregistrant__active=True,
-                account_template=template,
-                provider=provider
-            ).distinct()
+    contact_model = Registrant
 
 
 class ContactManager(ContactFactory):
@@ -381,30 +372,4 @@ class ContactManager(ContactFactory):
     Manage contact creation.
     """
 
-    def __init__(self,
-                 contact=None,
-                 provider=None,
-                 template=None,
-                 contact_type=None,
-                 user=None):
-        """
-        Initialise factory.
-        """
-        if contact is not None:
-            self.contact_object = Contact.objects.get(registry_id=contact)
-            super().__init__(
-                provider=self.contact_object.provider,
-                user=self.contact_object.project_id
-            )
-        else:
-            super().__init__(
-                provider=provider,
-                template=template,
-                user=user
-            )
-            self.related_contact_set = Contact.objects.filter(
-                domaincontact__active=True,
-                account_template=template,
-                domaincontact__contact_type__name=contact_type,
-                provider=provider
-            ).distinct()
+    pass
