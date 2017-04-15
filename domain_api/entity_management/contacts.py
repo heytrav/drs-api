@@ -43,6 +43,7 @@ class ContactFactory(object):
         """
         if self.related_contact_set.count() > 0:
             return self.related_contact_set.first()
+        log.info("Did not find an existing contact.")
         return None
 
     def create_local_contact(self, eppdata):
@@ -353,13 +354,15 @@ class RegistrantManager(ContactFactory):
         """
         Initialise factory.
         """
-        if contact:
+        if contact is not None:
+            log.info("Creating manager with related_contact_set")
             self.contact_object = Registrant.objects.get(registry_id=contact)
             super().__init__(
                 provider=self.contact_object.provider,
                 user=self.contact_object.project_id
             )
         else:
+            log.info("Creating manager with related_contact_set")
             super().__init__(
                 provider=provider,
                 template=template,
@@ -368,7 +371,7 @@ class RegistrantManager(ContactFactory):
             self.related_contact_set = Registrant.objects.filter(
                 domainregistrant__active=True,
                 account_template=template,
-                provider__slug=provider
+                provider=provider
             ).distinct()
 
 
@@ -387,7 +390,7 @@ class ContactManager(ContactFactory):
         """
         Initialise factory.
         """
-        if contact:
+        if contact is not None:
             self.contact_object = Contact.objects.get(registry_id=contact)
             super().__init__(
                 provider=self.contact_object.provider,
@@ -403,5 +406,5 @@ class ContactManager(ContactFactory):
                 domaincontact__active=True,
                 account_template=template,
                 domaincontact__contact_type__name=contact_type,
-                provider__slug=provider
+                provider=provider
             ).distinct()

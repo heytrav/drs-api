@@ -165,7 +165,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
         """
         if self.request.user.groups.filter(name='admin').exists():
-            log.debug("Is admin for contact %s" % contact.registry_id)
+            log.debug("Is admin")
             return True
         if contact and contact.project_id == self.request.user:
             log.debug("User owns %s " % contact.registry_id)

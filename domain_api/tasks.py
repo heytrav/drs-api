@@ -91,6 +91,10 @@ def create_registrant(epp,
                                         user=user_obj)
     contact = contact_manager.fetch_existing_contact()
     if not contact or force:
+        get_logzio_sender().append({"message": "Create new registrant",
+                                    "provider": registry,
+                                    "accountDetail": person_id,
+                                    "user": user})
         contact = contact_manager.create_registry_contact()
     epp["registrant"] = contact.registry_id
     return epp
@@ -123,6 +127,10 @@ def create_registry_contact(epp,
                                      user=user_obj)
     contact_obj = contact_manager.fetch_existing_contact()
     if not contact_obj or force:
+        get_logzio_sender().append({"message": "Create new contact",
+                                    "provider": registry,
+                                    "accountDetail": person_id,
+                                    "user": user})
         contact_obj = contact_manager.create_registry_contact()
 
     log.info("Registered contact_handle=%s" % contact_obj.registry_id)
