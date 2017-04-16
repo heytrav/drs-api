@@ -44,12 +44,15 @@ class ContactFactory(object):
             self.user = self.contact_object.project_id
 
         if self.template:
-            self.related_contact_set = self.contact_model.objects.filter(
-                domaincontact__active=True,
-                account_template=template,
-                domaincontact__contact_type__name=contact_type,
-                provider=provider
-            ).distinct()
+            self.related_contact_set = self.get_related_contact_set()
+
+    def get_related_contact_set(self):
+        return self.contact_model.objects.filter(
+            domaincontact__active=True,
+            account_template=self.template,
+            domaincontact__contact_type__name=contact_type,
+            provider=self.provider
+        ).distinct()
 
     def fetch_existing_contact(self):
         """
@@ -365,6 +368,13 @@ class RegistrantManager(ContactFactory):
 
     contact_model = Registrant
 
+
+    def get_related_contact_set(self):
+        return  Registrant.objects.filter(
+            domainregistrant__active=True,
+            account_template=self.template,
+            provider=self.provider
+        ).distinct()
 
 class ContactManager(ContactFactory):
 
