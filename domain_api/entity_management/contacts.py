@@ -28,6 +28,7 @@ class ContactFactory(object):
                  contact=None,
                  provider=None,
                  template=None,
+                 contact_type=None,
                  user=None):
         """
         Initialise factory.
@@ -35,6 +36,7 @@ class ContactFactory(object):
         self.provider = provider
         self.template = template
         self.user = user
+        self.contact_type = contact_type
         if contact:
             log.info("Creating manager with related_contact_set")
             self.contact_object = self.contact_model.objects.get(
@@ -50,7 +52,7 @@ class ContactFactory(object):
         return self.contact_model.objects.filter(
             domaincontact__active=True,
             account_template=self.template,
-            domaincontact__contact_type__name=contact_type,
+            domaincontact__contact_type__name=self.contact_type,
             provider=self.provider
         ).distinct()
 
