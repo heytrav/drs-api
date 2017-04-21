@@ -126,5 +126,37 @@
         "disclose_email": false,
         "project_id": 1
     }
+},
+{
+    "model": "domain_api.accountdetail",
+    "pk": 5,
+    "fields": {
+        "first_name": "Joe",
+        "surname": "User",
+        "middle_name": "",
+        "email": "joeuser2@test.com",
+        "telephone": "+1.8175551234",
+        "fax": "",
+        "company": "",
+        "house_number": "10",
+        "street1": "Evergreen Terrace",
+        "street2": "",
+        "street3": "",
+        "city": "Springfield",
+        "suburb": "",
+        "state": "State",
+        "postcode": "",
+        "country": "US",
+        "created": "2017-04-05T02:28:54.396Z",
+        "updated": "2017-04-05T02:28:54.396Z",
+        "postal_info_type": "loc",
+        "disclose_name": false,
+        "disclose_company": false,
+        "disclose_address": false,
+        "disclose_telephone": false,
+        "disclose_fax": false,
+        "disclose_email": false,
+        "project_id": 2
+    }
 }
 ]

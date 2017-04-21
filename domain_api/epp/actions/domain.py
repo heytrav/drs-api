@@ -3,6 +3,7 @@ from ..entity import EppEntity
 
 log = logging.getLogger(__name__)
 
+
 class Domain(EppEntity):
 
     """
@@ -32,3 +33,17 @@ class Domain(EppEntity):
             "create_date": create_data["domain:crDate"],
             "expiration_date": create_data["domain:exDate"]
         }
+
+    def update(self, registry, data):
+        """
+        Update a domain at a given registry.
+
+        :registry: Registry for domain
+        :data: EPP datastructure required for update
+        :returns: Result from EPP client
+
+        """
+        log.debug("Update a domain at %s" % registry)
+        result = self.rpc_client.call(registry, 'updateDomain', data)
+        log.debug("{!r}".format(result))
+        return {}

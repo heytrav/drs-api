@@ -1,0 +1,86 @@
+[
+{
+    "model": "domain_api.ipaddress",
+    "pk": 1,
+    "fields": {
+        "ip": "22.34.55.32",
+        "address_type": "v4",
+        "nameserver_host": 1,
+        "created": "2017-03-26T19:50:55.665Z",
+        "updated": "2017-03-26T19:50:55.665Z",
+        "project_id": 1
+    }
+},
+{
+    "model": "domain_api.ipaddress",
+    "pk": 2,
+    "fields": {
+        "ip": "23.34.56.67",
+        "address_type": "v4",
+        "nameserver_host": 1,
+        "created": "2017-03-26T19:51:17.439Z",
+        "updated": "2017-03-26T19:51:17.440Z",
+        "project_id": 1
+    }
+},
+{
+    "model": "domain_api.ipaddress",
+    "pk": 3,
+    "fields": {
+        "ip": "11.22.33.44",
+        "address_type": "v4",
+        "nameserver_host": 6,
+        "created": "2017-03-29T01:54:47.639Z",
+        "updated": "2017-03-29T01:54:47.639Z",
+        "project_id": 4
+    }
+},
+{
+    "model": "domain_api.ipaddress",
+    "pk": 7,
+    "fields": {
+        "ip": "11.22.33.44",
+        "address_type": "v4",
+        "nameserver_host": 2,
+        "created": "2017-03-29T03:22:39.899Z",
+        "updated": "2017-03-29T03:22:39.899Z",
+        "project_id": 4
+    }
+},
+{
+    "model": "domain_api.ipaddress",
+    "pk": 8,
+    "fields": {
+        "ip": "11.22.33.44",
+        "address_type": "v4",
+        "nameserver_host": 3,
+        "created": "2017-03-29T03:23:38.534Z",
+        "updated": "2017-03-29T03:23:38.535Z",
+        "project_id": 4
+    }
+},
+{
+    "model": "domain_api.ipaddress",
+    "pk": 9,
+    "fields": {
+        "ip": "11.22.33.44",
+        "address_type": "v4",
+        "nameserver_host": 5,
+        "created": "2017-03-29T03:23:55.958Z",
+        "updated": "2017-03-29T03:23:55.958Z",
+        "project_id": 4
+    }
+},
+{
+    "model": "domain_api.ipaddress",
+    "pk": 10,
+    "fields": {
+        "ip": "11.33.77.44",
+        "address_type": "v4",
+        "nameserver_host": 7,
+        "created": "2017-03-29T03:24:59.036Z",
+        "updated": "2017-03-29T03:24:59.036Z",
+        "project_id": 4
+    }
+}
+]

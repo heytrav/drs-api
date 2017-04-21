@@ -62,7 +62,8 @@ from .exceptions import (
     UnknownRegistry,
     DomainNotAvailable,
     NotObjectOwner,
-    EppObjectDoesNotExist
+    EppObjectDoesNotExist,
+    UpdateEmpty
 )
 from domain_api.entity_management.contacts import (
     RegistrantManager,
@@ -718,6 +719,64 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
         except TopLevelDomainProvider.DoesNotExist as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def update(self, request, domain):
+        """
+        Update a domain
+
+        :request: HTTP request object
+        :returns: HTTP response
+
+        """
+        parsed_domain = None
+        queryset = self.get_queryset()
+        try:
+            parsed_domain = parse_domain(domain)
+        except InvalidTld as e:
+            log.error(str(e), exc_info=True)
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        except UnsupportedTld as e:
+            log.error(str(e), exc_info=True)
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+        registered_domain = get_object_or_404(
+            queryset,
+            domain__name=parsed_domain["domain"],
+            tld__zone=parsed_domain["zone"],
+            active=True
+        )
+
+        try:
+            registry = registered_domain.tld_provider.provider.slug
+            workflow_manager = workflow_factory(registry)()
+            update_domain = request.data
+            update_domain["domain"] = domain
+
+            log.debug({"msg": "About to call workflow_manager.update_domain"})
+            workflow = workflow_manager.update_domain(request.data,
+                                                      registered_domain,
+                                                      request.user)
+            # run chained workflow and register the domain
+            raw_workflow = chain(workflow)
+            if not raw_workflow:
+                return Response({"msg": "No change to domain"})
+            chained_workflow = raw_workflow()
+            chain_res = process_workflow_chain(chained_workflow)
+            get_logzio_sender().append(chain_res)
+            if registered_domain and self.is_admin_or_owner(registered_domain):
+                serializer = self.serializer_class(
+                    self.get_queryset().get(pk=registered_domain.id)
+                )
+                return Response(serializer.data)
+        except EppObjectDoesNotExist as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except EppError as e:
             log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:

@@ -6,13 +6,17 @@ from ..entity_management.contacts import (
     RegistrantManager,
     ContactAction
 )
+from ..models import (
+    RegisteredDomain,
+    DomainRegistrant
+)
+from ..entity_management.domains import DomainManager
 import domain_api
 
 
 class MockRpcClient(domain_api.epp.entity.EppRpcClient):
     def __init__(self, host=None):
         pass
-
 
 class TestContactManager(TestSetup):
     """
@@ -116,6 +120,19 @@ class TestDomainManager(TestSetup):
     Test domain management stuff.
     """
 
+    def setUp(self):
+        """TODO: Docstring for setUp.
+        :returns: TODO
+
+        """
+        super().setUp()
+        self.registered_domain = RegisteredDomain.objects.get(
+            domain__name="test-something",
+            tld__zone="bar",
+            active=True
+        )
+
+
     def test_parse_domain_components(self):
         """
         Request for domains with a specific tld should return a manager
@@ -134,3 +151,51 @@ class TestDomainManager(TestSetup):
         """
         with self.assertRaises(InvalidTld):
             parse_domain("tld-doesnot.exist")
+
+    def test_successful_update_domain_registrant(self):
+        """
+        Test ability to successfully update a domain with a new registrant if
+        the registry has accepted our create domain request.
+        """
+        epp = {
+            "name": "test-something.bar",
+            "chg": {"registrant": "registrant-231" }
+        }
+        current_registrant_id = self.registered_domain.registrant.filter(
+            active=True
+        ).first().id
+        domain_manager = DomainManager(self.registered_domain)
+        domain_manager.update(epp)
+        registrant_obj = DomainRegistrant.objects.get(pk=current_registrant_id)
+        self.assertFalse(registrant_obj.active)
+
+    def test_successful_update_domain_contacts(self):
+        """
+        Test ability to update a domain by adding/removing contacts
+
+        """
+        epp = {
+            "name": "test-something.bar",
+            "rem": {
+                "contact": [{"admin": "contact-123"}]
+            },
+            "add": {
+                "contact": [{"admin": "contact-223"}]
+            }
+        }
+        domain_manager = DomainManager(self.registered_domain)
+        domain_manager.update(epp)
+        new_admin_contact = self.registered_domain.contacts.filter(
+            active=True,
+            contact__registry_id="contact-223",
+            contact_type__name="admin"
+        )
+        self.assertTrue(new_admin_contact.exists(),
+                        "New contact was added to domain")
+        old_admin_contact = self.registered_domain.contacts.filter(
+            active=True,
+            contact__registry_id="contact-123",
+            contact_type__name="admin"
+        )
+        self.assertFalse(old_admin_contact.exists(),
+                         "Old contact removed")

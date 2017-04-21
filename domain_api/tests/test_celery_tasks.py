@@ -66,6 +66,12 @@ class TestCreateRegistrant(TestSetup):
     Test creation of a regsitrant object.
     """
 
+    def setUp(self):
+        super().setUp()
+        self.new_registrant = self.test_customer_user.personal_details.filter(
+            email='joeuser2@test.com'
+        ).first()
+
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_create_registrant(self):
         """
@@ -82,7 +88,7 @@ class TestCreateRegistrant(TestSetup):
                           'call',
                           return_value=create_contact_response):
             processed_epp = create_registrant(epp,
-                                              self.joe_user.id,
+                                              self.new_registrant.id,
                                               'centralnic-test',
                                               self.test_customer_user.id)
             self.assertIn('registrant',
@@ -108,7 +114,7 @@ class TestCreateRegistrant(TestSetup):
                           side_effect=EppError("FAIL")):
             with self.assertRaises(EppError):
                 create_registrant({},
-                                  self.joe_user.id,
+                                  self.new_registrant.id,
                                   'centralnic-test',
                                   self.test_customer_user.id)
 
@@ -121,7 +127,7 @@ class TestCreateRegistrant(TestSetup):
                           'create_registry_contact',
                           return_value=self.joe_user_registrant) as mocked:
             create_registrant({},
-                              self.joe_user.id,
+                              self.new_registrant.id,
                               'centralnic-test',
                               self.test_customer_user.id)
             self.assertTrue(mocked.called)

@@ -8,7 +8,6 @@ from .models import (
     ContactType,
     Domain,
     DomainProvider,
-    DomainRegistrant,
     AccountDetail,
     RegisteredDomain,
     Registrant,
@@ -17,13 +16,13 @@ from .models import (
     Nameserver
 )
 from .entity_management.contacts import RegistrantManager, ContactManager
+from .entity_management.domains import DomainManager
 from .epp.actions.domain import Domain as DomainAction
 from .epp.actions.host import Host as HostAction
 from .epp.queries import Domain as DomainQuery, HostQuery
 from .utilities.domain import parse_domain, get_domain_registry
 from .exceptions import (
     DomainNotAvailable,
-    NotObjectOwner
 )
 from application.settings import get_logzio_sender
 
@@ -46,6 +45,7 @@ def check_bulk_domain(domains):
     availability = query.check_domain(*domains)
     return availability["result"]
 
+
 @shared_task
 def check_domain(domain):
     """
@@ -62,17 +62,15 @@ def check_domain(domain):
     availability = query.check_domain(domain)
     available = availability["result"][0]["available"]
     log.info("domain %s available=%s" % (domain, available))
-    if str(available) == "1" or str(available) == "true" or available == True:
+    if str(available) == "1" or str(available) == "true" or available is True:
         return True
     raise DomainNotAvailable("%s not available" % domain)
 
 
-@shared_task
-def create_registrant(epp,
-                      person_id=None,
-                      registry=None,
-                      user=None,
-                      force=False):
+def _create_registrant(person_id=None,
+                       registry=None,
+                       user=None,
+                       force=False):
     """
     Create a new contact at a registry. If a contact handle matching the
     person id and the registry already exists, use that one.
@@ -96,17 +94,38 @@ def create_registrant(epp,
                                     "accountDetail": person_id,
                                     "user": user})
         contact = contact_manager.create_registry_contact()
+    return contact
+
+
+@shared_task
+def create_registrant(epp,
+                      person_id=None,
+                      registry=None,
+                      user=None,
+                      force=False):
+    contact = _create_registrant(person_id, registry, user, force)
     epp["registrant"] = contact.registry_id
     return epp
 
 
 @shared_task
-def create_registry_contact(epp,
-                            person_id=None,
-                            registry=None,
-                            contact_type="contact",
-                            user=None,
-                            force=False):
+def update_domain_registrant(epp,
+                             person_id=None,
+                             registry=None,
+                             user=None,
+                             force=False):
+    contact = _create_registrant(person_id, registry, user, force)
+    if "chg" not in epp:
+        epp["chg"] = {}
+    epp["chg"]["registrant"] = contact.registry_id
+    return epp
+
+
+def _create_registry_contact(person_id=None,
+                             registry=None,
+                             contact_type="contact",
+                             user=None,
+                             force=False):
     """
     Create a new contact at a registry. If a contact handle matching the
     person id and the registry already exists, use that one.
@@ -117,7 +136,6 @@ def create_registry_contact(epp,
     :returns: registry id of new contact.
 
     """
-    contacts = epp.get("contact", [])
     provider = DomainProvider.objects.get(slug=registry)
     template = AccountDetail.objects.get(pk=person_id)
     user_obj = User.objects.get(pk=user)
@@ -136,6 +154,65 @@ def create_registry_contact(epp,
     log.info("Registered contact_handle=%s" % contact_obj.registry_id)
     contact = {}
     contact[contact_type] = contact_obj.registry_id
+    return contact
+
+@shared_task
+def init_update_domain(epp):
+    """
+    Init an update_domain workflow
+
+    Acts as a starting point so that all other commands that follow can receive
+    datastructure returned as first argument.
+
+    :epp: dict with basic EPP structure: {"domain":}
+    :returns: dict unchanged
+
+    """
+    return epp
+
+@shared_task
+def update_domain_registry_contact(epp,
+                                   person_id=None,
+                                   registry=None,
+                                   contact_type="contact",
+                                   user=None,
+                                   force=False):
+    """
+    Create a new contact at a registry. If a contact handle matching the
+    person id and the registry already exists, use that one.
+
+    :person_id: Integer identifying a person
+    :registry: Registry slug to identify registry
+    :force: Boolean value
+    :returns: registry id of new contact.
+
+    """
+    contact = _create_registry_contact(person_id,
+                                       registry,
+                                       contact_type,
+                                       user,
+                                       force)
+    add = epp.get("add", {})
+    contacts = add.get("contact", [])
+    contacts.append(contact)
+    add["contact"] = contacts
+    epp["add"] = add
+    return epp
+
+
+@shared_task
+def create_registry_contact(epp,
+                            person_id=None,
+                            registry=None,
+                            contact_type="contact",
+                            user=None,
+                            force=False):
+    contact = _create_registry_contact(person_id,
+                                       registry,
+                                       contact_type,
+                                       user,
+                                       force)
+    contacts = epp.get("contact", [])
     contacts.append(contact)
     epp["contact"] = contacts
     return epp
@@ -147,12 +224,60 @@ def create_domain(epp, registry):
     Create a domain at a given registry
 
     :epp: raw epp command
+    :registry: Target registry for action
     :returns: success or fail
 
     """
     domain = DomainAction()
     result = domain.create(registry, epp)
-    return {**epp, **result}
+    result.update(epp)
+    return result
+
+
+@shared_task
+def update_domain(epp=None, registry=None):
+    """
+    Update a domain at a registry
+
+    :epp: raw epp command
+    :registry: target registry for action
+    :returns: success or fail
+
+    """
+    log.info("Sending update domain to registry")
+    if epp:
+        domain = DomainAction()
+        action = domain.update(registry, epp)
+        update_data = {"message": "Sending update domain"}
+        update_data.update(epp)
+        get_logzio_sender().append(update_data)
+        action.update(epp)
+        return action
+    log.info("EPP update domain was empty")
+    return {}
+
+
+@shared_task
+def local_update_domain(update_data, user=None):
+    """
+    Modify connected domain data to reflect successful update.
+
+    :update_data: EPP request and response information
+    :returns: TODO
+
+    """
+    get_logzio_sender().append(update_data)
+    domain = update_data.pop("name", update_data.pop("domain", None))
+    parsed_domain = parse_domain(domain)
+    registered_domain = RegisteredDomain.objects.get(
+        domain__name=parsed_domain["domain"],
+        tld__zone=parsed_domain["zone"],
+        active=True
+    )
+    domain_manager = DomainManager(registered_domain)
+    domain_manager.update(update_data)
+    return update_data
+
 
 @shared_task
 def connect_domain(create_data, user=None):
@@ -161,7 +286,6 @@ def connect_domain(create_data, user=None):
 
     :create_data: The epp request and response information
     :returns: dict with EPP response
-
     """
     try:
         create_data["domain"] = create_data.pop('name', None)
@@ -184,7 +308,9 @@ def connect_domain(create_data, user=None):
             active=True
         )
         registered_domain.save()
-        registrant = Registrant.objects.get(registry_id=create_data["registrant"])
+        registrant = Registrant.objects.get(
+            registry_id=create_data["registrant"]
+        )
         registered_domain.registrant.create(
             registrant=registrant,
             active=True,
@@ -205,6 +331,7 @@ def connect_domain(create_data, user=None):
         log.error({"error": e})
         raise e
 
+
 @shared_task
 def check_host(host):
     """
@@ -220,15 +347,17 @@ def check_host(host):
     )
     available = availability["result"][0]["available"]
     log.info("host=%s available=%s" (host, available))
-    if str(available) == "1" or str(available) == "true" or available == True:
+    if str(available) == "1" or str(available) == "true" or available is True:
         return True
     raise DomainNotAvailable("%s not available" % host)
+
 
 @shared_task
 def create_host(epp):
     action = HostAction()
     result = action.create(epp)
     return result
+
 
 @shared_task
 def connect_host(host_data, user=None):

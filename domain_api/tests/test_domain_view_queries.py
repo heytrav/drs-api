@@ -3,7 +3,6 @@ from domain_api.views import DomainRegistryManagementViewSet
 from domain_api.models import (
     RegisteredDomain,
     TopLevelDomainProvider,
-    Domain
 )
 from .test_setup import TestSetup
 
@@ -30,9 +29,8 @@ class TestDomainViewMethods(TestSetup):
             zone__zone='ote'
         ).first()
         tld = tld_provider.zone
-        domain = Domain.objects.create(name="test-domain")
-        self.registered_domain = RegisteredDomain.objects.create(
-            domain=domain,
+        self.registered_domain = RegisteredDomain.objects.get(
+            domain__name="test-domain",
             tld=tld,
             tld_provider=tld_provider,
             active=True,
@@ -44,11 +42,12 @@ class TestDomainViewMethods(TestSetup):
         Test bugfix for exception thrown in admin or owner check function
         """
         def call_code(view_obj, domain):
+            print("Executing call code")
             try:
                 view_obj.is_admin_or_owner(domain)
                 return True
             except Exception as e:
-                print(str(e))
+                print("Code threw an exception" + str(e))
                 return False
 
         view = MockeDomainRegistryManagementViewSet()

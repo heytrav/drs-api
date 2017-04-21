@@ -1,0 +1,24 @@
+[
+{
+    "model": "domain_api.domaincontact",
+    "pk": 1,
+    "fields": {
+        "registered_domain": 1,
+        "contact": 1,
+        "contact_type": 1,
+        "active": true,
+        "created": "2017-03-14T20:25:58.295Z"
+    }
+},
+{
+    "model": "domain_api.domaincontact",
+    "pk": 2,
+    "fields": {
+        "registered_domain": 1,
+        "contact": 2,
+        "contact_type": 2,
+        "active": true,
+        "created": "2017-03-14T20:25:58.307Z"
+    }
+}
+]

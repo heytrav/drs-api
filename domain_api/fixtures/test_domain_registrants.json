@@ -1,0 +1,22 @@
+[
+{
+    "model": "domain_api.domainregistrant",
+    "pk": 1,
+    "fields": {
+        "registered_domain": 1,
+        "registrant": 1,
+        "active": true,
+        "created": "2017-03-14T20:25:58.283Z"
+    }
+},
+{
+    "model": "domain_api.domainregistrant",
+    "pk": 2,
+    "fields": {
+        "registered_domain": 2,
+        "registrant": 2,
+        "active": true,
+        "created": "2017-03-15T08:49:20.758Z"
+    }
+}
+]

@@ -43,3 +43,6 @@ class UnknownContact(Exception):
 
 class UnknownRegistry(Exception):
     pass
+
+class UpdateEmpty(Exception):
+    pass
