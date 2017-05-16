@@ -85,7 +85,7 @@ MIDDLEWARE_CLASSES = [
 ]
 
 CORS_ORIGIN_WHITELIST = [
-    'drs.testing.app',
+    'drs.testing.app:3000',
 ]
 
 ROOT_URLCONF = 'application.urls'
