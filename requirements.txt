@@ -16,6 +16,7 @@ Django==1.10.5
 django-allauth==0.31.0
 django-behave==0.1.5
 django-celery-results==1.0.1
+django-cors-headers==2.0.2
 django-filter==1.0.1
 django-logging-json==1.5.3
 django-nose==1.4.4
@@ -29,7 +30,7 @@ idna==2.5
 ipython==5.2.2
 ipython-genutils==0.1.0
 itypes==1.1.0
-Jinja2==2.9.5
+Jinja2==2.9.6
 kombu==4.0.2
 logzio-python-handler==2.0.0
 Markdown==2.6.8
