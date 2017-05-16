@@ -477,46 +477,13 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
+class DomainAvailabilityViewSet(viewsets.ViewSet):
     """
-    Handle domain related queries.
+    Domain availability check endpoint
     """
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = PrivateInfoDomainSerializer
+    serializer_class = DomainAvailabilitySerializer
+    permission_classes = (permissions.AllowAny,)
 
-    def get_queryset(self):
-        """
-        Return queryset
-        :returns: RegisteredDomain set
-        """
-        user = self.request.user
-        return get_registered_domain_queryset(user)
-
-    def is_admin_or_owner(self, domain=None):
-        """
-        Determine if the current logged in user is admin or the owner of
-        the object.
-
-        :domain: Registered domain object
-        :returns: True or False
-
-        """
-        user = self.request.user
-        # Check if user is admin
-        if user.groups.filter(name='admin').exists():
-            return True
-        # otherwise check if user is registrant of contact for domain
-        if domain:
-            if domain.registrant.filter(
-                active=True,
-                registrant__project_id=user
-            ):
-                return True
-            if domain.contacts.filter(contact__project_id=user).exists():
-                return True
-        return False
-
-    @detail_route(methods=['get'])
     def available(self, request, domain=None):
         """
         Check availability of a domain name
@@ -531,7 +498,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             availability = query.check_domain(
                 idna.encode(domain, uts46=True).decode('ascii')
             )
-            serializer = DomainAvailabilitySerializer(
+            serializer = self.serializer_class(
                 data=availability["result"][0]
             )
             if serializer.is_valid():
@@ -543,7 +510,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @detail_route(methods=['get'])
+
     def bulk_available(self, request, name=None):
         """
         Leave the tld away to check availability at all supported tld providers.
@@ -590,7 +557,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             for i in registry_result:
                 check_result += i
             log.debug("Received check domain response")
-            serializer = DomainAvailabilitySerializer(data=check_result,
+            serializer = self.serializer_class(data=check_result,
                                                       many=True)
             if serializer.is_valid():
                 return Response(serializer.data)
@@ -604,6 +571,46 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         except KeyError as e:
             log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
+    """
+    Handle domain related queries.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PrivateInfoDomainSerializer
+
+    def get_queryset(self):
+        """
+        Return queryset
+        :returns: RegisteredDomain set
+        """
+        user = self.request.user
+        return get_registered_domain_queryset(user)
+
+    def is_admin_or_owner(self, domain=None):
+        """
+        Determine if the current logged in user is admin or the owner of
+        the object.
+
+        :domain: Registered domain object
+        :returns: True or False
+
+        """
+        user = self.request.user
+        # Check if user is admin
+        if user.groups.filter(name='admin').exists():
+            return True
+        # otherwise check if user is registrant of contact for domain
+        if domain:
+            if domain.registrant.filter(
+                active=True,
+                registrant__project_id=user
+            ):
+                return True
+            if domain.contacts.filter(contact__project_id=user).exists():
+                return True
+        return False
 
     def domain_set(self, request):
         """

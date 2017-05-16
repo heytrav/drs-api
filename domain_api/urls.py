@@ -39,11 +39,11 @@ domain_list = views.DomainRegistryManagementViewSet.as_view({
 domain_detail = views.DomainRegistryManagementViewSet.as_view({
     'get': 'info',
 })
-domain_single_check = views.DomainRegistryManagementViewSet.as_view({
+domain_single_check = views.DomainAvailabilityViewSet.as_view({
     'get': 'available'
 })
 
-domain_bulk_check = views.DomainRegistryManagementViewSet.as_view({
+domain_bulk_check = views.DomainAvailabilityViewSet.as_view({
     'get': 'bulk_available'
 })
 
@@ -78,12 +78,12 @@ urlpatterns = [
     url(r'^', include(router.urls, namespace='domain_api')),
     url(r'^domains/$', domain_list, name='domain-list'),
     url(
-        r'^domains/available/(?P<name>[^\.\/]+)/$',
+        r'^available/(?P<name>[^\.\/]+)/$',
         domain_bulk_check,
         name='domain-bulk-available'
     ),
     url(
-        r'^domains/available/(?P<domain>.*)/$',
+        r'^available/(?P<domain>.*)/$',
         domain_single_check, name='check-domain'
     ),
     url(r'^domains/(?P<domain>.*)/$', domain_detail, name='domain-info'),
