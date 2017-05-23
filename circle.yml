@@ -8,3 +8,7 @@ machine:
     MYSQL_USER: ubuntu
     MYSQL_HOST: 127.0.0.1
     MYSQL_PORT: 3306
+
+notify:
+  webhooks:
+    - url: https://rocketchat.catalyst-au.net/hooks/ae8CYLLs9cYR5PZTe/bkAXoCavHHAF53wwh3rd6pR98BHHihyAg97Yyk3pZMwrcivy
