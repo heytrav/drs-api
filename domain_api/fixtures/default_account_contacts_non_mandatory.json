@@ -1,0 +1,68 @@
+[
+{
+    "model": "domain_api.defaultaccountcontact",
+    "pk": 1,
+    "fields": {
+        "project_id": 1,
+        "account_template": 3,
+        "contact_type": 1,
+        "provider": 3,
+        "mandatory": false
+    }
+},
+{
+    "model": "domain_api.defaultaccountcontact",
+    "pk": 2,
+    "fields": {
+        "project_id": 1,
+        "account_template": 4,
+        "contact_type": 2,
+        "provider": 3,
+        "mandatory": false
+    }
+},
+{
+    "model": "domain_api.defaultaccountcontact",
+    "pk": 3,
+    "fields": {
+        "project_id": 1,
+        "account_template": 3,
+        "contact_type": 1,
+        "provider": 4,
+        "mandatory": false
+    }
+},
+{
+    "model": "domain_api.defaultaccountcontact",
+    "pk": 4,
+    "fields": {
+        "project_id": 1,
+        "account_template": 4,
+        "contact_type": 2,
+        "provider": 4,
+        "mandatory": false
+    }
+},
+{
+    "model": "domain_api.defaultaccountcontact",
+    "pk": 5,
+    "fields": {
+        "project_id": 1,
+        "account_template": 3,
+        "contact_type": 1,
+        "provider": 5,
+        "mandatory": false
+    }
+},
+{
+    "model": "domain_api.defaultaccountcontact",
+    "pk": 6,
+    "fields": {
+        "project_id": 1,
+        "account_template": 4,
+        "contact_type": 2,
+        "provider": 5,
+        "mandatory": false
+    }
+}
+]
