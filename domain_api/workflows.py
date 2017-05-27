@@ -69,7 +69,7 @@ class Workflow(object):
 
     def append_contact_obj_to_workflow(self,
                                        contact,
-                                       user_id,
+                                       user_obj,
                                        mandatory=False):
         """
         Append DefaultAccountDetail object to create contact workflow.
@@ -78,7 +78,7 @@ class Workflow(object):
         """
         contact_type = contact.contact_type.name
         template_id = contact.account_template.id
-        user = user_id
+        user = user_obj.id
         contact_dict = {contact_type: template_id}
         if mandatory:
             user = contact.project_id.id
@@ -119,7 +119,7 @@ class Workflow(object):
         if mandatory_contacts.exists():
             [self.append_contact_obj_to_workflow(i, user, True) for i in mandatory_contacts.all()]
         elif "contacts" in data:
-            [self.append_contact_workflow(i, user) for i in data["contacts"]]
+            [self.append_contact_workflow(i, user.id) for i in data["contacts"]]
         elif default_contacts.exists():
             [self.append_contact_obj_to_workflow(i, user, False) for i in default_contacts.all()]
 
