@@ -184,7 +184,6 @@ class Workflow(object):
 
         :contact_set: Set of contacts in request
         :current_contacts: contacts currently attached to domain
-        :returns: TODO
 
         """
         for contact in contact_set:
@@ -199,11 +198,10 @@ class Workflow(object):
         """
         Check set of contacts attached to domain to see what is being removed.
 
-        :contact_set: TODO
-        :current_contacts: TODO
-        :epp: TODO
-        :user: TODO
-        :returns: TODO
+        :contact_set: list of contacts to evaluate
+        :current_contacts: Query Set object (django db)
+        :epp: dict with raw EPP structure
+        :user: id of user
 
         """
         for contact in current_contacts.all():
@@ -420,7 +418,8 @@ class Workflow(object):
                 log.debug("Not removing %s" % ns_host.idn_host)
 
     def update_domain(self, data, domain, user):
-        """Set up workflow for updating a domain
+        """
+        Set up workflow for updating a domain
 
         :data: dict for an epp update domain request
         :domain: registered domain object
@@ -493,6 +492,20 @@ class Workflow(object):
         self.append(create_host.si(host_data))
         self.append(connect_host.si(data, user.id))
         return self.workflow
+
+    def check_update_domain_change_status(self, data, epp, domain, user):
+        """
+        Evaluate the status sent with the request and determine if it should
+        go into the "chg" field
+
+        :data: TODO
+        :epp: TODO
+        :domain: TODO
+        :user: TODO
+        :returns: TODO
+
+        """
+        pass
 
 
 class CentralNic(Workflow):
