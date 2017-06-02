@@ -445,6 +445,11 @@ class Workflow(object):
                                                  domain,
                                                  user)
 
+        if "status" in data:
+            self.check_update_domain_change_status(data["status"],
+                                                   epp,
+                                                   domain,
+                                                   user)
         fields = ["add", "rem", "chg"]
         if len(self.workflow) > 0 or any(k in epp for k in fields):
             self.workflow.insert(0, init_update_domain.si(epp))

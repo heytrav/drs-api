@@ -80,8 +80,6 @@ class TestUpdateWorkflow(TestSetup):
     def test_update_domain_with_new_registrant(self):
         """
         Test logic for updating update command with a new registrant
-        :returns: TODO
-
         """
         possibly_new_registrant = "registrant-231"
         epp = {}
@@ -101,7 +99,6 @@ class TestUpdateWorkflow(TestSetup):
     def test_update_domain_fail_with_same_registrant(self):
         """
         Test logic for updating update command with the same registrant
-
         """
         possibly_new_registrant = "registrant-123"
         epp = {}
@@ -112,6 +109,29 @@ class TestUpdateWorkflow(TestSetup):
             self.test_customer_user
         )
         self.assertNotIn("chg", epp, "Change structure not added to epp data")
+
+    def test_update_domain_status(self):
+        """
+        Test change in domain status creates a "chg" entry in EPP
+        """
+        status = "clientTransferAllowed;gracePeriod"
+        epp = {}
+        self.workflow_factory.check_update_domain_change_status(
+            status,
+            epp,
+            self.registered_domain,
+            self.test_customer_user
+        )
+        self.assertIn("add",
+                      epp,
+                      "Change structure added to epp")
+        self.assertIn("clientTransferAllowed",
+                      epp["add"]["status"],
+                      "Updating status to allow transfer")
+        self.assertNotIn("clientTransferProhibited",
+                         epp["status"],
+                         "Removed prohibited status")
+
 
     def test_update_domain_add_contact(self):
         """
