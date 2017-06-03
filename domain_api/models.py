@@ -275,9 +275,6 @@ class RegisteredDomain(models.Model):
     Providers may have their own unique rules around renewal period and
     notifications.
     """
-    def default_status():
-        return ["ok"]
-
     domain = models.ForeignKey(Domain)
     # Needed to enforce unique constraint
     tld = models.ForeignKey(TopLevelDomain)
@@ -293,7 +290,7 @@ class RegisteredDomain(models.Model):
     authcode = models.CharField(max_length=100, null=True)
     roid = models.CharField(max_length=100, null=True)
     status = models.CharField(max_length=200, null=True)
-    domain_status = JSONField(default=None)
+    domain_status = JSONField(default=None, null=True)
     expiration = models.DateTimeField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
