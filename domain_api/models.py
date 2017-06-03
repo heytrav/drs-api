@@ -1,4 +1,5 @@
 from django.db import models
+from django_mysql.models import JSONField
 import idna
 import re
 
@@ -274,6 +275,9 @@ class RegisteredDomain(models.Model):
     Providers may have their own unique rules around renewal period and
     notifications.
     """
+    def default_status():
+        return ["ok"]
+
     domain = models.ForeignKey(Domain)
     # Needed to enforce unique constraint
     tld = models.ForeignKey(TopLevelDomain)
@@ -289,6 +293,7 @@ class RegisteredDomain(models.Model):
     authcode = models.CharField(max_length=100, null=True)
     roid = models.CharField(max_length=100, null=True)
     status = models.CharField(max_length=200, null=True)
+    domain_status = JSONField(default=None)
     expiration = models.DateTimeField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -301,6 +306,7 @@ class RegisteredDomain(models.Model):
         Represent a registered domain (i.e. name.tld).
         """
         return self.domain.name + "." + self.tld_provider.zone.zone
+
 
 
 class DomainRegistrant(models.Model):

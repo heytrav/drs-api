@@ -244,8 +244,9 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = RegisteredDomain
         fields = ('domain', 'tld', 'tld_provider', 'active', 'auto_renew',
+                  'domain_status',
                   'registration_period', 'expiration', 'created',
-                  'updated', 'registrant', 'contacts', 'url')
+                  'updated', 'registrant', 'contacts', 'url',)
 
 
 class DomainRegistrantSerializer(serializers.HyperlinkedModelSerializer):
@@ -344,6 +345,7 @@ class HandleSetSerializer(serializers.ListField):
     billing = serializers.CharField(required=False)
     zone = serializers.CharField(required=False)
 
+
 class PrivateInfoHostSerializer(serializers.ModelSerializer):
 
     host = serializers.SerializerMethodField()
@@ -384,7 +386,8 @@ class PrivateInfoHostSerializer(serializers.ModelSerializer):
         :returns: TODO
         """
         ipaddress_set = obj.ipaddress_set.all()
-        return [{"ip": i.ip, "addr_type": i.address_type} for i in ipaddress_set]
+        return [{"ip": i.ip, "addr_type": i.address_type}
+                for i in ipaddress_set]
 
 
 class PrivateInfoDomainSerializer(serializers.ModelSerializer):
@@ -408,7 +411,8 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
 
     def get_contacts(self, obj):
         active_contacts = obj.contacts.filter(active=True)
-        return [{i.contact_type.name: i.contact.registry_id} for i in active_contacts]
+        return [{i.contact_type.name: i.contact.registry_id}
+                for i in active_contacts]
 
     def get_ns(self, obj):
         ns = obj.ns
