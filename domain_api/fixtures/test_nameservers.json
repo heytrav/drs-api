@@ -1,0 +1,88 @@
+[
+{
+    "model": "domain_api.nameserver",
+    "pk": 1,
+    "fields": {
+        "idn_host": "ns1.test-01.cx",
+        "domain_nameservers": []
+    }
+},
+{
+    "model": "domain_api.nameserver",
+    "pk": 2,
+    "fields": {
+        "idn_host": "ns3.test-02.cx",
+        "domain_nameservers": []
+    }
+},
+{
+    "model": "domain_api.nameserver",
+    "pk": 3,
+    "fields": {
+        "idn_host": "ns4.test-03.com",
+        "domain_nameservers": []
+    }
+},
+{
+    "model": "domain_api.nameserver",
+    "pk": 4,
+    "fields": {
+        "idn_host": "ns5.test-04.net",
+        "domain_nameservers": []
+    }
+},
+{
+    "model": "domain_api.nameserver",
+    "pk": 5,
+    "fields": {
+        "idn_host": "ns6.test-05.host",
+        "domain_nameservers": []
+    }
+},
+{
+    "model": "domain_api.nameserver",
+    "pk": 6,
+    "fields": {
+        "idn_host": "ns7.test-06.cx",
+        "domain_nameservers": []
+    }
+},
+{
+    "model": "domain_api.nameserver",
+    "pk": 7,
+    "fields": {
+        "idn_host": "ns8.test-07.cx",
+        "domain_nameservers": []
+    }
+},
+{
+    "model": "domain_api.nameserver",
+    "pk": 8,
+    "fields": {
+        "idn_host": "ns1.test-08.com",
+        "domain_nameservers": [
+            1
+        ]
+    }
+},
+{
+    "model": "domain_api.nameserver",
+    "pk": 9,
+    "fields": {
+        "idn_host": "ns1.test-09.com",
+        "domain_nameservers": [
+            1
+        ]
+    }
+},
+{
+    "model": "domain_api.nameserver",
+    "pk": 10,
+    "fields": {
+        "idn_host": "ns2.test-10.com",
+        "domain_nameservers": [
+            1
+        ]
+    }
+}
+]

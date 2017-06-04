@@ -1,0 +1,100 @@
+[
+{
+    "model": "domain_api.nameserverhost",
+    "pk": 1,
+    "fields": {
+        "nameserver": 1,
+        "tld_provider": 23,
+        "default": false,
+        "created": "2017-03-26T19:48:30.155Z",
+        "updated": "2017-03-26T19:48:30.155Z",
+        "status": null,
+        "roid": null,
+        "project_id": 1
+    }
+},
+{
+    "model": "domain_api.nameserverhost",
+    "pk": 2,
+    "fields": {
+        "nameserver": 2,
+        "tld_provider": 23,
+        "default": false,
+        "created": "2017-03-29T00:28:38.067Z",
+        "updated": "2017-03-29T00:28:38.067Z",
+        "status": "ok",
+        "roid": "81891-CoCCA",
+        "project_id": 1
+    }
+},
+{
+    "model": "domain_api.nameserverhost",
+    "pk": 3,
+    "fields": {
+        "nameserver": 3,
+        "tld_provider": 23,
+        "default": false,
+        "created": "2017-03-29T00:33:37.952Z",
+        "updated": "2017-03-29T00:33:37.953Z",
+        "status": "ok",
+        "roid": "81892-CoCCA",
+        "project_id": 1
+    }
+},
+{
+    "model": "domain_api.nameserverhost",
+    "pk": 4,
+    "fields": {
+        "nameserver": 4,
+        "tld_provider": 23,
+        "default": false,
+        "created": "2017-03-29T01:08:08.122Z",
+        "updated": "2017-03-29T01:08:08.122Z",
+        "status": null,
+        "roid": null,
+        "project_id": 1
+    }
+},
+{
+    "model": "domain_api.nameserverhost",
+    "pk": 5,
+    "fields": {
+        "nameserver": 5,
+        "tld_provider": 23,
+        "default": false,
+        "created": "2017-03-29T01:50:04.923Z",
+        "updated": "2017-03-29T01:50:04.924Z",
+        "status": "ok",
+        "roid": "81894-CoCCA",
+        "project_id": 1
+    }
+},
+{
+    "model": "domain_api.nameserverhost",
+    "pk": 6,
+    "fields": {
+        "nameserver": 6,
+        "tld_provider": 23,
+        "default": false,
+        "created": "2017-03-29T01:54:47.601Z",
+        "updated": "2017-03-29T01:54:47.601Z",
+        "status": "ok",
+        "roid": "81895-CoCCA",
+        "project_id": 1
+    }
+},
+{
+    "model": "domain_api.nameserverhost",
+    "pk": 7,
+    "fields": {
+        "nameserver": 7,
+        "tld_provider": 23,
+        "default": false,
+        "created": "2017-03-29T03:24:59.021Z",
+        "updated": "2017-03-29T03:24:59.022Z",
+        "status": "ok",
+        "roid": "81896-CoCCA",
+        "project_id": 1
+    }
+}
+]

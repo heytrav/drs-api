@@ -103,6 +103,44 @@ class TestInfoDomain(TestSetup):
                              200,
                              "Epp returned normally")
 
+class TestUpdateDomain(TestSetup):
+
+    """
+    Test some commands to update domains
+    """
+
+    def setUp(self):
+        """
+        Set up test suite
+
+        """
+        super().setUp()
+
+    def test_noop_update_domain(self):
+        jwt_header = self.api_login()
+
+        update_domain = {
+            "domain": "test-something.bar",
+            "registrant": 1,
+            "contacts": [{"admin": 3}, {"tech": 4}]
+        }
+        response = self.client.patch(
+            '/v1/domains/test-something.bar/',
+            data=json.dumps(update_domain),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=jwt_header
+        )
+        self.assertEqual(response.status_code,
+                         200,
+                         "Epp returned normally")
+        data = response.data
+        self.assertEqual(data["msg"],
+                         "No change to domain",
+                         "Received a 'no change' response")
+
+
+
+
 
 class TestContact(TestSetup):
 

@@ -91,6 +91,7 @@ def synchronise_domain_nameserver(registered_domain, nameserver):
     ns, _ = Nameserver.objects.get_or_create(idn_host=nameserver)
     registered_domain.ns.add(ns)
 
+
 def synchronise_domain(info_data, domain_id):
     """
     Synchronise data in info domain response with upstream registry.
@@ -105,11 +106,11 @@ def synchronise_domain(info_data, domain_id):
         status=info_data.get("status", None)
     )
     registered_domain = filtered_domains.first()
+    current_nameservers = registered_domain.ns.all()
+    # Remove existing nameservers
+    for current_nameserver in current_nameservers:
+        registered_domain.ns.remove(current_nameserver)
     if registered_domain and 'ns' in info_data:
-        current_nameservers = registered_domain.ns.all()
-        # Remove existing nameservers
-        for current_nameserver in current_nameservers:
-            registered_domain.ns.remove(current_nameserver)
         if isinstance(info_data['ns'], list):
             for ns in info_data['ns']:
                 synchronise_domain_nameserver(registered_domain, ns)
@@ -135,7 +136,8 @@ def synchronise_host(info_data, host_id):
     for addr in info_data["addr"]:
         address_type = addr["addr_type"]
         ip = addr["ip"]
-        if not IpAddress.objects.filter(ip=ip, nameserver_host=nshost_obj).exists():
+        if not IpAddress.objects.filter(ip=ip,
+                                        nameserver_host=nshost_obj).exists():
             IpAddress.objects.get_or_create(
                 ip=ip,
                 nameserver_host=nshost_obj,

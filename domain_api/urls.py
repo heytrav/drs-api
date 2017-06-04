@@ -38,6 +38,7 @@ domain_list = views.DomainRegistryManagementViewSet.as_view({
 })
 domain_detail = views.DomainRegistryManagementViewSet.as_view({
     'get': 'info',
+    'patch': 'update'
 })
 domain_single_check = views.DomainAvailabilityViewSet.as_view({
     'get': 'available'
