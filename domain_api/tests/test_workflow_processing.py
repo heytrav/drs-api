@@ -110,29 +110,6 @@ class TestUpdateWorkflow(TestSetup):
         )
         self.assertNotIn("chg", epp, "Change structure not added to epp data")
 
-    def test_update_domain_status(self):
-        """
-        Test change in domain status creates a "chg" entry in EPP
-        """
-        status = "clientTransferAllowed;gracePeriod"
-        epp = {}
-        self.workflow_factory.check_update_domain_change_status(
-            status,
-            epp,
-            self.registered_domain,
-            self.test_customer_user
-        )
-        self.assertIn("add",
-                      epp,
-                      "Change structure added to epp")
-        self.assertIn("clientTransferAllowed",
-                      epp["add"]["status"],
-                      "Updating status to allow transfer")
-        self.assertNotIn("clientTransferProhibited",
-                         epp["status"],
-                         "Removed prohibited status")
-
-
     def test_update_domain_add_contact(self):
         """
         Test that request with new contact account detail id creates an entry
