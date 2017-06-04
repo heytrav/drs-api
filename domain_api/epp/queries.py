@@ -1,12 +1,5 @@
-from django.db.models import Q
 import logging
 from ..utilities.domain import parse_domain, get_domain_registry
-from ..exceptions import UnknownContact, UnknownRegistry
-from ..models import (
-    Contact as ContactModel,
-    Registrant as RegistrantModel,
-    RegisteredDomain
-)
 import idna
 from .entity import EppEntity
 
@@ -62,7 +55,8 @@ class Domain(EppEntity):
 
         """
         registry = get_domain_registry(args[0])
-        data = {"domain": [idna.encode(i, uts46=True).decode('ascii') for i in args]}
+        data = {"domain": [idna.encode(i, uts46=True).decode('ascii')
+                           for i in args]}
         log.debug("{!r}".format(data))
         response_data = self.rpc_client.call(registry.slug, 'checkDomain', data)
         log.debug("response data {!r}".format(response_data))
@@ -99,7 +93,6 @@ class Domain(EppEntity):
             for host_obj in raw_ns:
                 nameservers.append(host_obj["domain:hostObj"])
         return nameservers
-
 
     def info(self, domain, user=None):
         """
@@ -181,7 +174,7 @@ class ContactQuery(EppEntity):
             "name": item["contact:name"],
             "company": item.get("contact:org", ""),
             "postal_info_type": item["type"],
-            "street1": " ".join(contact_street),
+            "street": contact_street[0:3],
             "country": addr["contact:cc"],
             "state": addr["contact:sp"],
             "city": addr["contact:city"],
@@ -214,7 +207,7 @@ class ContactQuery(EppEntity):
             else:
                 # If item not in returned set, its display status is opposite
                 # everything else.
-                disclose[item] =  not flag
+                disclose[item] = not flag
         return disclose
 
     def info(self, contact):
@@ -253,21 +246,20 @@ class ContactQuery(EppEntity):
         extra_fields["roid"] = info_data["contact:roid"]
         if "contact:authInfo" in info_data:
             extra_fields["authcode"] = info_data["contact:authInfo"]["contact:pw"]
-        processed_info_data = {**processed_info_data, **extra_fields}
+        processed_info_data.update(extra_fields)
 
         try:
-            contact_info_data = {
-                **processed_postal_info,
-                **processed_info_data,
-                **disclose_data
-            }
+            contact_info_data = {}
+            contact_info_data.update(processed_postal_info)
+            contact_info_data.update(processed_info_data)
+            contact_info_data.update(disclose_data)
             for item, value in contact_info_data.items():
                 if isinstance(value, dict):
                     contact_info_data[item] = ""
 
             self.queryset.filter(pk=contact.id).update(**contact_info_data)
         except Exception as e:
-            log.error("", exc_info=True);
+            log.error("", exc_info=True)
             raise e
         return self.queryset.get(pk=contact.id)
 
@@ -281,7 +273,6 @@ class HostQuery(EppEntity):
     def __init__(self, queryset=None):
         super().__init__(queryset)
 
-
     def check_host(self, *args):
         """
         Send a check host request to the registry
@@ -291,8 +282,13 @@ class HostQuery(EppEntity):
 
         """
         registry = get_domain_registry(args[0])
-        data = {"host": [idna.encode(i, uts46=True).decode('ascii') for i in args]}
-        response_data = self.rpc_client.call(registry.slug, 'checkHost', data)
+        data = {"host": [idna.encode(i, uts46=True).decode('ascii')
+                         for i in args]}
+        response_data = self.rpc_client.call(
+            registry.slug,
+            'checkHost',
+            data
+        )
         check_data = response_data["host:chkData"]["host:cd"]
         results = []
         if isinstance(check_data, list):
@@ -331,7 +327,6 @@ class HostQuery(EppEntity):
         if isinstance(addresses, list):
             return [self.process_addr_item(i) for i in addresses]
         return [self.process_addr_item(addresses)]
-
 
     def info(self, host, user=None):
         """

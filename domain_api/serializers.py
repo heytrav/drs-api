@@ -39,6 +39,7 @@ class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
         model = AccountDetail
         fields = ('url', 'first_name', 'surname', 'middle_name', 'email',
                   'telephone', 'fax', 'company',
+                  'street',
                   'house_number', 'street1', 'street2', 'street3', 'city',
                   'suburb', 'state', 'postcode', 'country', 'postal_info_type',
                   'disclose_name', 'disclose_company', 'disclose_address',
@@ -145,7 +146,7 @@ class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
         model = Registrant
         fields = ('url', 'provider', 'registry_id', 'name',
                   'email', 'telephone', 'fax', 'company', 'house_number',
-                  'street1', 'street2', 'street3', 'city', 'suburb', 'state',
+                  'street', 'street1', 'street2', 'street3', 'city', 'suburb', 'state',
                   'postcode', 'country', 'postal_info_type', 'disclose_name',
                   'disclose_company', 'disclose_address', 'disclose_telephone',
                   'disclose_fax', 'disclose_email', 'created', 'updated',
@@ -173,7 +174,7 @@ class ContactSerializer(serializers.HyperlinkedModelSerializer):
         model = Contact
         fields = ('url', 'provider', 'registry_id', 'name',
                   'email', 'telephone', 'fax', 'company', 'house_number',
-                  'street1', 'street2', 'street3', 'city', 'suburb', 'state',
+                  'street', 'street1', 'street2', 'street3', 'city', 'suburb', 'state',
                   'postcode', 'country', 'postal_info_type', 'disclose_name',
                   'disclose_company', 'disclose_address', 'disclose_telephone',
                   'disclose_fax', 'disclose_email', 'created', 'updated',
@@ -470,7 +471,8 @@ class PrivateInfoContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        fields = ('registry_id', 'name', 'email', 'company', 'street1',
+        fields = ('registry_id', 'name', 'email', 'company', 'street',
+                  'street1',
                   'street2', 'street3', 'city', 'telephone', 'fax',
                   'house_number', 'state', 'country', 'postcode',
                   'postal_info_type', 'disclose_name', 'disclose_company',
@@ -485,6 +487,7 @@ class InfoContactSerializer(serializers.Serializer):
     email = serializers.CharField(required=False)
     company = serializers.CharField(required=False)
     house_number = serializers.CharField(required=False)
+    street = serializers.JSONField()
     street1 = serializers.CharField(required=False)
     street2 = serializers.CharField(required=False)
     street3 = serializers.CharField(required=False)
@@ -496,7 +499,8 @@ class InfoContactSerializer(serializers.Serializer):
 
     class Meta:
         model = Contact
-        fields = ('registry_id', 'name', 'email', 'company', 'street1',
+        fields = ('registry_id', 'name', 'email', 'company', 'street',
+                  'street1',
                   'street2', 'street3', 'city', 'telephone', 'fax',
                   'house_number', 'state', 'country', 'postcode',
                   'postal_info_type',)

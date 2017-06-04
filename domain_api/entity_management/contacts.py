@@ -133,11 +133,7 @@ class ContactFactory(object):
         """
         contact_id = self.get_registry_id()
         template = self.template
-        street = [template.street1]
-        if template.street2 != "":
-            street.append(template.street2)
-        if template.street3 != "":
-            street.append(template.street3)
+        street = template.street
         non_disclose = self.process_disclose()
         company = ""
         if template.company:
@@ -193,18 +189,9 @@ class ContactFactory(object):
             if any(k in data for k in self.address_fields):
                 address = {
                     "city": data.get('city', contact.city),
-                    "cc": data.get('country', contact.country)
+                    "cc": data.get('country', contact.country),
+                    "street": contact.street
                 }
-                if any(k in data for k in self.street_fields):
-                    address["street"] = []
-                    street1 = data.get('street1', contact.street1)
-                    street2 = data.get('street2', contact.street2)
-                    street3 = data.get('street3', contact.street3)
-                    address["street"].append(street1)
-                    if street2:
-                        address["street"].append(street2)
-                    if street3:
-                        address["street"].append(street3)
                 if "state" in data:
                     address["sp"] = data["state"]
                 if "postcode" in data:
