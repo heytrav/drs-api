@@ -382,8 +382,8 @@ class PrivateInfoHostSerializer(serializers.ModelSerializer):
         """
         Return the set of addresses
 
-        :obj: TODO
-        :returns: TODO
+        :obj: Model object
+        :returns: list of ip addresses
         """
         ipaddress_set = obj.ipaddress_set.all()
         return [{"ip": i.ip, "addr_type": i.address_type}
@@ -399,7 +399,8 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegisteredDomain
         fields = ('domain', 'contacts', 'registrant', 'roid', 'ns',
-                  'status', 'authcode', 'created', 'expiration')
+                  'status', 'domain_status', 'authcode',
+                  'created', 'expiration')
         read_only_fields = ('roid', 'expiration', 'created', 'authcode',
                             'status')
 

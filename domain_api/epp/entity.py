@@ -4,6 +4,7 @@ from application import settings
 
 log = logging.getLogger(__name__)
 
+
 class EppEntity(object):
 
     """
@@ -28,11 +29,11 @@ class EppEntity(object):
         return_status = []
         try:
             if isinstance(raw_status, dict):
-                return_status.append(raw_status["s"])
+                return_status.append(raw_status)
             elif isinstance(raw_status, list):
                 for stat in raw_status:
-                    return_status.append(stat["s"])
-            return ";".join(return_status)
+                    return_status.append(stat)
+            return return_status
         except Exception as e:
             log.error({"msg": "Problem parsing status", "error": e})
 

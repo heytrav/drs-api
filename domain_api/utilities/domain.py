@@ -103,7 +103,7 @@ def synchronise_domain(info_data, domain_id):
     filtered_domains.update(
         authcode=info_data.get("authcode", None),
         roid=info_data.get("roid", None),
-        status=info_data.get("status", None)
+        domain_status=info_data.get("status", None)
     )
     registered_domain = filtered_domains.first()
     current_nameservers = registered_domain.ns.all()

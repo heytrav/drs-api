@@ -247,7 +247,7 @@ class ContactQuery(EppEntity):
             "telephone": info_data["contact:voice"],
         }
         extra_fields = {}
-        extra_fields["status"] = self.process_status(
+        extra_fields["contact_status"] = self.process_status(
             info_data["contact:status"]
         )
         extra_fields["roid"] = info_data["contact:roid"]
@@ -355,7 +355,7 @@ class HostQuery(EppEntity):
         return_data = {
             "host": info_data["host:name"],
             "addr": self.process_addresses(info_data["host:addr"]),
-            "status": self.process_status(info_data["host:status"]),
+            "nameserver_status": self.process_status(info_data["host:status"]),
             "roid": info_data["host:roid"]
         }
         if "host:authInfo" in info_data:

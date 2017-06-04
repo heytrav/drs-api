@@ -144,6 +144,7 @@ class Registrant(models.Model):
     suburb = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=200, null=True, blank=True)
     status = models.CharField(max_length=200, null=True)
+    contact_status = JSONField(null=True, default=None)
     postcode = models.CharField(max_length=20, null=True)
     # Must be a 2 letter country code.
     country = models.CharField(max_length=2, null=True)
@@ -211,6 +212,7 @@ class Contact(models.Model):
     disclose_email = models.BooleanField(default=False)
     provider = models.ForeignKey(DomainProvider)
     status = models.CharField(max_length=200, null=True)
+    contact_status = JSONField(null=True, default=None)
     # Id from provider
     registry_id = models.CharField(max_length=200, unique=True)
     project_id = models.ForeignKey('auth.User',
@@ -376,6 +378,7 @@ class NameserverHost(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=200, null=True)
+    nameserver_status = JSONField(default=None, null=True)
     roid = models.CharField(max_length=100, null=True)
     project_id = models.ForeignKey('auth.User',
                                    related_name='nameserver_hosts',
