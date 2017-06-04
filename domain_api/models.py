@@ -42,7 +42,6 @@ class AccountDetail(models.Model):
         default=LOC
     )
     disclose = JSONField(default=None, null=True)
-    non_disclose = JSONField(default=None, null=True)
     disclose_name = models.BooleanField(default=False)
     disclose_company = models.BooleanField(default=False)
     disclose_address = models.BooleanField(default=False)
@@ -160,7 +159,6 @@ class Registrant(models.Model):
     authcode = models.CharField(max_length=100, null=True, blank=True)
     roid = models.CharField(max_length=100, null=True, blank=True)
     disclose = JSONField(default=None, null=True)
-    non_disclose = JSONField(default=None, null=True)
     disclose_name = models.BooleanField(default=False)
     disclose_company = models.BooleanField(default=False)
     disclose_address = models.BooleanField(default=False)
@@ -212,7 +210,6 @@ class Contact(models.Model):
     authcode = models.CharField(max_length=100, null=True, blank=True)
     roid = models.CharField(max_length=100, null=True, blank=True)
     disclose = JSONField(default=None, null=True)
-    non_disclose = JSONField(default=None, null=True)
     disclose_name = models.BooleanField(default=False)
     disclose_company = models.BooleanField(default=False)
     disclose_address = models.BooleanField(default=False)

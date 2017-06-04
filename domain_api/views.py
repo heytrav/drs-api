@@ -8,9 +8,6 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from rest_framework import status, permissions, viewsets, generics
-from rest_framework.decorators import (
-    detail_route,
-)
 from rest_framework.response import Response
 from domain_api.models import (
     Domain,
@@ -50,6 +47,7 @@ from domain_api.serializers import (
     DefaultAccountTemplateSerializer,
     InfoHostSerializer,
     PrivateInfoHostSerializer,
+    PrivateInfoRegistrantSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
@@ -63,7 +61,6 @@ from .exceptions import (
     DomainNotAvailable,
     NotObjectOwner,
     EppObjectDoesNotExist,
-    UpdateEmpty
 )
 from domain_api.entity_management.contacts import (
     RegistrantManager,
@@ -291,7 +288,7 @@ class RegistrantManagementViewSet(ContactManagementViewSet):
     Handle registrant related queries.
     """
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = PrivateInfoContactSerializer
+    serializer_class = PrivateInfoRegistrantSerializer
     queryset = Registrant.objects.all()
     manager = RegistrantManager
 
@@ -511,7 +508,6 @@ class DomainAvailabilityViewSet(viewsets.ViewSet):
             log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
     def bulk_available(self, request, name=None):
         """
         Leave the tld away to check availability at all supported tld providers.
@@ -559,7 +555,7 @@ class DomainAvailabilityViewSet(viewsets.ViewSet):
                 check_result += i
             log.debug("Received check domain response")
             serializer = self.serializer_class(data=check_result,
-                                                      many=True)
+                                               many=True)
             if serializer.is_valid():
                 return Response(serializer.data)
             else:

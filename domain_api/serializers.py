@@ -44,7 +44,8 @@ class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
                   'suburb', 'state', 'postcode', 'country', 'postal_info_type',
                   'disclose_name', 'disclose_company', 'disclose_address',
                   'disclose_telephone', 'disclose_fax', 'disclose_email',
-                  'created', 'updated', 'project_id', 'default_registrant',)
+                  'created', 'updated', 'project_id', 'default_registrant',
+                  'disclose',)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -146,10 +147,13 @@ class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
         model = Registrant
         fields = ('url', 'provider', 'registry_id', 'name',
                   'email', 'telephone', 'fax', 'company', 'house_number',
-                  'street', 'street1', 'street2', 'street3', 'city', 'suburb', 'state',
+                  'street', 'street1', 'street2', 'street3', 'city', 'suburb',
+                  'state',
                   'postcode', 'country', 'postal_info_type', 'disclose_name',
+                  'disclose',
                   'disclose_company', 'disclose_address', 'disclose_telephone',
                   'disclose_fax', 'disclose_email', 'created', 'updated',
+                  'contact_status',
                   'project_id',)
 
 
@@ -174,10 +178,14 @@ class ContactSerializer(serializers.HyperlinkedModelSerializer):
         model = Contact
         fields = ('url', 'provider', 'registry_id', 'name',
                   'email', 'telephone', 'fax', 'company', 'house_number',
-                  'street', 'street1', 'street2', 'street3', 'city', 'suburb', 'state',
-                  'postcode', 'country', 'postal_info_type', 'disclose_name',
+                  'street', 'street1', 'street2', 'street3', 'city', 'suburb',
+                  'state',
+                  'postcode', 'country', 'postal_info_type',
+                  'disclose',
+                  'disclose_name',
                   'disclose_company', 'disclose_address', 'disclose_telephone',
                   'disclose_fax', 'disclose_email', 'created', 'updated',
+                  'contact_status',
                   'project_id',)
 
 
@@ -357,6 +365,7 @@ class PrivateInfoHostSerializer(serializers.ModelSerializer):
     class Meta:
         model = NameserverHost
         fields = ('host', 'idn_host', 'addr', 'created', 'updated',
+                  'nameserver_status',
                   'status', 'roid', 'project_id')
         read_only_fields = ('status', 'project_id', 'created', 'updated',
                             'roid')
@@ -475,8 +484,25 @@ class PrivateInfoContactSerializer(serializers.ModelSerializer):
                   'street1',
                   'street2', 'street3', 'city', 'telephone', 'fax',
                   'house_number', 'state', 'country', 'postcode',
-                  'postal_info_type', 'disclose_name', 'disclose_company',
+                  'postal_info_type', 'disclose', 'disclose_name',
+                  'disclose_company',
                   'disclose_telephone', 'disclose_email', 'disclose_address',
+                  'contact_status',
+                  'status', 'authcode', 'disclose_fax',)
+
+
+class PrivateInfoRegistrantSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Registrant
+        fields = ('registry_id', 'name', 'email', 'company', 'street',
+                  'street1',
+                  'street2', 'street3', 'city', 'telephone', 'fax',
+                  'house_number', 'state', 'country', 'postcode',
+                  'postal_info_type', 'disclose', 'disclose_name',
+                  'disclose_company',
+                  'disclose_telephone', 'disclose_email', 'disclose_address',
+                  'contact_status',
                   'status', 'authcode', 'disclose_fax',)
 
 
