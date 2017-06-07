@@ -1,0 +1,9 @@
+.git*
+.dockerignore
+circle.yml
+Dockerfile
+README*
+local.rc
+
+# don't import the e2e tests
+e2e

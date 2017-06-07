@@ -11,13 +11,15 @@ RUN apt-get update && apt-get -y install \
       python3-pip \
       python3.5 \
       python3.5-dev \
-      jq
+      jq \
+      && rm -rf /var/lib/apt/lists/*
 
 
 WORKDIR /usr/local/domain-api
-COPY . /usr/local/domain-api
-RUN pip3 install -r requirements.txt
+COPY requirements.txt /usr/local/domain-api
+RUN pip3 install --no-cache-dir -r requirements.txt
 
+COPY . /usr/local/domain-api/
 
 EXPOSE 8000
 VOLUME ["/usr/local/domain-api"]
