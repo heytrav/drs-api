@@ -154,8 +154,8 @@ class Workflow(object):
         epp = {
             "name": data["domain"]
         }
-        if "ns" in data:
-            epp["ns"] = data["ns"]
+        if "nameservers" in data:
+            epp["ns"] = data["nameservers"]
 
         if "period" in data:
             epp["period"] = data["period"]
