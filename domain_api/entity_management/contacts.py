@@ -21,7 +21,7 @@ class ContactFactory(object):
                        'disclose_telephone', 'disclose_fax', 'disclose_email')
     postal_info_fields = ('name', 'company',)
     address_fields = ('city', 'state', 'postcode', 'country')
-    street_fields = ('street1', 'street2', 'street3')
+    street_fields = ('street',)
     contact_model = Contact
 
     def __init__(self,
@@ -189,14 +189,14 @@ class ContactFactory(object):
             if any(k in data for k in self.address_fields):
                 address = {
                     "city": data.get('city', contact.city),
-                    "cc": data.get('country', contact.country),
-                    "street": contact.street
+                    "cc": data.get('country', contact.country)
                 }
+                if "street" in data:
+                    address["street"] = data["street"]
                 if "state" in data:
                     address["sp"] = data["state"]
                 if "postcode" in data:
                     address["pc"] = data["postcode"]
-
                 postal_info["addr"] = address
             return postal_info
         return None

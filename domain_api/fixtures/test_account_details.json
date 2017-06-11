@@ -11,6 +11,7 @@
         "fax": "",
         "company": "",
         "house_number": "10",
+        "street": ["Evergreen Terrace"],
         "street1": "Evergreen Terrace",
         "street2": "",
         "street3": "",

@@ -12,6 +12,7 @@
         "fax": "",
         "company": "",
         "house_number": "",
+        "street": ["754 Evergreen Terrace"],
         "street1": "754 Evergreen Terrace",
         "street2": "",
         "street3": "",

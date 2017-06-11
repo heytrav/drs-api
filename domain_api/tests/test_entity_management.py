@@ -91,7 +91,6 @@ class TestContactManager(TestSetup):
 
             actual_data = {
                 'id': "registrant-123",
-                'add': ['clientHappy'],
                 'chg': {
                     'postalInfo': {
                         'name': 'Joe Luser',
