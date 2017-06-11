@@ -405,14 +405,13 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
     registrant = serializers.SerializerMethodField()
     contacts = serializers.SerializerMethodField()
     ns = serializers.SerializerMethodField()
+    nameservers = serializers.JSONField()
 
     class Meta:
         model = RegisteredDomain
-        fields = ('domain', 'contacts', 'registrant', 'ns',
-                  'authcode',
-                  'created', 'expiration')
-        read_only_fields = ('expiration', 'created', 'authcode',
-                            'status')
+        fields = ('domain', 'contacts', 'registrant', 'ns', 'nameservers',
+                  'authcode', 'created', 'expiration')
+        read_only_fields = ('expiration', 'created', 'authcode', 'status')
 
     def get_registrant(self, obj):
         return obj.registrant.filter(active=True).first().registrant.registry_id
@@ -460,6 +459,7 @@ class InfoDomainSerializer(serializers.Serializer):
     registrant = serializers.CharField(required=True, allow_blank=False)
     roid = serializers.CharField(required=False)
     ns = NsHostObjectListSerializer(required=False)
+    nameservers = serializers.JSONField()
     status = serializers.JSONField()
     created = serializers.DateTimeField(required=False)
     expiration = serializers.DateTimeField(required=False)

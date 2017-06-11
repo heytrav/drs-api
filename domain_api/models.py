@@ -299,6 +299,7 @@ class RegisteredDomain(models.Model):
     roid = models.CharField(max_length=100, null=True)
     status = models.CharField(max_length=200, null=True)
     domain_status = JSONField(default=None, null=True)
+    nameservers = JSONField(default=None, null=True)
     expiration = models.DateTimeField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)

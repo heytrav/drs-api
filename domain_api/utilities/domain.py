@@ -112,9 +112,11 @@ def synchronise_domain(info_data, domain_id):
         registered_domain.ns.remove(current_nameserver)
     if registered_domain and 'ns' in info_data:
         if isinstance(info_data['ns'], list):
+            filtered_domains.update(nameservers=info_data['ns'])
             for ns in info_data['ns']:
                 synchronise_domain_nameserver(registered_domain, ns)
         else:
+            filtered_domains.update(nameservers=[info_data['ns']])
             synchronise_domain_nameserver(registered_domain,
                                           info_data['ns'])
 
