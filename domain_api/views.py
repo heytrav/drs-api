@@ -48,6 +48,7 @@ from domain_api.serializers import (
     InfoHostSerializer,
     PrivateInfoHostSerializer,
     PrivateInfoRegistrantSerializer,
+    AdminInfoDomainSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
@@ -585,20 +586,24 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         user = self.request.user
         return get_registered_domain_queryset(user)
 
-    def is_admin_or_owner(self, domain=None):
+    def is_admin(self):
         """
-        Determine if the current logged in user is admin or the owner of
-        the object.
-
-        :domain: Registered domain object
-        :returns: True or False
-
+        Determine if the current logged in user is admin
+        :returns: Boolean
         """
         user = self.request.user
         # Check if user is admin
         if user.groups.filter(name='admin').exists():
             return True
-        # otherwise check if user is registrant of contact for domain
+        return False
+
+    def is_owner(self, domain=None):
+        """
+        Determine if the current logged in user is the domain owner.
+        :domain: RegisteredDomain object
+        :returns: Boolean
+        """
+        user = self.request.user
         if domain:
             if domain.registrant.filter(
                 active=True,
@@ -641,9 +646,14 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             info, registered_domain = query.info(domain)
             get_logzio_sender().append(info)
             log.debug("Info domain for %s" % domain)
-            if registered_domain and self.is_admin_or_owner(registered_domain):
+            serializer_class = None
+            if self.is_owner(registered_domain):
+                serializer_class = self.serializer_class
+            if self.is_admin():
+                serializer_class = AdminInfoDomainSerializer
+            if serializer_class is not None:
                 synchronise_domain(info, registered_domain.id)
-                serializer = self.serializer_class(
+                serializer = serializer_class(
                     self.get_queryset().get(pk=registered_domain.id)
                 )
                 return Response(serializer.data)
@@ -651,6 +661,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             if serializer.is_valid():
                 return Response(serializer.data)
             else:
+                log.error("Errors serializing response")
                 return Response(serializer.errors,
                                 status=status.HTTP_400_BAD_REQUEST)
         except InvalidTld as e:
