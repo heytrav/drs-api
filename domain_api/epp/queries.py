@@ -189,26 +189,22 @@ class ContactQuery(EppEntity):
         :returns: dict processed with true/false
 
         """
-        flag = False
-        if int(raw_disclose_data["flag"]) == 1:
-            flag = True
+        log.info("Processing disclose data {!r}".format(raw_disclose_data))
         contact_attributes = {
-            "contact:name": "disclose_name",
-            "contact:voice": "disclose_telephone",
-            "contact:fax": "disclose_fax",
-            "contact:email": "disclose_email",
-            "contact:addr": "disclose_address",
-            "contact:org": "disclose_company"
+            "contact:voice": "telephone",
+            "contact:fax": "fax",
+            "contact:email": "email",
+            "contact:name": "name",
+            "contact:addr": "address",
+            "contact:org": "company"
         }
-        disclose = {}
-        for epp_attr, item in contact_attributes.items():
-            if epp_attr in raw_disclose_data:
-                disclose[item] = flag
-            else:
-                # If item not in returned set, its display status is opposite
-                # everything else.
-                disclose[item] = not flag
-        return disclose
+        processed_data = {
+            "flag": raw_disclose_data["flag"],
+            "fields": []
+        }
+        for (k, v) in contact_attributes.items():
+            processed_data["fields"].append(v)
+        return processed_data
 
     def info(self, contact):
         """
@@ -226,10 +222,6 @@ class ContactQuery(EppEntity):
         response_data = self.rpc_client.call(registry, 'infoContact', data)
         log.debug("Received info response")
         info_data = response_data["contact:infData"]
-        disclose_data = {}
-        if "contact:disclose" in info_data:
-            disclose_data = self.process_disclose(info_data["contact:disclose"])
-
         processed_postal_info = self.process_postal_info(
             info_data["contact:postalInfo"]
         )[0]
@@ -238,6 +230,7 @@ class ContactQuery(EppEntity):
             "fax": info_data.get("contact:fax", ""),
             "registry_id": info_data["contact:id"],
             "telephone": info_data["contact:voice"],
+
         }
         extra_fields = {}
         extra_fields["contact_status"] = self.process_status(
@@ -252,11 +245,12 @@ class ContactQuery(EppEntity):
             contact_info_data = {}
             contact_info_data.update(processed_postal_info)
             contact_info_data.update(processed_info_data)
-            contact_info_data.update(disclose_data)
             for item, value in contact_info_data.items():
                 if isinstance(value, dict):
                     contact_info_data[item] = ""
-
+            contact_info_data["disclose"] = self.process_disclose(
+                info_data["contact:disclose"]
+            )
             self.queryset.filter(pk=contact.id).update(**contact_info_data)
         except Exception as e:
             log.error("", exc_info=True)

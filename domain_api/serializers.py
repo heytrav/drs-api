@@ -37,13 +37,11 @@ class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = AccountDetail
-        fields = ('url', 'first_name', 'surname', 'middle_name', 'email',
+        fields = ('url', 'first_name', 'surname', 'email',
                   'telephone', 'fax', 'company',
                   'street',
-                  'house_number', 'street1', 'street2', 'street3', 'city',
-                  'suburb', 'state', 'postcode', 'country', 'postal_info_type',
-                  'disclose_name', 'disclose_company', 'disclose_address',
-                  'disclose_telephone', 'disclose_fax', 'disclose_email',
+                   'city',
+                  'state', 'postcode', 'country', 'postal_info_type',
                   'created', 'updated', 'project_id', 'default_registrant',
                   'disclose',)
 
@@ -146,13 +144,12 @@ class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Registrant
         fields = ('url', 'provider', 'registry_id', 'name',
-                  'email', 'telephone', 'fax', 'company', 'house_number',
-                  'street', 'street1', 'street2', 'street3', 'city', 'suburb',
+                  'email', 'telephone', 'fax', 'company',
+                  'street', 'city',
                   'state',
-                  'postcode', 'country', 'postal_info_type', 'disclose_name',
+                  'postcode', 'country', 'postal_info_type',
                   'disclose',
-                  'disclose_company', 'disclose_address', 'disclose_telephone',
-                  'disclose_fax', 'disclose_email', 'created', 'updated',
+                   'created', 'updated',
                   'contact_status',
                   'project_id',)
 
@@ -177,14 +174,12 @@ class ContactSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Contact
         fields = ('url', 'provider', 'registry_id', 'name',
-                  'email', 'telephone', 'fax', 'company', 'house_number',
-                  'street', 'street1', 'street2', 'street3', 'city', 'suburb',
+                  'email', 'telephone', 'fax', 'company',
+                  'street', 'city',
                   'state',
                   'postcode', 'country', 'postal_info_type',
                   'disclose',
-                  'disclose_name',
-                  'disclose_company', 'disclose_address', 'disclose_telephone',
-                  'disclose_fax', 'disclose_email', 'created', 'updated',
+                  'created', 'updated',
                   'contact_status',
                   'project_id',)
 
@@ -440,19 +435,6 @@ class AdminInfoDomainSerializer(PrivateInfoDomainSerializer):
                             'status')
 
 
-class OwnerInfoDomainSerializer(serializers.Serializer):
-    domain = serializers.CharField(required=True, allow_blank=False)
-    contacts = HandleSetSerializer()
-    registrant = serializers.CharField(required=True, allow_blank=False)
-    roid = serializers.CharField()
-    ns = NsHostObjectListSerializer(required=False)
-    status = serializers.CharField(required=False, allow_blank=True)
-    authcode = serializers.CharField(required=False, allow_blank=True)
-    roid = serializers.CharField(required=False, allow_blank=True)
-    created = serializers.DateTimeField(required=False)
-    expiration = serializers.DateTimeField(required=False)
-
-
 class InfoDomainSerializer(serializers.Serializer):
     domain = serializers.CharField(required=True, allow_blank=False)
     contacts = HandleSetSerializer()
@@ -492,14 +474,22 @@ class PrivateInfoContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = ('registry_id', 'name', 'email', 'company', 'street',
-                  'street1',
-                  'street2', 'street3', 'city', 'telephone', 'fax',
-                  'house_number', 'state', 'country', 'postcode',
-                  'postal_info_type', 'disclose', 'disclose_name',
-                  'disclose_company',
-                  'disclose_telephone', 'disclose_email', 'disclose_address',
+                  'city', 'telephone', 'fax',
+                  'state', 'country', 'postcode',
+                  'postal_info_type', 'disclose',
+                  'authcode',)
+
+
+class AdminInfoContactSerializer(PrivateInfoContactSerializer):
+
+    class Meta:
+        model = Contact
+        fields = ('registry_id', 'name', 'email', 'company', 'street',
+                  'city', 'telephone', 'fax',
+                  'state', 'country', 'postcode',
+                  'postal_info_type', 'disclose',
                   'contact_status',
-                  'status', 'authcode', 'disclose_fax',)
+                  'status', 'authcode', 'roid')
 
 
 class PrivateInfoRegistrantSerializer(serializers.ModelSerializer):
@@ -507,14 +497,23 @@ class PrivateInfoRegistrantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Registrant
         fields = ('registry_id', 'name', 'email', 'company', 'street',
-                  'street1',
-                  'street2', 'street3', 'city', 'telephone', 'fax',
-                  'house_number', 'state', 'country', 'postcode',
-                  'postal_info_type', 'disclose', 'disclose_name',
-                  'disclose_company',
-                  'disclose_telephone', 'disclose_email', 'disclose_address',
+                  'city', 'telephone', 'fax',
+                  'state', 'country', 'postcode',
+                  'postal_info_type', 'disclose',
+                  'authcode',)
+
+
+class AdminInfoRegistrantSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Registrant
+        fields = ('registry_id', 'name', 'email', 'company', 'street',
+
+                  'city', 'telephone', 'fax',
+                  'state', 'country', 'postcode',
+                  'postal_info_type', 'disclose',
                   'contact_status',
-                  'status', 'authcode', 'disclose_fax',)
+                  'status', 'authcode', 'roid')
 
 
 class InfoContactSerializer(serializers.Serializer):
@@ -523,11 +522,7 @@ class InfoContactSerializer(serializers.Serializer):
     name = serializers.CharField(required=False)
     email = serializers.CharField(required=False)
     company = serializers.CharField(required=False)
-    house_number = serializers.CharField(required=False)
     street = serializers.JSONField()
-    street1 = serializers.CharField(required=False)
-    street2 = serializers.CharField(required=False)
-    street3 = serializers.CharField(required=False)
     city = serializers.CharField(required=False)
     state = serializers.CharField(required=False)
     country = serializers.CharField(required=False)
@@ -537,9 +532,8 @@ class InfoContactSerializer(serializers.Serializer):
     class Meta:
         model = Contact
         fields = ('registry_id', 'name', 'email', 'company', 'street',
-                  'street1',
-                  'street2', 'street3', 'city', 'telephone', 'fax',
-                  'house_number', 'state', 'country', 'postcode',
+                   'city', 'telephone', 'fax',
+                  'state', 'country', 'postcode',
                   'postal_info_type',)
         read_only_fields = ('registry_id', 'postal_info_type')
 

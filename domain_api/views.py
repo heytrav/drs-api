@@ -44,10 +44,12 @@ from domain_api.serializers import (
     PrivateInfoDomainSerializer,
     InfoContactSerializer,
     PrivateInfoContactSerializer,
+    AdminInfoContactSerializer,
     DefaultAccountTemplateSerializer,
     InfoHostSerializer,
     PrivateInfoHostSerializer,
     PrivateInfoRegistrantSerializer,
+    AdminInfoRegistrantSerializer,
     AdminInfoDomainSerializer,
 )
 from domain_api.filters import (
@@ -151,21 +153,29 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
     """
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = PrivateInfoContactSerializer
+    admin_serializer_class = AdminInfoContactSerializer
     queryset = Contact.objects.all()
     manager = ContactManager
 
-    def is_admin_or_owner(self, contact=None):
+    def is_admin(self):
         """
-        Determine if the current logged in user is admin or the owner of
-        the object.
-
-        :contact: Contact/Registrant object
-        :returns: True or False
+        Determine whether request user is admin.
+        :returns: Boolean
 
         """
         if self.request.user.groups.filter(name='admin').exists():
             log.debug("Is admin")
             return True
+        return False
+
+    def is_owner(self, contact):
+        """
+        Determine whether request user is owner of contact object.
+
+        :contact: Contact object
+        :returns: Boolean
+
+        """
         if contact and contact.project_id == self.request.user:
             log.debug("User owns %s " % contact.registry_id)
             return True
@@ -215,12 +225,17 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
         """
         try:
             contact = self.get_queryset().get(registry_id=registry_id)
+            serializer_class = None
+            if self.is_admin:
+                serializer_class = self.admin_serializer_class
+            if self.is_owner(contact):
+                serializer_class = self.serializer_class
 
-            if self.is_admin_or_owner(contact):
+            if serializer_class:
                 log.debug("Performing info for %s as owner." % registry_id)
                 query = ContactQuery(self.get_queryset())
                 contact = query.info(contact)
-                serializer = self.serializer_class(contact)
+                serializer = serializer_class(contact)
                 return Response(serializer.data)
             else:
                 log.debug("Basic contact query for %s" % registry_id)
@@ -258,7 +273,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
         """
         contact = get_object_or_404(self.queryset, registry_id=registry_id)
-        if self.is_admin_or_owner(contact):
+        if self.is_admin or self.is_owner(contact):
             try:
                 manager = self.manager(contact=registry_id)
                 response = manager.update_contact(request.data)
@@ -277,7 +292,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
         """
         contacts = self.get_queryset()
-        if not self.is_admin_or_owner():
+        if not self.is_admin():
             contacts = contacts.filter(project_id=self.request.user)
 
         serializer = InfoContactSerializer(contacts, many=True)
@@ -290,6 +305,7 @@ class RegistrantManagementViewSet(ContactManagementViewSet):
     """
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = PrivateInfoRegistrantSerializer
+    admin_serializer_class = AdminInfoRegistrantSerializer
     queryset = Registrant.objects.all()
     manager = RegistrantManager
 
