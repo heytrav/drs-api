@@ -22,8 +22,8 @@ from domain_api.models import (
     DomainContact,
     TopLevelDomainProvider,
     DefaultAccountTemplate,
-    NameserverHost,
     DefaultAccountContact,
+    Nameserver,
 )
 from domain_api.serializers import (
     UserSerializer,
@@ -47,7 +47,6 @@ from domain_api.serializers import (
     AdminInfoContactSerializer,
     DefaultAccountTemplateSerializer,
     InfoHostSerializer,
-    PrivateInfoHostSerializer,
     PrivateInfoRegistrantSerializer,
     AdminInfoRegistrantSerializer,
     AdminInfoDomainSerializer,
@@ -361,7 +360,7 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         :returns: queryset object
 
         """
-        queryset = NameserverHost.objects.all()
+        queryset = Nameserver.objects.all()
         user = self.request.user
         if user.groups.filter(name='admin').exists():
             return queryset
@@ -404,7 +403,7 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         try:
             # Limit registered domain query to "owned" domains
             hosts = self.get_queryset().filter()
-            serializer = PrivateInfoHostSerializer(hosts, many=True)
+            serializer = InfoHostSerializer(hosts, many=True)
             return Response(serializer.data)
         except Exception:
             log.error("", exc_info=True)
@@ -424,7 +423,7 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             info, registered_host = query.info(host)
             if registered_host and self.is_admin_or_owner(registered_host):
                 synchronise_host(info, registered_host.id)
-                serializer = PrivateInfoHostSerializer(
+                serializer = InfoHostSerializer(
                     self.get_queryset().get(pk=registered_host.id)
                 )
                 return Response(serializer.data)

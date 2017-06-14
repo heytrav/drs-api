@@ -37,12 +37,12 @@ class AccountDetail(models.Model):
     )
     disclose = JSONField(default=None, null=True)
     default_registrant = models.NullBooleanField(null=True, )
-    project_id = models.ForeignKey('auth.User',
+    user = models.ForeignKey('auth.User',
                                    related_name='personal_details',
                                    on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ('project_id', 'default_registrant',)
+        unique_together = ('user', 'default_registrant',)
 
     def __str__(self):
         return self.surname + ', ' + self.first_name
@@ -111,7 +111,7 @@ class Registrant(models.Model):
     provider = models.ForeignKey(DomainProvider)
     # Id from provider
     registry_id = models.CharField(max_length=200, unique=True)
-    project_id = models.ForeignKey('auth.User',
+    user = models.ForeignKey('auth.User',
                                    related_name='registrants',
                                    on_delete=models.CASCADE)
 
@@ -187,7 +187,7 @@ class Contact(models.Model):
     contact_status = JSONField(null=True, default=None)
     # Id from provider
     registry_id = models.CharField(max_length=200, unique=True)
-    project_id = models.ForeignKey('auth.User',
+    user = models.ForeignKey('auth.User',
                                    related_name='contacts',
                                    on_delete=models.CASCADE)
     account_template = models.ForeignKey(AccountDetail)
@@ -318,10 +318,17 @@ class Nameserver(models.Model):
     Nameserver object.
     """
     idn_host = models.CharField(max_length=255, unique=True)
-    domain_nameservers = models.ManyToManyField(
-        RegisteredDomain,
-        related_name='ns'
-    )
+    ip = JSONField(default=None, null=True)
+    tld_provider = models.ForeignKey(TopLevelDomainProvider)
+    default = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=200, null=True)
+    nameserver_status = JSONField(default=None, null=True)
+    roid = models.CharField(max_length=100, null=True)
+    user = models.ForeignKey('auth.User',
+                                related_name='nameservers',
+                                on_delete=models.CASCADE)
 
     def _get_nameserver(self):
         """
@@ -338,64 +345,13 @@ class Nameserver(models.Model):
         super(Nameserver, self).save(*args, **kwargs)
 
 
-class NameserverHost(models.Model):
-
-    """
-    Nameserver
-
-    i.e. ns1.something.com
-    """
-    nameserver = models.ForeignKey(Nameserver)
-    tld_provider = models.ForeignKey(TopLevelDomainProvider)
-    default = models.BooleanField(default=False)
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=200, null=True)
-    nameserver_status = JSONField(default=None, null=True)
-    roid = models.CharField(max_length=100, null=True)
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='nameserver_hosts',
-                                   on_delete=models.CASCADE)
-
-
-class IpAddress(models.Model):
-
-    """
-    IP address.
-    """
-
-    V4 = 'v4'
-    V6 = 'v6'
-    IP_ADDRESS_TYPES = (
-        (V4, 'ipv4'),
-        (V6, 'ipv6'),
-    )
-    ip = models.CharField(max_length=255)
-    address_type = models.CharField(
-        max_length=2,
-        choices=IP_ADDRESS_TYPES,
-        default=V4
-    )
-    nameserver_host = models.ForeignKey(NameserverHost)
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='ip_addresses',
-                                   on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('ip', 'nameserver_host')
-    def __str__(self):
-        return self.ip + " - " + self.address_type
-
-
 class DefaultAccountTemplate(models.Model):
 
     """
     Store some default details for a given project.
     """
 
-    project_id = models.ForeignKey('auth.User',
+    user = models.ForeignKey('auth.User',
                                    related_name='default_account',
                                    on_delete=models.CASCADE)
     account_template = models.ForeignKey(AccountDetail)
@@ -405,7 +361,7 @@ class DefaultAccountTemplate(models.Model):
         return self.account_template.first_name + " " + self.account_template.surname + " - " + self.provider.name
 
     class Meta:
-        unique_together = ('project_id', 'provider', 'account_template',)
+        unique_together = ('user', 'provider', 'account_template',)
 
 
 class DefaultRegistrant(models.Model):
@@ -413,20 +369,20 @@ class DefaultRegistrant(models.Model):
     """
     Store default registrant for project.
     """
-    project_id = models.ForeignKey('auth.User',
+    user = models.ForeignKey('auth.User',
                                    related_name='default_registrant',
                                    on_delete=models.CASCADE)
     registrant = models.ForeignKey(Registrant)
 
     class Meta:
-        unique_together = ('project_id', 'registrant',)
+        unique_together = ('user', 'registrant',)
 
 
 class DefaultAccountContact(models.Model):
     """
     Assign default contact for registry.
     """
-    project_id = models.ForeignKey('auth.User',
+    user = models.ForeignKey('auth.User',
                                    related_name='default_account_contact',
                                    on_delete=models.CASCADE)
     account_template = models.ForeignKey(AccountDetail)
@@ -438,7 +394,7 @@ class DefaultAccountContact(models.Model):
         return self.provider.name + " - " + self.contact_type.name
 
     class Meta:
-        unique_together = ('project_id', 'contact_type', 'account_template',
+        unique_together = ('user', 'contact_type', 'account_template',
                            'provider', 'mandatory',)
 
 
@@ -446,7 +402,7 @@ class DefaultContact(models.Model):
     """
     Store default contact for registrars for a given project.
     """
-    project_id = models.ForeignKey('auth.User',
+    user = models.ForeignKey('auth.User',
                                    related_name='default_contact',
                                    on_delete=models.CASCADE)
     contact_type = models.ForeignKey(ContactType)
@@ -455,4 +411,4 @@ class DefaultContact(models.Model):
     mandatory = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = ('project_id', 'contact_type', 'contact', 'provider',)
+        unique_together = ('user', 'contact_type', 'contact', 'provider',)
