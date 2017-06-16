@@ -249,46 +249,52 @@ class RegisteredDomain(models.Model):
     Providers may have their own unique rules around renewal period and
     notifications.
     """
-    # Needed to enforce unique constraint
+    domain = models.ForeignKey(Domain)
     name = models.CharField(max_length=200)
+    # Needed to enforce unique constraint
     tld = models.ForeignKey(TopLevelDomain)
     tld_provider = models.ForeignKey(TopLevelDomainProvider)
     # Need to see if this can be constrained to be just a registrant.
-    registrant = models.ForeignKey(Registrant)
+    active = models.NullBooleanField(null=True)
     auto_renew = models.BooleanField(default=True)
     registration_period = models.IntegerField()
     # This will need to be a meta field that is calculated based on the
     # registration period and whatever the notification buffer is for a
     # provider. The aim is to notify a customer ahead of time that their domain
     # is about to renew/expire.
+    domain_registrant = models.ForeignKey(Registrant)
     authcode = models.CharField(max_length=100, null=True)
     roid = models.CharField(max_length=100, null=True)
-    status = JSONField(default=None, null=True)
+    status = models.CharField(max_length=200, null=True)
+    domain_status = JSONField(default=None, null=True)
     nameservers = JSONField(default=None, null=True)
     expiration = models.DateTimeField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    active = models.NullBooleanField(null=True)
+
+    class Meta:
+        unique_together = ('domain', 'tld', 'active')
 
     def __str__(self):
         """
         Represent a registered domain (i.e. name.tld).
         """
-        return self.name + "." + self.tld_provider.zone.zone
-
-    def _get_domain(self):
-        return idna.decode(self.name)
+        return self.domain.name + "." + self.tld_provider.zone.zone
 
 
-    domain = property(_get_domain)
 
-    def save(self, *args, **kwargs):
-        """
-        Override the save method
-        """
-        self.name = idna.encode(self.name, uts46=True).decode('ascii')
-        super(RegisteredDomain, self).save(*args, **kwargs)
+class DomainRegistrant(models.Model):
+    """
+    Registrant associated with a domain. A domain can typically have only one.
+    """
+    registered_domain = models.ForeignKey(RegisteredDomain,
+                                          related_name="registrant")
+    registrant = models.ForeignKey(Registrant)
+    active = models.NullBooleanField(null=True)
+    created = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('registered_domain', 'registrant', 'active')
 
 
 class DomainContact(models.Model):
