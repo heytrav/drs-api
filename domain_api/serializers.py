@@ -12,6 +12,7 @@ from domain_api.models import (
     RegisteredDomain,
     DomainContact,
     DefaultAccountTemplate,
+    Nameserver,
 )
 
 UserModel = get_user_model()
@@ -362,6 +363,44 @@ class InfoDomainSerializer(serializers.Serializer):
     status = serializers.JSONField()
     created = serializers.DateTimeField(required=False)
     expiration = serializers.DateTimeField(required=False)
+
+class NameserverSerializer(serializers.HyperlinkedModelSerializer):
+
+    """
+    Serialize nameserver objects.
+    """
+    url = serializers.HyperlinkedIdentityField(
+        view_name="domain_api:nameserver-detail",
+        lookup_field="pk"
+    )
+
+    class Meta:
+        model = Nameserver
+        fields = ('url', 'idn_host', 'host', 'addr',
+                  'created', 'updated')
+
+class AdminNameserverSerializer(NameserverSerializer):
+
+    """
+    Serialize nameserver objects.
+    """
+
+    tld_provider = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:topleveldomainprovider-detail",
+        lookup_field="pk",
+        read_only=True,
+    )
+    user = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+
+    class Meta:
+        model = Nameserver
+        fields = ('url', 'idn_host', 'host', 'addr',
+                  'tld_provider', 'default',
+                  'created', 'updated', 'status', 'roid', 'user')
 
 
 class IpAddressSerializer(serializers.Serializer):

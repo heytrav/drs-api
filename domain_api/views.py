@@ -46,6 +46,8 @@ from domain_api.serializers import (
     PrivateInfoRegistrantSerializer,
     AdminInfoRegistrantSerializer,
     AdminInfoDomainSerializer,
+    NameserverSerializer,
+    AdminNameserverSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
@@ -1049,3 +1051,8 @@ class DefaultAccountContactViewSet(viewsets.ModelViewSet):
         if user.is_staff:
             return DefaultAccountContact.objects.all()
         return DefaultAccountContact.objects.filter(project_id=user)
+
+class NameserverViewSet(viewsets.ModelViewSet):
+    serializer_class = AdminNameserverSerializer
+    permission_classes = (permissions.IsAdminUser,)
+    queryset = Nameserver.objects.all()

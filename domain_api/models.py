@@ -294,13 +294,12 @@ class Nameserver(models.Model):
     Nameserver object.
     """
     idn_host = models.CharField(max_length=255, unique=True)
-    ip = JSONField(default=None, null=True)
+    addr = JSONField(default=None, null=True)
     tld_provider = models.ForeignKey(TopLevelDomainProvider)
     default = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=200, null=True)
-    nameserver_status = JSONField(default=None, null=True)
+    status = JSONField(default=None, null=True)
     roid = models.CharField(max_length=100, null=True)
     user = models.ForeignKey('auth.User',
                              related_name='nameservers',
