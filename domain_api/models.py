@@ -274,7 +274,23 @@ class RegisteredDomain(models.Model):
         """
         Represent a registered domain (i.e. name.tld).
         """
-        return self.domain.name + "." + self.tld_provider.zone.zone
+        return self.name + "." + self.tld_provider.zone.zone
+
+    def _get_domain(self):
+        return idna.decode(self.name)
+
+    domain = property(_get_domain)
+
+    def save(self, *args, **kwargs):
+        """
+        Override the save method
+        """
+        self.name = idna.encode(self.name, uts46=True).decode('ascii')
+        super(RegisteredDomain, self).save(*args, **kwargs)
+
+    class Meta:
+        unique_together = ('name', 'tld', 'active',)
+
 
 
 class DomainContact(models.Model):

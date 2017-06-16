@@ -221,9 +221,6 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
         view_name="domain_api:registereddomain-detail",
         lookup_field="pk"
     )
-    domain = serializers.SlugRelatedField(many=False,
-                                          read_only=True,
-                                          slug_field='name')
     tld = serializers.SlugRelatedField(many=False,
                                        read_only=True,
                                        slug_field='zone')
