@@ -10,7 +10,6 @@ from .models import (
     Registrant,
     Contact,
     ContactType,
-    DomainRegistrant,
     DomainContact,
     DefaultAccountTemplate,
     DefaultRegistrant,
@@ -65,5 +64,4 @@ admin.site.register(RegisteredDomain)
 admin.site.register(Registrant)
 admin.site.register(Contact)
 admin.site.register(ContactType)
-admin.site.register(DomainRegistrant)
 admin.site.register(DomainContact)

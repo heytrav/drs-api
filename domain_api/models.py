@@ -249,12 +249,12 @@ class RegisteredDomain(models.Model):
     Providers may have their own unique rules around renewal period and
     notifications.
     """
-    domain = models.ForeignKey(Domain)
     # Needed to enforce unique constraint
+    name = models.CharField(max_length=200)
     tld = models.ForeignKey(TopLevelDomain)
     tld_provider = models.ForeignKey(TopLevelDomainProvider)
     # Need to see if this can be constrained to be just a registrant.
-    active = models.NullBooleanField(null=True)
+    registrant = models.ForeignKey(Registrant)
     auto_renew = models.BooleanField(default=True)
     registration_period = models.IntegerField()
     # This will need to be a meta field that is calculated based on the
@@ -263,36 +263,32 @@ class RegisteredDomain(models.Model):
     # is about to renew/expire.
     authcode = models.CharField(max_length=100, null=True)
     roid = models.CharField(max_length=100, null=True)
-    status = models.CharField(max_length=200, null=True)
-    domain_status = JSONField(default=None, null=True)
+    status = JSONField(default=None, null=True)
     nameservers = JSONField(default=None, null=True)
     expiration = models.DateTimeField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('domain', 'tld', 'active')
+    active = models.NullBooleanField(null=True)
 
     def __str__(self):
         """
         Represent a registered domain (i.e. name.tld).
         """
-        return self.domain.name + "." + self.tld_provider.zone.zone
+        return self.name + "." + self.tld_provider.zone.zone
+
+    def _get_domain(self):
+        return idna.decode(self.name)
 
 
+    domain = property(_get_domain)
 
-class DomainRegistrant(models.Model):
-    """
-    Registrant associated with a domain. A domain can typically have only one.
-    """
-    registered_domain = models.ForeignKey(RegisteredDomain,
-                                          related_name="registrant")
-    registrant = models.ForeignKey(Registrant)
-    active = models.NullBooleanField(null=True)
-    created = models.DateTimeField(auto_now_add=True)
+    def save(self, *args, **kwargs):
+        """
+        Override the save method
+        """
+        self.name = idna.encode(self.name, uts46=True).decode('ascii')
+        super(RegisteredDomain, self).save(*args, **kwargs)
 
-    class Meta:
-        unique_together = ('registered_domain', 'registrant', 'active')
 
 
 class DomainContact(models.Model):
