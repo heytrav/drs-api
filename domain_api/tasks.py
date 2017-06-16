@@ -6,7 +6,6 @@ import logging
 from .models import (
     Contact,
     ContactType,
-    Domain,
     DomainProvider,
     AccountDetail,
     RegisteredDomain,
@@ -291,16 +290,12 @@ def connect_domain(create_data, user=None):
         create_data["domain"] = create_data.pop('name', None)
         contacts = create_data.pop('contact', None)
         parsed_domain = parse_domain(create_data["domain"])
-        domain_obj, _ = Domain.objects.get_or_create(
-            name=parsed_domain["domain"],
-        )
         tld_provider = TopLevelDomainProvider.objects.get(
             zone__zone=parsed_domain["zone"]
         )
         tld = TopLevelDomain.objects.get(zone=parsed_domain["zone"])
         registered_domain = RegisteredDomain(
-            domain=domain_obj,
-            tld=tld,
+            name=parsed_domain["domain"],
             tld_provider=tld_provider,
             registration_period=1,
             expiration=create_data["expiration_date"],

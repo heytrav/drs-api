@@ -9,7 +9,6 @@ router.register(r'manage-contacts', views.ContactViewSet, "contact")
 router.register(r'tlds', views.TopLevelDomainViewSet)
 router.register(r'tld-providers', views.TopLevelDomainProviderViewSet)
 router.register(r'registries', views.DomainProviderViewSet)
-router.register(r'domain-names', views.DomainViewSet, "domain")
 router.register(r'domain-registrants', views.RegistrantViewSet, "registrant")
 router.register(
     r'registered-domains',

@@ -10,7 +10,6 @@ from django.contrib.auth import get_user_model
 from rest_framework import status, permissions, viewsets, generics
 from rest_framework.response import Response
 from domain_api.models import (
-    Domain,
     AccountDetail,
     ContactType,
     TopLevelDomain,
@@ -33,7 +32,6 @@ from domain_api.serializers import (
     TopLevelDomainProviderSerializer,
     DomainProviderSerializer,
     RegistrantSerializer,
-    DomainSerializer,
     RegisteredDomainSerializer,
     DomainAvailabilitySerializer,
     HostAvailabilitySerializer,
@@ -917,15 +915,6 @@ class RegistrantViewSet(viewsets.ModelViewSet):
         if user.is_staff:
             return Registrant.objects.all()
         return Registrant.objects.filter(project_id=user)
-
-
-class DomainViewSet(viewsets.ModelViewSet):
-
-    serializer_class = DomainSerializer
-    permission_classes = (permissions.IsAuthenticated,
-                          IsAdmin,)
-    queryset = Domain.objects.all()
-    lookup_field = 'name'
 
 
 class RegisteredDomainViewSet(viewsets.ModelViewSet):

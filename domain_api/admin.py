@@ -5,7 +5,6 @@ from .models import (
     TopLevelDomain,
     DomainProvider,
     TopLevelDomainProvider,
-    Domain,
     RegisteredDomain,
     Registrant,
     Contact,
@@ -35,14 +34,6 @@ class DomainProviderAdmin(admin.ModelAdmin):
     ]
     inlines = [TopLevelDomainProviderInline]
 
-class DomainAdmin(admin.ModelAdmin):
-    list_display = ('domain', 'name',)
-    readonly_fields = ('domain',)
-
-    fieldsets = [
-        (None, {'fields': ['domain', 'name']}),
-    ]
-
 class TopLevelDomainAdmin(admin.ModelAdmin):
     list_display = ('tld', 'slug', 'zone', 'description')
     readonly_fields = ('tld', 'slug',)
@@ -59,7 +50,6 @@ admin.site.register(DefaultContact)
 admin.site.register(AccountDetail)
 admin.site.register(TopLevelDomain, TopLevelDomainAdmin)
 admin.site.register(DomainProvider, DomainProviderAdmin)
-admin.site.register(Domain, DomainAdmin)
 admin.site.register(RegisteredDomain)
 admin.site.register(Registrant)
 admin.site.register(Contact)

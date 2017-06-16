@@ -1,7 +1,6 @@
 from ..exceptions import InvalidTld, UnsupportedTld
 import idna
 from ..models import (
-    Domain,
     TopLevelDomain,
     TopLevelDomainProvider,
     RegisteredDomain,
@@ -26,11 +25,8 @@ def get_domain_registry(fqdn):
         top_level_domain = TopLevelDomain.objects.get(
             zone=parsed_domain["zone"]
         )
-        domain_obj, _ = Domain.objects.get_or_create(
-            name=parsed_domain["domain"],
-        )
         registered_domain_set = RegisteredDomain.objects.filter(
-            domain=domain_obj,
+            name=parsed_domain["domain"],
             tld=top_level_domain,
             active=True
         )

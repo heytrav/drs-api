@@ -217,29 +217,6 @@ class TopLevelDomainProvider(models.Model):
         return self.zone.zone + " " + self.provider.name
 
 
-class Domain(models.Model):
-    """
-    Represent a domain.
-    """
-    # The part of a domain name before the tld
-    name = models.CharField(max_length=200, unique=True)
-
-    def __str__(self):
-        return self.domain
-
-    def _get_domain(self):
-        return idna.decode(self.name)
-
-    domain = property(_get_domain)
-
-    def save(self, *args, **kwargs):
-        """
-        Override the save method
-        """
-        self.name = idna.encode(self.name, uts46=True).decode('ascii')
-        super(Domain, self).save(*args, **kwargs)
-
-
 class RegisteredDomain(models.Model):
     """
     Represent a registered domain name.

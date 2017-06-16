@@ -9,7 +9,6 @@ from domain_api.models import (
     Registrant,
     Contact,
     TopLevelDomainProvider,
-    Domain,
     RegisteredDomain,
     DomainContact,
     DefaultAccountTemplate,
@@ -203,17 +202,6 @@ class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('zone', 'provider', 'expiration_notification_period_days',
                   'active',
                   'renewal_period', 'grace_period_days', 'url')
-
-
-class DomainSerializer(serializers.HyperlinkedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        view_name="domain_api:domain-detail",
-        lookup_field="name"
-    )
-
-    class Meta:
-        model = Domain
-        fields = ('domain', 'name', 'url')
 
 
 class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
