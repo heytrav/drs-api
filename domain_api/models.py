@@ -281,21 +281,6 @@ class RegisteredDomain(models.Model):
         return self.domain.name + "." + self.tld_provider.zone.zone
 
 
-
-class DomainRegistrant(models.Model):
-    """
-    Registrant associated with a domain. A domain can typically have only one.
-    """
-    registered_domain = models.ForeignKey(RegisteredDomain,
-                                          related_name="deprecated_registrant")
-    registrant = models.ForeignKey(Registrant)
-    active = models.NullBooleanField(null=True)
-    created = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('registered_domain', 'registrant', 'active')
-
-
 class DomainContact(models.Model):
     """
     Contact associated with a domain. A domain can have several contact

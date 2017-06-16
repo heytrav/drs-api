@@ -11,7 +11,6 @@ from domain_api.models import (
     TopLevelDomainProvider,
     Domain,
     RegisteredDomain,
-    DomainRegistrant,
     DomainContact,
     DefaultAccountTemplate,
 )
@@ -234,11 +233,6 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
         read_only=True
     )
     registrant = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:domainregistrant-detail",
-        many=True,
-        read_only=True
-    )
-    domain_registrant = serializers.HyperlinkedRelatedField(
         view_name="domain_api:registrant-detail",
         lookup_field="registry_id",
         read_only=True
@@ -254,28 +248,7 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('domain', 'name', 'tld', 'tld_provider', 'active', 'auto_renew',
                   'status', 'nameservers',
                   'registration_period', 'expiration', 'created',
-                  'updated', 'registrant', 'domain_registrant', 'contacts', 'url',)
-
-
-class DomainRegistrantSerializer(serializers.HyperlinkedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        view_name="domain_api:domainregistrant-detail",
-        lookup_field="pk"
-    )
-    registered_domain = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:registereddomain-detail",
-        lookup_field="pk",
-        read_only=True
-    )
-    registrant = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:registrant-detail",
-        lookup_field="registry_id",
-        read_only=True
-    )
-
-    class Meta:
-        model = DomainRegistrant
-        fields = ('registered_domain', 'registrant', 'active', 'created', 'url')
+                  'updated', 'registrant', 'contacts', 'url',)
 
 
 class DomainContactSerializer(serializers.HyperlinkedModelSerializer):

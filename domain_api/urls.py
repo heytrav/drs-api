@@ -16,10 +16,6 @@ router.register(
     views.RegisteredDomainViewSet,
     "registereddomain"
 )
-router.register(
-    r'domain-registrant',
-    views.DomainRegistrantViewSet, "domainregistrant"
-)
 router.register(r'domain-contacts', views.DomainContactViewSet, "domaincontact")
 router.register(r'users', views.UserViewSet)
 

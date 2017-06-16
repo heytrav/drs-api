@@ -18,7 +18,6 @@ from domain_api.models import (
     Registrant,
     Contact,
     RegisteredDomain,
-    DomainRegistrant,
     DomainContact,
     TopLevelDomainProvider,
     DefaultAccountTemplate,
@@ -38,7 +37,6 @@ from domain_api.serializers import (
     RegisteredDomainSerializer,
     DomainAvailabilitySerializer,
     HostAvailabilitySerializer,
-    DomainRegistrantSerializer,
     DomainContactSerializer,
     InfoDomainSerializer,
     PrivateInfoDomainSerializer,
@@ -936,24 +934,6 @@ class RegisteredDomainViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,
                           IsAdmin,)
     queryset = RegisteredDomain.objects.all()
-
-
-class DomainRegistrantViewSet(viewsets.ModelViewSet):
-
-    serializer_class = DomainRegistrantSerializer
-    permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissionsOrAnonReadOnly,)
-
-    def get_queryset(self):
-        """
-        Filter registered domains on request user.
-        :returns: Set of RegisteredDomain objects filtered by customer
-
-        """
-        user = self.request.user
-        if user.is_staff:
-            return DomainRegistrant.objects.all()
-        return DomainRegistrant.objects.filter(registrant__project_id=user)
 
 
 class DomainContactViewSet(viewsets.ModelViewSet):
