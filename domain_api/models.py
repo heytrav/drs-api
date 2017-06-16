@@ -286,6 +286,7 @@ class RegisteredDomain(models.Model):
         Override the save method
         """
         self.name = idna.encode(self.name, uts46=True).decode('ascii')
+        self.tld = self.tld_provider.zone
         super(RegisteredDomain, self).save(*args, **kwargs)
 
     class Meta:
