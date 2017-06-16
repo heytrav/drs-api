@@ -24,7 +24,7 @@ class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
     """
     Serializer for AccountDetails
     """
-    project_id = serializers.HyperlinkedRelatedField(
+    user = serializers.HyperlinkedRelatedField(
         view_name="domain_api:user-detail",
         lookup_field="pk",
         read_only=True
@@ -41,7 +41,7 @@ class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
                   'street',
                    'city',
                   'state', 'postcode', 'country', 'postal_info_type',
-                  'created', 'updated', 'project_id', 'default_registrant',
+                  'created', 'updated', 'user', 'default_registrant',
                   'disclose',)
 
 
@@ -134,7 +134,7 @@ class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
         lookup_field="slug",
         read_only=True
     )
-    project_id = serializers.HyperlinkedRelatedField(
+    user = serializers.HyperlinkedRelatedField(
         view_name="domain_api:user-detail",
         lookup_field="pk",
         read_only=True
@@ -150,7 +150,7 @@ class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
                   'disclose',
                    'created', 'updated',
                   'contact_status',
-                  'project_id',)
+                  'user',)
 
 
 class ContactSerializer(serializers.HyperlinkedModelSerializer):
@@ -164,7 +164,7 @@ class ContactSerializer(serializers.HyperlinkedModelSerializer):
         lookup_field="slug",
         read_only=True
     )
-    project_id = serializers.HyperlinkedRelatedField(
+    user = serializers.HyperlinkedRelatedField(
         view_name="domain_api:user-detail",
         lookup_field="pk",
         read_only=True
@@ -180,7 +180,7 @@ class ContactSerializer(serializers.HyperlinkedModelSerializer):
                   'disclose',
                   'created', 'updated',
                   'contact_status',
-                  'project_id',)
+                  'user',)
 
 
 class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
@@ -252,7 +252,7 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = RegisteredDomain
         fields = ('domain', 'name', 'tld', 'tld_provider', 'active', 'auto_renew',
-                  'domain_status', 'nameservers',
+                  'status', 'nameservers',
                   'registration_period', 'expiration', 'created',
                   'updated', 'registrant', 'domain_registrant', 'contacts', 'url',)
 
@@ -306,8 +306,8 @@ class DefaultAccountTemplateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DefaultAccountTemplate
-        fields = ('id', 'account_template', 'provider', 'project_id')
-        read_only_fields = ('id', 'project_id',)
+        fields = ('id', 'account_template', 'provider', 'user')
+        read_only_fields = ('id', 'user',)
 
 
 class DefaultAccountContactSerializer(serializers.ModelSerializer):
@@ -317,9 +317,9 @@ class DefaultAccountContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DefaultAccountTemplate
-        fields = ('project_id', 'account_template', 'contact_type', 'provider',
+        fields = ('user', 'account_template', 'contact_type', 'provider',
                   'mandatory')
-        read_only_fields = ('project_id',)
+        read_only_fields = ('user',)
 
 
 class DomainAvailabilitySerializer(serializers.Serializer):
