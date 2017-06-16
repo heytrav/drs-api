@@ -249,7 +249,6 @@ class RegisteredDomain(models.Model):
     Providers may have their own unique rules around renewal period and
     notifications.
     """
-    domain = models.ForeignKey(Domain)
     name = models.CharField(max_length=200)
     # Needed to enforce unique constraint
     tld = models.ForeignKey(TopLevelDomain)
@@ -270,9 +269,6 @@ class RegisteredDomain(models.Model):
     expiration = models.DateTimeField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('domain', 'tld', 'active')
 
     def __str__(self):
         """
