@@ -38,8 +38,8 @@ class AccountDetail(models.Model):
     disclose = JSONField(default=None, null=True)
     default_registrant = models.NullBooleanField(null=True, )
     user = models.ForeignKey('auth.User',
-                                   related_name='personal_details',
-                                   on_delete=models.CASCADE)
+                             related_name='personal_details',
+                             on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('user', 'default_registrant',)
@@ -112,8 +112,8 @@ class Registrant(models.Model):
     # Id from provider
     registry_id = models.CharField(max_length=200, unique=True)
     user = models.ForeignKey('auth.User',
-                                   related_name='registrants',
-                                   on_delete=models.CASCADE)
+                             related_name='registrants',
+                             on_delete=models.CASCADE)
 
     INT = 'int'
     LOC = 'loc'
@@ -188,8 +188,8 @@ class Contact(models.Model):
     # Id from provider
     registry_id = models.CharField(max_length=200, unique=True)
     user = models.ForeignKey('auth.User',
-                                   related_name='contacts',
-                                   on_delete=models.CASCADE)
+                             related_name='contacts',
+                             on_delete=models.CASCADE)
     account_template = models.ForeignKey(AccountDetail)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -325,8 +325,8 @@ class Nameserver(models.Model):
     nameserver_status = JSONField(default=None, null=True)
     roid = models.CharField(max_length=100, null=True)
     user = models.ForeignKey('auth.User',
-                                related_name='nameservers',
-                                on_delete=models.CASCADE)
+                             related_name='nameservers',
+                             on_delete=models.CASCADE)
 
     def _get_nameserver(self):
         """
@@ -350,8 +350,8 @@ class DefaultAccountTemplate(models.Model):
     """
 
     user = models.ForeignKey('auth.User',
-                                   related_name='default_account',
-                                   on_delete=models.CASCADE)
+                             related_name='default_account',
+                             on_delete=models.CASCADE)
     account_template = models.ForeignKey(AccountDetail)
     provider = models.ForeignKey(DomainProvider)
 
@@ -368,8 +368,8 @@ class DefaultRegistrant(models.Model):
     Store default registrant for project.
     """
     user = models.ForeignKey('auth.User',
-                                   related_name='default_registrant',
-                                   on_delete=models.CASCADE)
+                             related_name='default_registrant',
+                             on_delete=models.CASCADE)
     registrant = models.ForeignKey(Registrant)
 
     class Meta:
@@ -381,8 +381,8 @@ class DefaultAccountContact(models.Model):
     Assign default contact for registry.
     """
     user = models.ForeignKey('auth.User',
-                                   related_name='default_account_contact',
-                                   on_delete=models.CASCADE)
+                             related_name='default_account_contact',
+                             on_delete=models.CASCADE)
     account_template = models.ForeignKey(AccountDetail)
     contact_type = models.ForeignKey(ContactType)
     provider = models.ForeignKey(DomainProvider)
@@ -401,8 +401,8 @@ class DefaultContact(models.Model):
     Store default contact for registrars for a given project.
     """
     user = models.ForeignKey('auth.User',
-                                   related_name='default_contact',
-                                   on_delete=models.CASCADE)
+                             related_name='default_contact',
+                             on_delete=models.CASCADE)
     contact_type = models.ForeignKey(ContactType)
     contact = models.ForeignKey(Contact)
     provider = models.ForeignKey(DomainProvider)
