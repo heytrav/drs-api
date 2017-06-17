@@ -23,8 +23,6 @@
         "authcode": null,
         "roid": null,
         "non_disclose": [
-            "name",
-            "address",
             "company",
             "telephone",
             "fax",

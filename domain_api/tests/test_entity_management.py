@@ -49,10 +49,10 @@ class TestContactManager(TestSetup):
                     'org': '',
                     'type': 'loc',
                     'addr': {
-                        'street': ['Evergreen Terrace'],
+                        'street': ['10 Evergreen Terrace'],
                         'city': 'Springfield',
                         'sp': 'State',
-                        'pc': '',
+                        'pc': '97835',
                         'cc': 'US'}
                 },
                 'disclose': {
@@ -79,6 +79,14 @@ class TestContactManager(TestSetup):
             "city": "Shelbeyville",
             "state": "Flyover",
             "telephone": "+1.8172221233",
+            "non_disclose": [
+                "name",
+                "address",
+                "company",
+                "telephone",
+                "email",
+                "fax"
+            ],
             "disclose_email": True,
             "status": "ok;clientHappy;linked"
         }
@@ -102,13 +110,18 @@ class TestContactManager(TestSetup):
                     },
                     'voice':  '+1.8172221233',
                     'disclose': {
-                        'flag': 1,
+                        'flag': 0,
                         'disclosing': [
+                            {"name": "name", "type": "loc"},
+                            {"name": "org", "type": "loc"},
+                            {"name": "addr", "type": "loc"},
+                            'voice',
+                            'fax',
                             'email'
                         ]
                     }
                 },
-                'add': ['clientHappy', 'linked']
+                'add': ['ok', 'clientHappy', 'linked']
             }
             mocked.assert_called_with('centralnic-test', actual_data)
 
