@@ -367,7 +367,7 @@ def connect_host(host_data, user=None):
     ns = Nameserver.objects.create(idn_host=host)
     ns_host = ns.nameserverhost_set.create(
         tld_provider=tld_provider,
-        project_id=user_obj
+        user=user_obj
     )
     for i in addresses:
         address_type = 'v4'
@@ -375,5 +375,5 @@ def connect_host(host_data, user=None):
             address_type = i["addr_type"]
             ns_host.ipaddress_set.create(ip=i["ip"],
                                          address_type=address_type,
-                                         project_id=user_obj)
+                                         user=user_obj)
     return host_data

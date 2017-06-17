@@ -75,13 +75,13 @@ class Workflow(object):
             return data["registrant"]
         default_registrant_set = AccountDetail.objects.filter(
             default_registrant=True,
-            project_id=user
+            user=user
         )
         if default_registrant_set.exists():
             return default_registrant_set.first().id
         default_registrant = DefaultAccountTemplate.objects.get(
             provider__slug=self.registry,
-            project_id=user
+            user=user
         )
         return default_registrant.account_template.id
 
@@ -99,7 +99,7 @@ class Workflow(object):
         user = user_obj.id
         contact_dict = {contact_type: template_id}
         if mandatory:
-            user = contact.project_id.id
+            user = contact.user.id
         self.append_contact_workflow(contact_dict, user)
 
     def append_contact_workflow(self,
@@ -248,7 +248,7 @@ class Workflow(object):
         # does not belong to requesting user.
         return AccountDetail.objects.get(
             pk=account_template_id,
-            project_id=user
+            user=user
         )
 
     def process_add_contact(self,
@@ -295,7 +295,7 @@ class Workflow(object):
             provider__slug=self.registry,
         )
         if not user.groups.filter(name='admin').exists():
-            query_set = query_set.filter(project_id=user)
+            query_set = query_set.filter(user=user)
         contact_query_set = query_set.filter(registry_id=contact_id)
         # This contact exists
         if contact_query_set.exists():
@@ -365,7 +365,7 @@ class Workflow(object):
         # This assumes that the new registrant id is a "registry id".
         query_set = Registrant.objects.all()
         if not user.groups.filter(name='admin').exists():
-            query_set = Registrant.objects.filter(project_id=user)
+            query_set = Registrant.objects.filter(user=user)
         registrant_query_set = query_set.filter(
             registry_id=new_registrant
         )

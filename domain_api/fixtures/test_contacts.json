@@ -5,34 +5,33 @@
     "fields": {
         "name": "Ada Min",
         "email": "admin@test.com",
-        "telephone": "",
-        "fax": "",
-        "company": "",
-        "house_number": "",
-        "street1": "Willis Street",
-        "street2": "",
-        "street3": "",
+        "telephone": "+1.123455683",
+        "fax": null,
+        "company": null,
+        "street": [
+            "50 Willis Street"
+        ],
         "city": "Wellington",
-        "suburb": "Wellington",
-        "state": "",
+        "state": "Wellington",
         "postcode": "6011",
-        "country": "Ne",
+        "country": "NZ",
         "postal_info_type": "loc",
-        "authcode": "",
-        "roid": "",
-        "disclose_name": false,
-        "disclose_company": false,
-        "disclose_address": false,
-        "disclose_telephone": false,
-        "disclose_fax": false,
-        "disclose_email": false,
+        "authcode": null,
+        "roid": null,
+        "disclose": {
+            "flag": 1,
+            "fields": [
+                "name",
+                "address"
+            ]
+        },
         "provider": 3,
-        "status": "ok",
+        "status": null,
         "registry_id": "contact-123",
-        "project_id": 1,
+        "user": 1,
         "account_template": 3,
-        "created": "2017-04-05T02:36:59.819Z",
-        "updated": "2017-04-05T02:36:59.819Z"
+        "created": "2017-06-14T07:25:17.976Z",
+        "updated": "2017-06-14T03:35:11.368Z"
     }
 },
 {
@@ -41,106 +40,107 @@
     "fields": {
         "name": "Tech Guy",
         "email": "tech@test.com",
-        "telephone": "",
+        "telephone": "+1.23434334",
         "fax": "",
         "company": "",
-        "house_number": "",
-        "street1": "Willis Street",
-        "street2": "",
-        "street3": "",
+        "street": [
+            "150 Willis Street"
+        ],
         "city": "Wellington",
-        "suburb": "Wellington",
         "state": "",
         "postcode": "6011",
         "country": "NZ",
         "postal_info_type": "loc",
-        "authcode": "",
-        "roid": "",
-        "disclose_name": false,
-        "disclose_company": false,
-        "disclose_address": false,
-        "disclose_telephone": false,
-        "disclose_fax": false,
-        "disclose_email": false,
+        "authcode": null,
+        "roid": null,
+        "disclose": {
+            "flag": 1,
+            "fields": [
+                "name",
+                "telephone"
+            ]
+        },
         "provider": 3,
-        "status": "ok",
+        "status": null,
         "registry_id": "contact-321",
-        "project_id": 1,
+        "user": 1,
         "account_template": 4,
-        "created": "2017-04-05T02:37:36.323Z",
-        "updated": "2017-04-05T02:37:36.323Z"
+        "created": "2017-06-14T07:27:06.718Z",
+        "updated": "2017-06-14T03:36:49.029Z"
     }
 },
 {
     "model": "domain_api.contact",
     "pk": 3,
     "fields": {
-        "name": "Adi Min",
-        "email": "admin@test.com",
-        "telephone": "",
-        "fax": "",
-        "company": "",
-        "house_number": "",
-        "street1": "Willis Street",
-        "street2": "",
-        "street3": "",
+        "name": "Ada Min",
+        "email": "adatest@test.com",
+        "telephone": "+1.12345678",
+        "fax": null,
+        "company": null,
+        "street": [
+            "150 Willis Street"
+        ],
         "city": "Wellington",
-        "suburb": "Wellington",
-        "state": "",
+        "state": null,
         "postcode": "6011",
-        "country": "Ne",
+        "country": "NE",
         "postal_info_type": "loc",
-        "authcode": "",
-        "roid": "",
-        "disclose_name": false,
-        "disclose_company": false,
-        "disclose_address": false,
-        "disclose_telephone": false,
-        "disclose_fax": false,
-        "disclose_email": false,
+        "authcode": null,
+        "roid": null,
+        "disclose": {
+            "flag": 0,
+            "fields": [
+                "name",
+                "address",
+                "company",
+                "telephone",
+                "fax",
+                "email"
+            ]
+        },
         "provider": 3,
-        "status": "ok",
+        "status": null,
         "registry_id": "contact-223",
-        "project_id": 1,
+        "user": 1,
         "account_template": 3,
-        "created": "2017-04-05T02:36:59.819Z",
-        "updated": "2017-04-05T02:36:59.819Z"
+        "created": "2017-06-14T07:38:53.003Z",
+        "updated": "2017-06-14T03:47:31.557Z"
     }
 },
 {
     "model": "domain_api.contact",
     "pk": 4,
     "fields": {
-        "name": "Techo Min",
-        "email": "admon@test.com",
-        "telephone": "",
+        "name": "Tech Guy",
+        "email": "tech@test.com",
+        "telephone": "+1.23434334",
         "fax": "",
         "company": "",
-        "house_number": "",
-        "street1": "Willis Street",
-        "street2": "",
-        "street3": "",
+        "street": [
+            "150 Willis Street"
+        ],
         "city": "Wellington",
-        "suburb": "Wellington",
         "state": "",
         "postcode": "6011",
-        "country": "Ne",
+        "country": "NZ",
         "postal_info_type": "loc",
-        "authcode": "",
-        "roid": "",
-        "disclose_name": false,
-        "disclose_company": false,
-        "disclose_address": false,
-        "disclose_telephone": false,
-        "disclose_fax": false,
-        "disclose_email": false,
+        "authcode": null,
+        "roid": null,
+        "disclose": {
+            "flag": 0,
+            "fields": [
+                "name",
+                "telephone"
+            ]
+        },
         "provider": 3,
-        "status": "ok",
+        "status": null,
         "registry_id": "contact-224",
-        "project_id": 1,
-        "account_template": 3,
-        "created": "2017-04-05T02:36:59.819Z",
-        "updated": "2017-04-05T02:36:59.819Z"
+        "user": 1,
+        "account_template": 4,
+        "created": "2017-06-14T07:39:18.271Z",
+        "updated": "2017-06-14T03:50:48.355Z"
     }
 }
 ]

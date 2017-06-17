@@ -91,8 +91,8 @@ def get_registered_domain_queryset(user):
     if user.groups.filter(name='admin').exists():
         return queryset
     return queryset.filter(
-        Q(registrant__registrant__project_id=user) |
-        Q(contacts__contact__project_id=user)
+        Q(registrant__registrant__user=user) |
+        Q(contacts__contact__user=user)
     ).distinct()
 
 
@@ -173,7 +173,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
         :returns: Boolean
 
         """
-        if contact and contact.project_id == self.request.user:
+        if contact and contact.user == self.request.user:
             log.debug("User owns %s " % contact.registry_id)
             return True
         return False
@@ -290,7 +290,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
         """
         contacts = self.get_queryset()
         if not self.is_admin():
-            contacts = contacts.filter(project_id=self.request.user)
+            contacts = contacts.filter(user=self.request.user)
 
         serializer = InfoContactSerializer(contacts, many=True)
         return Response(serializer.data)
@@ -331,7 +331,7 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             return True
         # otherwise check if user is registrant of contact for domain
         if host:
-            if host.project_id == user:
+            if host.user == user:
                 return True
         return False
 
@@ -362,7 +362,7 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         user = self.request.user
         if user.groups.filter(name='admin').exists():
             return queryset
-        return queryset.filter(project_id=user).distinct()
+        return queryset.filter(user=user).distinct()
 
     def available(self, request, host=None):
         """
@@ -620,10 +620,10 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         if domain:
             if domain.registrant.filter(
                 active=True,
-                registrant__project_id=user
+                registrant__user=user
             ):
                 return True
-            if domain.contacts.filter(contact__project_id=user).exists():
+            if domain.contacts.filter(contact__user=user).exists():
                 return True
         return False
 
@@ -810,7 +810,7 @@ class AccountDetailViewSet(viewsets.ModelViewSet):
                           permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def perform_create(self, serializer):
-        serializer.save(project_id=self.request.user)
+        serializer.save(user=self.request.user)
 
     def get_queryset(self):
         """
@@ -822,7 +822,7 @@ class AccountDetailViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return AccountDetail.objects.all()
-        return AccountDetail.objects.filter(project_id=user)
+        return AccountDetail.objects.filter(user=user)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -889,7 +889,7 @@ class ContactViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return Contact.objects.all()
-        return Contact.objects.filter(project_id=user)
+        return Contact.objects.filter(user=user)
 
 
 class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
@@ -916,7 +916,7 @@ class RegistrantViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return Registrant.objects.all()
-        return Registrant.objects.filter(project_id=user)
+        return Registrant.objects.filter(user=user)
 
 
 class RegisteredDomainViewSet(viewsets.ModelViewSet):
@@ -942,7 +942,7 @@ class DomainContactViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return DomainContact.objects.all()
-        return DomainContact.objects.filter(contact__project_id=user)
+        return DomainContact.objects.filter(contact__user=user)
 
 
 class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
@@ -962,12 +962,12 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
         serializer = self.serializer_class(data=data)
         if serializer.is_valid():
             account_templates = AccountDetail.objects.filter(
-                project_id=request.user
+                user=request.user
             )
             account_template = get_object_or_404(account_templates,
                                                  pk=data["account_template"])
             serializer.save(
-                project_id=request.user,
+                user=request.user,
                 account_template=account_template,
                 provider=DomainProvider.objects.get(slug=data["provider"])
             )
@@ -983,7 +983,7 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
                                                      default_id)
         data = request.data
         account_templates = AccountDetail.objects.filter(
-            project_id=request.user
+            user=request.user
         )
         account_template = get_object_or_404(account_templates,
                                              pk=data["account_template"])
@@ -1034,7 +1034,7 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return DefaultAccountTemplate.objects.all()
-        return DefaultAccountTemplate.objects.filter(project_id=user)
+        return DefaultAccountTemplate.objects.filter(user=user)
 
 
 class DefaultAccountContactViewSet(viewsets.ModelViewSet):
@@ -1050,7 +1050,7 @@ class DefaultAccountContactViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return DefaultAccountContact.objects.all()
-        return DefaultAccountContact.objects.filter(project_id=user)
+        return DefaultAccountContact.objects.filter(user=user)
 
 class NameserverViewSet(viewsets.ModelViewSet):
     serializer_class = AdminNameserverSerializer

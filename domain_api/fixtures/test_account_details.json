@@ -9,16 +9,29 @@
         "telephone": "+1.8175551234",
         "fax": "",
         "company": "",
-        "street": ["10 Evergreen Terrace"],
+        "street": [
+            "10 Evergreen Terrace"
+        ],
         "city": "Springfield",
-        "suburb": "",
         "state": "State",
-        "postcode": "",
+        "postcode": "97835",
         "country": "US",
-        "created": "2017-04-05T02:28:54.396Z",
-        "updated": "2017-04-05T02:28:54.396Z",
+        "created": "2017-06-13T19:53:17.295Z",
+        "updated": "2017-06-13T19:53:17.295Z",
         "postal_info_type": "loc",
-        "project_id": 2
+        "disclose": {
+            "flag": 0,
+            "fields": [
+                "name",
+                "address",
+                "company",
+                "telephone",
+                "fax",
+                "email"
+            ]
+        },
+        "default_registrant": true,
+        "user": 2
     }
 },
 {
@@ -28,19 +41,29 @@
         "first_name": "Bob",
         "surname": "User",
         "email": "bobuser@test.com",
-        "telephone": "",
+        "telephone": "+1.123456879",
         "fax": "",
         "company": "",
-        "street": ["754 Evergreen Terrace"],
+        "street": [
+            "754 Evergreen Terrace"
+        ],
         "city": "Des Moines",
-        "suburb": "",
-        "state": "",
-        "postcode": "48392",
-        "country": "IA",
-        "created": "2017-04-05T02:29:41.184Z",
-        "updated": "2017-04-05T02:29:41.184Z",
+        "state": "SA",
+        "postcode": "6011",
+        "country": "US",
+        "created": "2017-06-13T19:54:46.035Z",
+        "updated": "2017-06-13T19:55:59.690Z",
         "postal_info_type": "loc",
-        "project_id": 2
+        "disclose": {
+            "flag": 1,
+            "fields": [
+                "name",
+                "company",
+                "address"
+            ]
+        },
+        "default_registrant": null,
+        "user": 2
     }
 },
 {
@@ -50,19 +73,28 @@
         "first_name": "Ada",
         "surname": "Min",
         "email": "admin@test.com",
-        "telephone": "",
+        "telephone": "+1.123455683",
         "fax": "",
         "company": "",
-        "street": ["50 Willis Street"],
+        "street": [
+            "50 Willis Street"
+        ],
         "city": "Wellington",
-        "suburb": "",
-        "state": "",
+        "state": "Wellington",
         "postcode": "6011",
         "country": "NZ",
-        "created": "2017-04-05T02:30:30.484Z",
-        "updated": "2017-04-05T02:30:30.484Z",
+        "created": "2017-06-13T20:02:20.994Z",
+        "updated": "2017-06-13T20:02:20.994Z",
         "postal_info_type": "loc",
-        "project_id": 1
+        "disclose": {
+            "flag": 1,
+            "fields": [
+                "name",
+                "address"
+            ]
+        },
+        "default_registrant": null,
+        "user": 1
     }
 },
 {
@@ -72,41 +104,28 @@
         "first_name": "Tech",
         "surname": "Guy",
         "email": "tech@test.com",
-        "telephone": "",
+        "telephone": "+1.23434334",
         "fax": "",
         "company": "",
-        "street": ["150 Willis Street"],
+        "street": [
+            "150 Willis Street"
+        ],
         "city": "Wellington",
-        "suburb": "",
         "state": "",
         "postcode": "6011",
         "country": "NZ",
-        "created": "2017-04-05T02:31:05.629Z",
-        "updated": "2017-04-05T02:31:05.629Z",
+        "created": "2017-06-13T21:04:16.309Z",
+        "updated": "2017-06-13T21:04:16.309Z",
         "postal_info_type": "loc",
-        "project_id": 1
-    }
-},
-{
-    "model": "domain_api.accountdetail",
-    "pk": 5,
-    "fields": {
-        "first_name": "Joe",
-        "surname": "User",
-        "email": "joeuser2@test.com",
-        "telephone": "+1.8175551234",
-        "fax": "",
-        "company": "",
-        "street": ["10 Evergreen Terrace"],
-        "city": "Springfield",
-        "suburb": "",
-        "state": "State",
-        "postcode": "",
-        "country": "US",
-        "created": "2017-04-05T02:28:54.396Z",
-        "updated": "2017-04-05T02:28:54.396Z",
-        "postal_info_type": "loc",
-        "project_id": 2
+        "disclose": {
+            "flag": 1,
+            "fields": [
+                "name",
+                "telephone"
+            ]
+        },
+        "default_registrant": null,
+        "user": 1
     }
 }
 ]

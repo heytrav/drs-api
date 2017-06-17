@@ -84,7 +84,7 @@ class TestInfoContact(TestSetup):
             }
         }
         contact_query = ContactQuery(
-            Contact.objects.filter(project_id=self.user)
+            Contact.objects.filter(user=self.user)
         )
         with patch.object(EppRpcClient,
                           'call',

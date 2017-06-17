@@ -24,17 +24,14 @@ class TestUpdateWorkflow(TestSetup):
                 "test_contacts.json",
                 "test_registrants.json",
                 "test_domain_contacts.json",
-                "test_domain_registrants.json",
-                "test_domains.json",
-                "registered_domain_test_update.json",
+                "test_registered_domains.json",
                 "test_nameservers.json",
-                "test_nameserver_hosts.json"
                 ]
 
     def setUp(self):
         super().setUp()
         self.registered_domain = RegisteredDomain.objects.get(
-            domain__name="test-something",
+            name="test-something",
             tld__zone="bar",
             active=True
         )

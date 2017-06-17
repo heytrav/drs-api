@@ -129,8 +129,7 @@ class Registrant(models.Model):
     street = JSONField(default=None, null=True)
     city = models.CharField(max_length=200, null=True)
     state = models.CharField(max_length=200, null=True, blank=True)
-    status = models.CharField(max_length=200, null=True)
-    contact_status = JSONField(null=True, default=None)
+    status = JSONField(null=True, default=None)
     postcode = models.CharField(max_length=20, null=True)
     # Must be a 2 letter country code.
     country = models.CharField(max_length=2, null=True)
@@ -183,8 +182,7 @@ class Contact(models.Model):
     roid = models.CharField(max_length=100, null=True, blank=True)
     disclose = JSONField(default=None, null=True)
     provider = models.ForeignKey(DomainProvider)
-    status = models.CharField(max_length=200, null=True)
-    contact_status = JSONField(null=True, default=None)
+    status = JSONField(null=True, default=None)
     # Id from provider
     registry_id = models.CharField(max_length=200, unique=True)
     user = models.ForeignKey('auth.User',

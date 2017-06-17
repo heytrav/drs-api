@@ -49,7 +49,7 @@ class ContactFactory(object):
                 registry_id=contact
             )
             self.provider = self.contact_object.provider
-            self.user = self.contact_object.project_id
+            self.user = self.contact_object.user
 
         if self.template:
             self.related_contact_set = self.get_related_contact_set()
@@ -88,7 +88,7 @@ class ContactFactory(object):
         contact = self.related_contact_set.create(
             registry_id=registry_id,
             provider=self.provider,
-            project_id=self.user,
+            user=self.user,
             account_template=self.template
         )
         return contact

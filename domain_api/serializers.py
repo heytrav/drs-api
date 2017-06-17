@@ -148,7 +148,7 @@ class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
                   'postcode', 'country', 'postal_info_type',
                   'disclose',
                    'created', 'updated',
-                  'contact_status',
+                  'status',
                   'user',)
 
 
@@ -178,7 +178,7 @@ class ContactSerializer(serializers.HyperlinkedModelSerializer):
                   'postcode', 'country', 'postal_info_type',
                   'disclose',
                   'created', 'updated',
-                  'contact_status',
+                  'status',
                   'user',)
 
 
@@ -444,7 +444,6 @@ class AdminInfoContactSerializer(PrivateInfoContactSerializer):
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
                   'postal_info_type', 'disclose',
-                  'contact_status',
                   'status', 'authcode', 'roid')
 
 
@@ -468,7 +467,6 @@ class AdminInfoRegistrantSerializer(serializers.ModelSerializer):
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
                   'postal_info_type', 'disclose',
-                  'contact_status',
                   'status', 'authcode', 'roid')
 
 

@@ -233,7 +233,7 @@ class ContactQuery(EppEntity):
 
         }
         extra_fields = {}
-        extra_fields["contact_status"] = self.process_status(
+        extra_fields["status"] = self.process_status(
             info_data["contact:status"]
         )
         extra_fields["roid"] = info_data["contact:roid"]
