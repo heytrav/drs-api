@@ -107,7 +107,7 @@ class TestCreateRegistrant(TestSetup):
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_create_registrant_epp_error(self):
         """
-        Check that an EPP error causes failure.
+        Check that an EPP error causes failure when creating a registrant.
         """
         with patch.object(EppRpcClient,
                           'call',

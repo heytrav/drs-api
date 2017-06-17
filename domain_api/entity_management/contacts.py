@@ -17,7 +17,7 @@ class ContactFactory(object):
     """
 
     contact_fields = ('telephone', 'fax', 'email',)
-    disclose_fields = ('disclose',)
+    disclose_fields = ('non_disclose',)
     disclose_localised = {"name": "name",
                           "company": "org",
                           "address": "addr"}
@@ -105,25 +105,34 @@ class ContactFactory(object):
         """
         Transform disclose dict to registry fields
 
-        :disclose_data: TODO
-        :returns: TODO
+        :disclose_data: list of fields to not disclose
+        :returns: dict
 
         """
         non_disclose = []
-        fields = disclose_data["fields"]
-        flag = disclose_data["flag"]
+        disclose = []
         for (k, v) in self.disclose_localised.items():
-            if k in fields:
-                non_disclose.append({
+            data = {
                     "name": v,
                     "type": postal_info_type
-                })
+                }
+            if k in disclose_data:
+                non_disclose.append(data)
+            else:
+                disclose.append(data)
         for (k, v) in self.disclose_non_localized.items():
-            if k in fields:
+            if k in disclose_data:
                 non_disclose.append(v)
+            else:
+                disclose.append(v)
+        if non_disclose:
+            return {
+                "flag": 0,
+                "disclosing": non_disclose
+            }
         return {
-            "flag": flag,
-            "disclosing": non_disclose
+            "flag": 1,
+            "disclosing": disclose
         }
 
     def process_disclose(self):
@@ -136,7 +145,7 @@ class ContactFactory(object):
         """
         template = self.template
         postal_info_type = template.postal_info_type
-        template_disclose = template.disclose
+        template_disclose = template.non_disclose
         return self.disclose_transform(template_disclose, postal_info_type)
 
     def create_registry_contact(self):
@@ -224,8 +233,8 @@ class ContactFactory(object):
         :returns: dict with appropriate disclose changes
 
         """
-        disclose = data.get("disclose", False)
-        if disclose and all(i in disclose for i in ["flag", "fields"]):
+        disclose = data.get("non_disclose", False)
+        if disclose:
             postal_info_type = self.contact_object.postal_info_type
             return self.disclose_transform(disclose, postal_info_type)
         return False
@@ -326,7 +335,6 @@ class RegistrantManager(ContactFactory):
 
     def get_related_contact_set(self):
         return  Registrant.objects.filter(
-            domainregistrant__active=True,
             account_template=self.template,
             provider=self.provider
         ).distinct()

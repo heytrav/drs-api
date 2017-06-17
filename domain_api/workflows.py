@@ -394,7 +394,7 @@ class Workflow(object):
         current_nameservers = domain.nameservers
         for ns_host in ns:
             idn = idna.encode(ns_host, uts46=True).decode('ascii')
-            if not current_nameservers.filter(idn_host=idn).exists():
+            if idn not in current_nameservers:
                 add = epp.get("add", {})
                 add_ns = add.get("ns", [])
                 add_ns.append(idn)
@@ -404,16 +404,17 @@ class Workflow(object):
                 log.debug("%s is a current nameserver" % idn)
 
         for ns_host in current_nameservers:
-            idn_included = ns_host.idn_host in ns
-            host_included = ns_host.host in ns
+            idn = idna.encode(ns_host, uts46=True).decode('ascii')
+            idn_included = idn in ns
+            host_included = ns_host in ns
             if not any([idn_included, host_included]):
                 rem = epp.get("rem", {})
                 rem_ns = rem.get("ns", [])
-                rem_ns.append(ns_host.idn_host)
+                rem_ns.append(idn)
                 rem["ns"] = rem_ns
                 epp["rem"] = rem
             else:
-                log.debug("Not removing %s" % ns_host.idn_host)
+                log.debug("Not removing %s" % idn)
 
     def update_domain(self, data, domain, user):
         """

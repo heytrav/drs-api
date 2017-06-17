@@ -26,11 +26,11 @@ class TestDomainViewMethods(TestSetup):
         Set up test suite
         """
         tld_provider = TopLevelDomainProvider.objects.filter(
-            zone__zone='ote'
+            zone__zone='bar'
         ).first()
         tld = tld_provider.zone
         self.registered_domain = RegisteredDomain.objects.get(
-            domain__name="test-domain",
+            name="test-something",
             tld=tld,
             tld_provider=tld_provider,
             active=True,
@@ -44,8 +44,7 @@ class TestDomainViewMethods(TestSetup):
         def call_code(view_obj, domain):
             print("Executing call code")
             try:
-                view_obj.is_admin_or_owner(domain)
-                return True
+                return any([view_obj.is_owner(domain), view_obj.is_admin()])
             except Exception as e:
                 print("Code threw an exception" + str(e))
                 return False

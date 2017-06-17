@@ -41,7 +41,7 @@ class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
                    'city',
                   'state', 'postcode', 'country', 'postal_info_type',
                   'created', 'updated', 'user', 'default_registrant',
-                  'disclose',)
+                  'non_disclose',)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -146,7 +146,7 @@ class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
                   'street', 'city',
                   'state',
                   'postcode', 'country', 'postal_info_type',
-                  'disclose',
+                  'non_disclose',
                    'created', 'updated',
                   'status',
                   'user',)
@@ -176,7 +176,7 @@ class ContactSerializer(serializers.HyperlinkedModelSerializer):
                   'street', 'city',
                   'state',
                   'postcode', 'country', 'postal_info_type',
-                  'disclose',
+                  'non_disclose',
                   'created', 'updated',
                   'status',
                   'user',)
@@ -431,7 +431,7 @@ class PrivateInfoContactSerializer(serializers.ModelSerializer):
         fields = ('registry_id', 'name', 'email', 'company', 'street',
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
-                  'postal_info_type', 'disclose',
+                  'postal_info_type', 'non_disclose',
                   'authcode',)
 
 
@@ -442,7 +442,7 @@ class AdminInfoContactSerializer(PrivateInfoContactSerializer):
         fields = ('registry_id', 'name', 'email', 'company', 'street',
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
-                  'postal_info_type', 'disclose',
+                  'postal_info_type', 'non_disclose',
                   'status', 'authcode', 'roid')
 
 
@@ -453,7 +453,7 @@ class PrivateInfoRegistrantSerializer(serializers.ModelSerializer):
         fields = ('registry_id', 'name', 'email', 'company', 'street',
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
-                  'postal_info_type', 'disclose',
+                  'postal_info_type', 'non_disclose',
                   'authcode',)
 
 
@@ -465,7 +465,7 @@ class AdminInfoRegistrantSerializer(serializers.ModelSerializer):
 
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
-                  'postal_info_type', 'disclose',
+                  'postal_info_type', 'non_disclose',
                   'status', 'authcode', 'roid')
 
 

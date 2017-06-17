@@ -35,7 +35,7 @@ class AccountDetail(models.Model):
         choices=POSTAL_INFO_TYPES,
         default=LOC
     )
-    disclose = JSONField(default=None, null=True)
+    non_disclose = JSONField(default=None, null=True)
     default_registrant = models.NullBooleanField(null=True, )
     user = models.ForeignKey('auth.User',
                              related_name='personal_details',
@@ -140,7 +140,7 @@ class Registrant(models.Model):
     )
     authcode = models.CharField(max_length=100, null=True, blank=True)
     roid = models.CharField(max_length=100, null=True, blank=True)
-    disclose = JSONField(default=None, null=True)
+    non_disclose = JSONField(default=None, null=True)
     account_template = models.ForeignKey(AccountDetail)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -180,7 +180,7 @@ class Contact(models.Model):
     )
     authcode = models.CharField(max_length=100, null=True, blank=True)
     roid = models.CharField(max_length=100, null=True, blank=True)
-    disclose = JSONField(default=None, null=True)
+    non_disclose = JSONField(default=None, null=True)
     provider = models.ForeignKey(DomainProvider)
     status = JSONField(null=True, default=None)
     # Id from provider

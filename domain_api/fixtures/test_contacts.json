@@ -18,20 +18,19 @@
         "postal_info_type": "loc",
         "authcode": null,
         "roid": null,
-        "disclose": {
-            "flag": 1,
-            "fields": [
-                "name",
-                "address"
-            ]
-        },
+        "non_disclose": [
+            "company",
+            "fax",
+            "telephone",
+            "email"
+        ],
         "provider": 3,
         "status": null,
         "registry_id": "contact-123",
         "user": 1,
         "account_template": 3,
         "created": "2017-06-14T07:25:17.976Z",
-        "updated": "2017-06-14T03:35:11.368Z"
+        "updated": "2017-06-17T09:31:19.680Z"
     }
 },
 {
@@ -53,20 +52,19 @@
         "postal_info_type": "loc",
         "authcode": null,
         "roid": null,
-        "disclose": {
-            "flag": 1,
-            "fields": [
-                "name",
-                "telephone"
-            ]
-        },
+        "non_disclose": [
+            "address",
+            "company",
+            "email",
+            "fax"
+        ],
         "provider": 3,
         "status": null,
         "registry_id": "contact-321",
         "user": 1,
         "account_template": 4,
         "created": "2017-06-14T07:27:06.718Z",
-        "updated": "2017-06-14T03:36:49.029Z"
+        "updated": "2017-06-17T09:33:34.407Z"
     }
 },
 {
@@ -88,24 +86,21 @@
         "postal_info_type": "loc",
         "authcode": null,
         "roid": null,
-        "disclose": {
-            "flag": 0,
-            "fields": [
-                "name",
-                "address",
-                "company",
-                "telephone",
-                "fax",
-                "email"
-            ]
-        },
+        "non_disclose": [
+            "name",
+            "address",
+            "company",
+            "telephone",
+            "fax",
+            "email"
+        ],
         "provider": 3,
         "status": null,
         "registry_id": "contact-223",
         "user": 1,
         "account_template": 3,
         "created": "2017-06-14T07:38:53.003Z",
-        "updated": "2017-06-14T03:47:31.557Z"
+        "updated": "2017-06-17T10:23:20.495Z"
     }
 },
 {
@@ -127,20 +122,17 @@
         "postal_info_type": "loc",
         "authcode": null,
         "roid": null,
-        "disclose": {
-            "flag": 0,
-            "fields": [
-                "name",
-                "telephone"
-            ]
-        },
+        "non_disclose": [
+            "name",
+            "telephone"
+        ],
         "provider": 3,
         "status": null,
         "registry_id": "contact-224",
         "user": 1,
         "account_template": 4,
         "created": "2017-06-14T07:39:18.271Z",
-        "updated": "2017-06-14T03:50:48.355Z"
+        "updated": "2017-06-17T10:23:03.545Z"
     }
 }
 ]

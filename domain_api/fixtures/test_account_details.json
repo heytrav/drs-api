@@ -17,19 +17,16 @@
         "postcode": "97835",
         "country": "US",
         "created": "2017-06-13T19:53:17.295Z",
-        "updated": "2017-06-13T19:53:17.295Z",
+        "updated": "2017-06-17T06:58:25.506Z",
         "postal_info_type": "loc",
-        "disclose": {
-            "flag": 0,
-            "fields": [
-                "name",
-                "address",
-                "company",
-                "telephone",
-                "fax",
-                "email"
-            ]
-        },
+        "non_disclose": [
+            "name",
+            "address",
+            "company",
+            "telephone",
+            "fax",
+            "email"
+        ],
         "default_registrant": true,
         "user": 2
     }
@@ -52,16 +49,13 @@
         "postcode": "6011",
         "country": "US",
         "created": "2017-06-13T19:54:46.035Z",
-        "updated": "2017-06-13T19:55:59.690Z",
+        "updated": "2017-06-17T09:21:53.751Z",
         "postal_info_type": "loc",
-        "disclose": {
-            "flag": 1,
-            "fields": [
-                "name",
-                "company",
-                "address"
-            ]
-        },
+        "non_disclose": [
+            "name",
+            "company",
+            "address"
+        ],
         "default_registrant": null,
         "user": 2
     }
@@ -84,15 +78,12 @@
         "postcode": "6011",
         "country": "NZ",
         "created": "2017-06-13T20:02:20.994Z",
-        "updated": "2017-06-13T20:02:20.994Z",
+        "updated": "2017-06-17T09:22:22.799Z",
         "postal_info_type": "loc",
-        "disclose": {
-            "flag": 1,
-            "fields": [
-                "name",
-                "address"
-            ]
-        },
+        "non_disclose": [
+            "name",
+            "address"
+        ],
         "default_registrant": null,
         "user": 1
     }
@@ -115,15 +106,12 @@
         "postcode": "6011",
         "country": "NZ",
         "created": "2017-06-13T21:04:16.309Z",
-        "updated": "2017-06-13T21:04:16.309Z",
+        "updated": "2017-06-17T09:22:50.549Z",
         "postal_info_type": "loc",
-        "disclose": {
-            "flag": 1,
-            "fields": [
-                "name",
-                "telephone"
-            ]
-        },
+        "non_disclose": [
+            "name",
+            "telephone"
+        ],
         "default_registrant": null,
         "user": 1
     }
@@ -146,19 +134,16 @@
         "postcode": "97835",
         "country": "US",
         "created": "2017-06-13T19:53:17.295Z",
-        "updated": "2017-06-13T19:53:17.295Z",
+        "updated": "2017-06-17T09:25:37.078Z",
         "postal_info_type": "loc",
-        "disclose": {
-            "flag": 0,
-            "fields": [
-                "name",
-                "address",
-                "company",
-                "telephone",
-                "fax",
-                "email"
-            ]
-        },
+        "non_disclose": [
+            "name",
+            "address",
+            "company",
+            "telephone",
+            "fax",
+            "email"
+        ],
         "default_registrant": false,
         "user": 2
     }

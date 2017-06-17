@@ -618,10 +618,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         """
         user = self.request.user
         if domain:
-            if domain.registrant.filter(
-                active=True,
-                registrant__user=user
-            ):
+            if domain.registrant.user == user:
                 return True
             if domain.contacts.filter(contact__user=user).exists():
                 return True

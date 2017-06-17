@@ -190,6 +190,7 @@ class ContactQuery(EppEntity):
 
         """
         log.info("Processing disclose data {!r}".format(raw_disclose_data))
+        flag = raw_disclose_data.get("flag", 1)
         contact_attributes = {
             "contact:voice": "telephone",
             "contact:fax": "fax",
@@ -198,12 +199,13 @@ class ContactQuery(EppEntity):
             "contact:addr": "address",
             "contact:org": "company"
         }
-        processed_data = {
-            "flag": raw_disclose_data["flag"],
-            "fields": []
-        }
+        processed_data = []
         for (k, v) in contact_attributes.items():
-            processed_data["fields"].append(v)
+            if flag == 0:
+                if k in raw_disclose_data:
+                    processed_data.append(v)
+            elif k not in raw_disclose_data:
+                processed_data.append(v)
         return processed_data
 
     def info(self, contact):
@@ -248,7 +250,7 @@ class ContactQuery(EppEntity):
             for item, value in contact_info_data.items():
                 if isinstance(value, dict):
                     contact_info_data[item] = ""
-            contact_info_data["disclose"] = self.process_disclose(
+            contact_info_data["non_disclose"] = self.process_disclose(
                 info_data["contact:disclose"]
             )
             self.queryset.filter(pk=contact.id).update(**contact_info_data)

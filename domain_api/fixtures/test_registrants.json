@@ -22,20 +22,17 @@
         "postal_info_type": "loc",
         "authcode": null,
         "roid": null,
-        "disclose": {
-            "flag": 0,
-            "fields": [
-                "name",
-                "address",
-                "company",
-                "telephone",
-                "fax",
-                "email"
-            ]
-        },
+        "non_disclose": [
+            "name",
+            "address",
+            "company",
+            "telephone",
+            "fax",
+            "email"
+        ],
         "account_template": 1,
         "created": "2017-06-14T08:30:01.048Z",
-        "updated": "2017-06-14T04:03:40.603Z"
+        "updated": "2017-06-17T10:23:47.882Z"
     }
 },
 {
@@ -61,17 +58,14 @@
         "postal_info_type": "loc",
         "authcode": null,
         "roid": null,
-        "disclose": {
-            "flag": 1,
-            "fields": [
-                "name",
-                "company",
-                "address"
-            ]
-        },
+        "non_disclose": [
+            "email",
+            "telephone",
+            "fax"
+        ],
         "account_template": 2,
         "created": "2017-06-14T08:32:01.799Z",
-        "updated": "2017-06-14T04:04:57.263Z"
+        "updated": "2017-06-17T10:24:54.445Z"
     }
 }
 ]
