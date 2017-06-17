@@ -741,18 +741,18 @@
     "model": "auth.user",
     "pk": 1,
     "fields": {
-        "password": "pbkdf2_sha256$30000$67m1ZGtiOhnF$cRclkbtjkP8v0cccLm3jTMmcrpREQSCBJCHe1yudB38=",
-        "last_login": "2017-06-16T22:12:55Z",
-        "is_superuser": true,
-        "username": "travis",
+        "password": "pbkdf2_sha256$30000$sHGo9HF8w39x$vcaJ0IcnMuNltdu/uvL499zx9HedkgB1NLu0tZEt/Eg=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "testadmin",
         "first_name": "",
         "last_name": "",
-        "email": "travis@catalyst.net.nz",
-        "is_staff": true,
+        "email": "",
+        "is_staff": false,
         "is_active": true,
-        "date_joined": "2017-06-16T22:12:29Z",
+        "date_joined": "2017-06-17T01:43:55.303Z",
         "groups": [
-            1
+            2
         ],
         "user_permissions": []
     }
@@ -771,26 +771,6 @@
         "is_staff": false,
         "is_active": true,
         "date_joined": "2017-06-17T01:43:32.102Z",
-        "groups": [
-            2
-        ],
-        "user_permissions": []
-    }
-},
-{
-    "model": "auth.user",
-    "pk": 3,
-    "fields": {
-        "password": "pbkdf2_sha256$30000$sHGo9HF8w39x$vcaJ0IcnMuNltdu/uvL499zx9HedkgB1NLu0tZEt/Eg=",
-        "last_login": null,
-        "is_superuser": false,
-        "username": "testadmin",
-        "first_name": "",
-        "last_name": "",
-        "email": "",
-        "is_staff": false,
-        "is_active": true,
-        "date_joined": "2017-06-17T01:43:55.303Z",
         "groups": [
             2
         ],

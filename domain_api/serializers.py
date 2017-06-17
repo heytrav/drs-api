@@ -327,7 +327,7 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
         read_only_fields = ('expiration', 'created', 'authcode', 'status')
 
     def get_registrant(self, obj):
-        return obj.registrant.filter(active=True).first().registrant.registry_id
+        return obj.registrant.registry_id
 
     def get_fqdn(self, obj):
         return ".".join([obj.domain.domain, obj.tld.tld])
@@ -358,7 +358,6 @@ class InfoDomainSerializer(serializers.Serializer):
     contacts = HandleSetSerializer()
     registrant = serializers.CharField(required=True, allow_blank=False)
     roid = serializers.CharField(required=False)
-    ns = NsHostObjectListSerializer(required=False)
     nameservers = serializers.JSONField()
     status = serializers.JSONField()
     created = serializers.DateTimeField(required=False)

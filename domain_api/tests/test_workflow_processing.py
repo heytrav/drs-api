@@ -41,7 +41,7 @@ class TestUpdateWorkflow(TestSetup):
 
     def test_update_domain_with_registrant_acct_template(self):
         """
-        Test logic for determining if we need a new contact
+        Test logic for determining if we need a new registrant
         """
 
         possibly_new_registrant = 5  # see fixtures/test_account_details.json

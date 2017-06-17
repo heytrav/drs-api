@@ -127,5 +127,40 @@
         "default_registrant": null,
         "user": 1
     }
+},
+{
+    "model": "domain_api.accountdetail",
+    "pk": 5,
+    "fields": {
+        "first_name": "Joe",
+        "surname": "User",
+        "email": "joeuser2@test.com",
+        "telephone": "+1.8175551234",
+        "fax": "",
+        "company": "",
+        "street": [
+            "10 Evergreen Terrace"
+        ],
+        "city": "Springfield",
+        "state": "State",
+        "postcode": "97835",
+        "country": "US",
+        "created": "2017-06-13T19:53:17.295Z",
+        "updated": "2017-06-13T19:53:17.295Z",
+        "postal_info_type": "loc",
+        "disclose": {
+            "flag": 0,
+            "fields": [
+                "name",
+                "address",
+                "company",
+                "telephone",
+                "fax",
+                "email"
+            ]
+        },
+        "default_registrant": false,
+        "user": 2
+    }
 }
 ]

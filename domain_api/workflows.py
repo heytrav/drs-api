@@ -329,9 +329,7 @@ class Workflow(object):
         :domain: registered domain object
         :user: User object from http request
         """
-        current_registrant = domain.registrant.filter(
-            active=True
-        ).first().registrant
+        current_registrant = domain.registrant
         current_account_detail = current_registrant.account_template.id
         try:
             account_detail = self._is_account_detail(new_registrant, user)
@@ -393,7 +391,7 @@ class Workflow(object):
         :user: HTTP Request user
 
         """
-        current_nameservers = domain.ns.all()
+        current_nameservers = domain.nameservers
         for ns_host in ns:
             idn = idna.encode(ns_host, uts46=True).decode('ascii')
             if not current_nameservers.filter(idn_host=idn).exists():

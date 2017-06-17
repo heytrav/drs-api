@@ -106,7 +106,7 @@ class Domain(EppEntity):
         registry = get_domain_registry(domain)
         parsed_domain = parse_domain(domain)
         registered_domain_set = self.queryset.filter(
-            domain__name=parsed_domain["domain"],
+            name=parsed_domain["domain"],
             tld__zone=parsed_domain["zone"],
             active=True
         )
@@ -123,7 +123,7 @@ class Domain(EppEntity):
             "status": self.process_status(info_data["domain:status"])
         }
         if "domain:ns" in info_data:
-            return_data["ns"] = self.process_nameservers(info_data["domain:ns"])
+            return_data["nameservers"] = self.process_nameservers(info_data["domain:ns"])
 
         if "domain:authInfo" in info_data:
             return_data["authcode"] = info_data["domain:authInfo"]["domain:pw"]

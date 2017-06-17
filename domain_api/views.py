@@ -91,7 +91,7 @@ def get_registered_domain_queryset(user):
     if user.groups.filter(name='admin').exists():
         return queryset
     return queryset.filter(
-        Q(registrant__registrant__user=user) |
+        Q(registrant__user=user) |
         Q(contacts__contact__user=user)
     ).distinct()
 
@@ -766,7 +766,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
 
         registered_domain = get_object_or_404(
             queryset,
-            domain__name=parsed_domain["domain"],
+            name=parsed_domain["domain"],
             tld__zone=parsed_domain["zone"],
             active=True
         )

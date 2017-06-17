@@ -119,13 +119,13 @@ class TestDomainManager(TestSetup):
     """
 
     def setUp(self):
-        """TODO: Docstring for setUp.
+        """
         :returns: TODO
 
         """
         super().setUp()
         self.registered_domain = RegisteredDomain.objects.get(
-            domain__name="test-something",
+            name="test-something",
             tld__zone="bar",
             active=True
         )
@@ -159,9 +159,7 @@ class TestDomainManager(TestSetup):
             "name": "test-something.bar",
             "chg": {"registrant": "registrant-231" }
         }
-        current_registrant_id = self.registered_domain.registrant.filter(
-            active=True
-        ).first().id
+        current_registrant_id = self.registered_domain.registrant.id
         domain_manager = DomainManager(self.registered_domain)
         domain_manager.update(epp)
         #registrant_obj = DomainRegistrant.objects.get(pk=current_registrant_id)
