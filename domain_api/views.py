@@ -151,8 +151,17 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = PrivateInfoContactSerializer
     admin_serializer_class = AdminInfoContactSerializer
-    queryset = Contact.objects.all()
     manager = ContactManager
+
+    def get_queryset(self):
+        """
+        Return the contact queryset
+
+        :returns: Contact queryset
+        """
+        if self.is_admin():
+            return Contact.objects.all()
+        return Contact.objects.filter(user=self.request.user)
 
     def is_admin(self):
         """
@@ -220,8 +229,10 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
         :returns: InfoContactSerialised response
 
         """
+        queryset = self.get_queryset()
+        contact = get_object_or_404(queryset, registry_id=registry_id)
         try:
-            contact = self.get_queryset().get(registry_id=registry_id)
+            queryset.get(registry_id=registry_id)
             serializer_class = None
             if self.is_admin:
                 serializer_class = self.admin_serializer_class
@@ -230,11 +241,10 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
             if serializer_class:
                 log.debug("Performing info for %s as owner." % registry_id)
-                queryset = self.get_queryset()
                 query = ContactQuery(queryset)
                 contact_data = query.info(contact)
-                self.queryset.filter(pk=contact.id).update(**contact_data)
-                contact = self.queryset.get(pk=contact.id)
+                queryset.filter(pk=contact.id).update(**contact_data)
+                contact = queryset.get(pk=contact.id)
                 serializer = serializer_class(contact)
                 return Response(serializer.data)
             else:
@@ -306,8 +316,18 @@ class RegistrantManagementViewSet(ContactManagementViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = PrivateInfoRegistrantSerializer
     admin_serializer_class = AdminInfoRegistrantSerializer
-    queryset = Registrant.objects.all()
     manager = RegistrantManager
+
+    def get_queryset(self):
+        """
+        Return the contact queryset
+
+        :returns: Contact queryset
+        """
+        if self.is_admin():
+            return Registrant.objects.all()
+        return Registrant.objects.filter(user=self.request.user)
+
 
 
 class HostManagementViewSet(viewsets.GenericViewSet):
