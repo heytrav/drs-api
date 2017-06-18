@@ -230,8 +230,11 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
             if serializer_class:
                 log.debug("Performing info for %s as owner." % registry_id)
-                query = ContactQuery(self.get_queryset())
-                contact = query.info(contact)
+                queryset = self.get_queryset()
+                query = ContactQuery(queryset)
+                contact_data = query.info(contact)
+                self.queryset.filter(pk=contact.id).update(**contact_data)
+                contact = self.queryset.get(pk=contact.id)
                 serializer = serializer_class(contact)
                 return Response(serializer.data)
             else:

@@ -201,7 +201,7 @@ class ContactQuery(EppEntity):
         }
         processed_data = []
         for (k, v) in contact_attributes.items():
-            if flag == 0:
+            if int(flag) == 0:
                 if k in raw_disclose_data:
                     processed_data.append(v)
             elif k not in raw_disclose_data:
@@ -253,11 +253,10 @@ class ContactQuery(EppEntity):
             contact_info_data["non_disclose"] = self.process_disclose(
                 info_data["contact:disclose"]
             )
-            self.queryset.filter(pk=contact.id).update(**contact_info_data)
+            return contact_info_data
         except Exception as e:
             log.error("", exc_info=True)
             raise e
-        return self.queryset.get(pk=contact.id)
 
 
 class HostQuery(EppEntity):

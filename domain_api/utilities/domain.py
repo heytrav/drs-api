@@ -97,7 +97,8 @@ def synchronise_domain(info_data, domain_id):
     filtered_domains.update(
         authcode=info_data.get("authcode", None),
         roid=info_data.get("roid", None),
-        status=info_data.get("status", None)
+        status=info_data.get("status", None),
+        non_disclose=info_data.get("non_disclose", [])
     )
     registered_domain = filtered_domains.first()
     if registered_domain and 'nameservers' in info_data:

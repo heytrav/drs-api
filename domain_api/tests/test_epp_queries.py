@@ -26,13 +26,7 @@ class TestInfoContact(TestSetup):
 
     def setUp(self):
         super().setUp()
-
-    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
-    def test_info_domain(self):
-        """
-        Test info domain processing.
-        """
-        info_contact_response = {
+        self.info_contact_response = {
             "contact:infData": {
                 "contact:authInfo": {
                     "contact:pw": "iafbv5yoe5cg4k8cww44kk0400wg8gg"
@@ -41,11 +35,7 @@ class TestInfoContact(TestSetup):
                 "contact:crDate": "2017-01-23T02:48:25.0Z",
                 "contact:crID": "H93060719",
                 "contact:disclose": {
-                    "contact:addr": {
-                        "type": "int"
-                    },
                     "contact:email": {},
-                    "contact:fax": {},
                     "contact:name": {
                         "type": "int"
                     },
@@ -79,21 +69,61 @@ class TestInfoContact(TestSetup):
                 "xmlns:contact": "urn:ietf:params:xml:ns:contact-1.0"
             }
         }
+
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
+    @patch.object(ContactQuery, 'process_disclose')
+    def test_disclose_processing(self, process_disclose):
+        """
+        Test process disclose is called.
+        """
+        contact_query = ContactQuery(Contact.objects.all())
+        with patch.object(EppRpcClient,
+                          'call',
+                          return_value=self.info_contact_response):
+            contact = Contact.objects.get(registry_id='contact-123')
+            contact_query.info(contact)
+            process_disclose.assert_called_with( {
+                "contact:email": {},
+                "contact:name": {
+                    "type": "int"
+                },
+                "contact:org": {
+                    "type": "int"
+                },
+                "contact:voice": {},
+                "flag": "1"
+            })
+
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
+    def test_info_domain(self):
+        """
+        Test info domain processing.
+        """
         contact_query = ContactQuery(
             Contact.objects.filter(user=self.user)
         )
         with patch.object(EppRpcClient,
                           'call',
-                          return_value=info_contact_response):
+                          return_value=self.info_contact_response):
             contact = Contact.objects.get(registry_id='contact-123')
-            info_data = contact_query.info(contact)
+            contact = contact_query.info(contact)
+            print("Contact: {!r}".format(contact))
             self.assertEqual("admin@test.com",
-                             info_data.email,
-                             "Response from info request contains email")
+                             contact["email"],
+                             "Response from info request contains email"
+                             )
             self.assertEqual("reg-20",
-                             info_data.registry_id,
+                             contact["registry_id"],
                              "contact id is expected value")
-            self.assertEqual(info_data.country, "US", "Expected country US")
+            self.assertEqual(contact["country"], "US", "Expected country US")
+            self.assertEqual(set(contact["non_disclose"]),
+                             set([
+                                 "address",
+                                 "fax"
+                             ]),
+                             "Non disclose data is correct"
+                             )
+
 
 
 class TestNameserver(TestSetup):
