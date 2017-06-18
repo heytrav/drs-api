@@ -133,8 +133,7 @@ class TestDomainManager(TestSetup):
 
     def setUp(self):
         """
-        :returns: TODO
-
+        Setup test suite
         """
         super().setUp()
         self.registered_domain = RegisteredDomain.objects.get(
@@ -172,11 +171,10 @@ class TestDomainManager(TestSetup):
             "name": "test-something.bar",
             "chg": {"registrant": "registrant-231" }
         }
-        current_registrant_id = self.registered_domain.registrant.id
-        domain_manager = DomainManager(self.registered_domain)
-        domain_manager.update(epp)
-        #registrant_obj = DomainRegistrant.objects.get(pk=current_registrant_id)
-        #self.assertFalse(registrant_obj.active)
+        with patch.object(DomainManager, 'connect_domain_to_registrant') as mock:
+            domain_manager = DomainManager(self.registered_domain)
+            domain_manager.update(epp)
+            mock.assert_called_with("registrant-231")
 
     def test_successful_update_domain_contacts(self):
         """

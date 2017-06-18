@@ -174,7 +174,7 @@ class Workflow(object):
         self.create_contact_workflow(data, user)
 
         self.append(create_domain.s(self.registry))
-        self.append(connect_domain.s())
+        self.append(connect_domain.s(self.registry))
         return self.workflow
 
     def check_add_contacts(self, contact_set, current_contacts, epp, user):

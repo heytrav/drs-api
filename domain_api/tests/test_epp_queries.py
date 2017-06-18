@@ -1,17 +1,13 @@
-from django.contrib.auth.models import User
-from django.test import TestCase
 from unittest.mock import patch
 from domain_api.epp.queries import (
     ContactQuery,
-    HostQuery
+    HostQuery,
+    Domain as DomainQuery
 )
 from domain_api.epp.entity import EppRpcClient
 from domain_api.models import (
     Contact,
-    DomainProvider,
-    AccountDetail,
-    TopLevelDomainProvider,
-    TopLevelDomain,
+    RegisteredDomain
 )
 import domain_api
 from .test_setup import TestSetup
@@ -111,6 +107,7 @@ class TestNameserver(TestSetup):
         Setup test suite
 
         """
+        super().setUp()
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_check_host_query(self):
@@ -137,3 +134,80 @@ class TestNameserver(TestSetup):
             results = processed["result"]
             self.assertTrue(results[0]["available"],
                             "Processed response from check host command")
+
+
+class TestDomain(TestSetup):
+
+    def setUp(self):
+        super().setUp()
+        self.info_domain_response = {
+            "domain:infData": {
+                "xmlns:domain": "urn:ietf:params:xml:ns:domain-1.0",
+                "domain:name": "test-something.bar",
+                "domain:roid": "D2357923-CNIC",
+                "domain:status": {
+                    "s": "ok"
+                },
+                "domain:registrant": "2df4a9dd",
+                "domain:contact": [
+                    { "type": "tech", "$t": "0b8747b2" },
+                    { "type": "admin", "$t": "a1c00cc2" }
+                ],
+                "domain:ns": {
+                    "domain:hostObj": [
+                        "ns1.nameserver.com",
+                        "ns2.nameserver.com"
+                    ]
+                },
+                "domain:clID": "H93060719",
+                "domain:crID": "H93060719",
+                "domain:crDate": "2017-06-18T01:27:26.0Z",
+                "domain:upDate": "2017-06-18T01:27:26.0Z",
+                "domain:exDate": "2018-06-18T23:59:59.0Z",
+                "domain:authInfo": {
+                    "domain:pw": "2dxr6n0if8n"
+                }
+            }
+        }
+
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
+    @patch.object(DomainQuery, 'process_status')
+    @patch.object(DomainQuery, 'process_nameservers')
+    def test_info_domain_calls_process_functions(self,
+                                                 proc_nameservers,
+                                                 proc_status):
+        """
+        Test that succesful info domain with nameserver data calls
+        process_nameservers.
+        """
+        queryset= RegisteredDomain.objects.all()
+        dq = DomainQuery(queryset)
+        with patch.object(EppRpcClient,
+                          'call',
+                          return_value=self.info_domain_response):
+            dq.info('test-something.bar')
+            proc_nameservers.assert_called_with( {
+                "domain:hostObj": [
+                    "ns1.nameserver.com",
+                    "ns2.nameserver.com"
+                ]
+            })
+            proc_status.assert_called_with({"s": "ok"})
+
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
+    def test_info_domain_nameserver_processing(self):
+        """
+        Test processing info domain response for nameserver handling.
+        """
+        queryset= RegisteredDomain.objects.all()
+        domain_query = DomainQuery(queryset)
+        with patch.object(EppRpcClient,
+                          'call',
+                          return_value=self.info_domain_response):
+            return_data, registered_domain = domain_query.info('test-something.bar')
+            self.assertIn("nameservers",
+                          return_data,
+                          "Return data contains nameservers")
+            self.assertEqual(return_data["nameservers"],
+                             ["ns1.nameserver.com", "ns2.nameserver.com"],
+                             "Info domain processed nameservers correctly")

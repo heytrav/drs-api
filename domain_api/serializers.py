@@ -317,12 +317,11 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
     domain = serializers.SerializerMethodField('get_fqdn')
     registrant = serializers.SerializerMethodField()
     contacts = serializers.SerializerMethodField()
-    ns = serializers.SerializerMethodField()
     nameservers = serializers.JSONField()
 
     class Meta:
         model = RegisteredDomain
-        fields = ('domain', 'contacts', 'registrant', 'ns', 'nameservers',
+        fields = ('domain', 'contacts', 'registrant', 'nameservers',
                   'authcode', 'created', 'expiration')
         read_only_fields = ('expiration', 'created', 'authcode', 'status')
 
@@ -330,24 +329,20 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
         return obj.registrant.registry_id
 
     def get_fqdn(self, obj):
-        return ".".join([obj.domain.domain, obj.tld.tld])
+        return ".".join([obj.domain, obj.tld.tld])
 
     def get_contacts(self, obj):
         active_contacts = obj.contacts.filter(active=True)
         return [{i.contact_type.name: i.contact.registry_id}
                 for i in active_contacts]
 
-    def get_ns(self, obj):
-        ns = obj.ns
-        return [i.host for i in ns.all()]
-
 
 class AdminInfoDomainSerializer(PrivateInfoDomainSerializer):
 
     class Meta:
         model = RegisteredDomain
-        fields = ('domain', 'contacts', 'registrant', 'roid', 'ns',
-                  'status', 'domain_status', 'authcode',
+        fields = ('domain', 'contacts', 'registrant', 'roid',
+                  'status', 'authcode',
                   'created', 'expiration')
         read_only_fields = ('roid', 'expiration', 'created', 'authcode',
                             'status')
@@ -358,8 +353,8 @@ class InfoDomainSerializer(serializers.Serializer):
     contacts = HandleSetSerializer()
     registrant = serializers.CharField(required=True, allow_blank=False)
     roid = serializers.CharField(required=False)
-    nameservers = serializers.JSONField()
-    status = serializers.JSONField()
+    nameservers = serializers.JSONField(required=False)
+    status = serializers.JSONField(required=False)
     created = serializers.DateTimeField(required=False)
     expiration = serializers.DateTimeField(required=False)
 

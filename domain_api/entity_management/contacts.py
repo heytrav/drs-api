@@ -111,7 +111,8 @@ class ContactFactory(object):
         """
         non_disclose = []
         disclose = []
-        for (k, v) in self.disclose_localised.items():
+        for k in ["name", "company", "address"]:
+            v = self.disclose_localised[k]
             data = {
                     "name": v,
                     "type": postal_info_type
@@ -120,7 +121,8 @@ class ContactFactory(object):
                 non_disclose.append(data)
             else:
                 disclose.append(data)
-        for (k, v) in self.disclose_non_localized.items():
+        for k in ["telephone", "fax", "email"]:
+            v = self.disclose_non_localized[k]
             if k in disclose_data:
                 non_disclose.append(v)
             else:

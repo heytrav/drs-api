@@ -97,22 +97,14 @@ def synchronise_domain(info_data, domain_id):
     filtered_domains.update(
         authcode=info_data.get("authcode", None),
         roid=info_data.get("roid", None),
-        domain_status=info_data.get("status", None)
+        status=info_data.get("status", None)
     )
     registered_domain = filtered_domains.first()
-    current_nameservers = registered_domain.ns.all()
-    # Remove existing nameservers
-    for current_nameserver in current_nameservers:
-        registered_domain.ns.remove(current_nameserver)
     if registered_domain and 'ns' in info_data:
         if isinstance(info_data['ns'], list):
             filtered_domains.update(nameservers=info_data['ns'])
-            for ns in info_data['ns']:
-                synchronise_domain_nameserver(registered_domain, ns)
         else:
             filtered_domains.update(nameservers=[info_data['ns']])
-            synchronise_domain_nameserver(registered_domain,
-                                          info_data['ns'])
 
 
 def synchronise_host(info_data, host_id):
