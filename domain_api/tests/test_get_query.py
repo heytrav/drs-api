@@ -203,10 +203,14 @@ class TestContact(TestSetup):
                 }
             }
         }
+        jwt_header = self.api_login(username='testadmin',
+                                    password='imaadmin1')
+        print("JWT: %s" % jwt_header)
         with patch.object(EppRpcClient,
                           'call',
                           return_value=info_contact_response):
-            response = self.client.get('/v1/contacts/contact-123/')
+            response = self.client.get('/v1/contacts/contact-123/',
+                                        HTTP_AUTHORIZATION=jwt_header)
             self.assertEqual(response.status_code,
                              200,
                              "Info contact returned normal response")
