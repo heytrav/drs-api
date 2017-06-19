@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ParseError, ValidationError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from domain_api.models import (
@@ -14,8 +15,49 @@ from domain_api.models import (
     DefaultAccountTemplate,
     Nameserver,
 )
+from . import schemas
+import jsonschema
 
 UserModel = get_user_model()
+
+
+class NonDiscloseField(serializers.JSONField):
+    def to_internal_value(self, data):
+        """
+        Validate the representation of the non_disclose field
+
+        :data: list of disclose data
+        :returns: serialized data
+
+        """
+        try:
+            jsonschema.validate(data, schemas.non_disclose)
+        except ValidationError:
+            raise
+        return super().to_internal_value(data)
+
+    def to_representation(self, obj):
+        return obj
+
+
+
+class StreetField(serializers.JSONField):
+    def to_internal_value(self, data):
+        """
+        Validate the representation of the non_disclose field
+
+        :data: list of disclose data
+        :returns: serialized data
+
+        """
+        try:
+            jsonschema.validate(data, schemas.street)
+        except ValidationError:
+            raise
+        return super().to_internal_value(data)
+
+    def to_representation(self, obj):
+        return obj
 
 
 class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
@@ -32,13 +74,13 @@ class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
         view_name="domain_api:account-detail",
         lookup_field="pk"
     )
+    non_disclose = NonDiscloseField()
+    street = StreetField()
 
     class Meta:
         model = AccountDetail
         fields = ('url', 'first_name', 'surname', 'email',
-                  'telephone', 'fax', 'company',
-                  'street',
-                   'city',
+                  'telephone', 'fax', 'company', 'street', 'city',
                   'state', 'postcode', 'country', 'postal_info_type',
                   'created', 'updated', 'user', 'default_registrant',
                   'non_disclose',)
