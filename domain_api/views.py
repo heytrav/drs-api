@@ -8,12 +8,8 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from rest_framework import status, permissions, viewsets, generics
-from rest_framework.decorators import (
-    detail_route,
-)
 from rest_framework.response import Response
 from domain_api.models import (
-    Domain,
     AccountDetail,
     ContactType,
     TopLevelDomain,
@@ -21,12 +17,11 @@ from domain_api.models import (
     Registrant,
     Contact,
     RegisteredDomain,
-    DomainRegistrant,
     DomainContact,
     TopLevelDomainProvider,
     DefaultAccountTemplate,
-    NameserverHost,
     DefaultAccountContact,
+    Nameserver,
 )
 from domain_api.serializers import (
     UserSerializer,
@@ -37,19 +32,22 @@ from domain_api.serializers import (
     TopLevelDomainProviderSerializer,
     DomainProviderSerializer,
     RegistrantSerializer,
-    DomainSerializer,
     RegisteredDomainSerializer,
     DomainAvailabilitySerializer,
     HostAvailabilitySerializer,
-    DomainRegistrantSerializer,
     DomainContactSerializer,
     InfoDomainSerializer,
     PrivateInfoDomainSerializer,
     InfoContactSerializer,
     PrivateInfoContactSerializer,
+    AdminInfoContactSerializer,
     DefaultAccountTemplateSerializer,
     InfoHostSerializer,
-    PrivateInfoHostSerializer,
+    PrivateInfoRegistrantSerializer,
+    AdminInfoRegistrantSerializer,
+    AdminInfoDomainSerializer,
+    NameserverSerializer,
+    AdminNameserverSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
@@ -63,7 +61,6 @@ from .exceptions import (
     DomainNotAvailable,
     NotObjectOwner,
     EppObjectDoesNotExist,
-    UpdateEmpty
 )
 from domain_api.entity_management.contacts import (
     RegistrantManager,
@@ -94,8 +91,8 @@ def get_registered_domain_queryset(user):
     if user.groups.filter(name='admin').exists():
         return queryset
     return queryset.filter(
-        Q(registrant__registrant__project_id=user) |
-        Q(contacts__contact__project_id=user)
+        Q(registrant__user=user) |
+        Q(contacts__contact__user=user)
     ).distinct()
 
 
@@ -153,22 +150,39 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
     """
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = PrivateInfoContactSerializer
-    queryset = Contact.objects.all()
+    admin_serializer_class = AdminInfoContactSerializer
     manager = ContactManager
 
-    def is_admin_or_owner(self, contact=None):
+    def get_queryset(self):
         """
-        Determine if the current logged in user is admin or the owner of
-        the object.
+        Return the contact queryset
 
-        :contact: Contact/Registrant object
-        :returns: True or False
+        :returns: Contact queryset
+        """
+        if self.is_admin():
+            return Contact.objects.all()
+        return Contact.objects.filter(user=self.request.user)
+
+    def is_admin(self):
+        """
+        Determine whether request user is admin.
+        :returns: Boolean
 
         """
         if self.request.user.groups.filter(name='admin').exists():
             log.debug("Is admin")
             return True
-        if contact and contact.project_id == self.request.user:
+        return False
+
+    def is_owner(self, contact):
+        """
+        Determine whether request user is owner of contact object.
+
+        :contact: Contact object
+        :returns: Boolean
+
+        """
+        if contact and contact.user == self.request.user:
             log.debug("User owns %s " % contact.registry_id)
             return True
         return False
@@ -215,14 +229,23 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
         :returns: InfoContactSerialised response
 
         """
+        queryset = self.get_queryset()
+        contact = get_object_or_404(queryset, registry_id=registry_id)
         try:
-            contact = self.get_queryset().get(registry_id=registry_id)
+            queryset.get(registry_id=registry_id)
+            serializer_class = None
+            if self.is_admin:
+                serializer_class = self.admin_serializer_class
+            if self.is_owner(contact):
+                serializer_class = self.serializer_class
 
-            if self.is_admin_or_owner(contact):
+            if serializer_class:
                 log.debug("Performing info for %s as owner." % registry_id)
-                query = ContactQuery(self.get_queryset())
-                contact = query.info(contact)
-                serializer = self.serializer_class(contact)
+                query = ContactQuery(queryset)
+                contact_data = query.info(contact)
+                queryset.filter(pk=contact.id).update(**contact_data)
+                contact = queryset.get(pk=contact.id)
+                serializer = serializer_class(contact)
                 return Response(serializer.data)
             else:
                 log.debug("Basic contact query for %s" % registry_id)
@@ -260,7 +283,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
         """
         contact = get_object_or_404(self.queryset, registry_id=registry_id)
-        if self.is_admin_or_owner(contact):
+        if self.is_admin or self.is_owner(contact):
             try:
                 manager = self.manager(contact=registry_id)
                 response = manager.update_contact(request.data)
@@ -279,8 +302,8 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
         """
         contacts = self.get_queryset()
-        if not self.is_admin_or_owner():
-            contacts = contacts.filter(project_id=self.request.user)
+        if not self.is_admin():
+            contacts = contacts.filter(user=self.request.user)
 
         serializer = InfoContactSerializer(contacts, many=True)
         return Response(serializer.data)
@@ -291,9 +314,20 @@ class RegistrantManagementViewSet(ContactManagementViewSet):
     Handle registrant related queries.
     """
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = PrivateInfoContactSerializer
-    queryset = Registrant.objects.all()
+    serializer_class = PrivateInfoRegistrantSerializer
+    admin_serializer_class = AdminInfoRegistrantSerializer
     manager = RegistrantManager
+
+    def get_queryset(self):
+        """
+        Return the contact queryset
+
+        :returns: Contact queryset
+        """
+        if self.is_admin():
+            return Registrant.objects.all()
+        return Registrant.objects.filter(user=self.request.user)
+
 
 
 class HostManagementViewSet(viewsets.GenericViewSet):
@@ -320,7 +354,7 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             return True
         # otherwise check if user is registrant of contact for domain
         if host:
-            if host.project_id == user:
+            if host.user == user:
                 return True
         return False
 
@@ -347,11 +381,11 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         :returns: queryset object
 
         """
-        queryset = NameserverHost.objects.all()
+        queryset = Nameserver.objects.all()
         user = self.request.user
         if user.groups.filter(name='admin').exists():
             return queryset
-        return queryset.filter(project_id=user).distinct()
+        return queryset.filter(user=user).distinct()
 
     def available(self, request, host=None):
         """
@@ -390,7 +424,7 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         try:
             # Limit registered domain query to "owned" domains
             hosts = self.get_queryset().filter()
-            serializer = PrivateInfoHostSerializer(hosts, many=True)
+            serializer = InfoHostSerializer(hosts, many=True)
             return Response(serializer.data)
         except Exception:
             log.error("", exc_info=True)
@@ -410,7 +444,7 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             info, registered_host = query.info(host)
             if registered_host and self.is_admin_or_owner(registered_host):
                 synchronise_host(info, registered_host.id)
-                serializer = PrivateInfoHostSerializer(
+                serializer = InfoHostSerializer(
                     self.get_queryset().get(pk=registered_host.id)
                 )
                 return Response(serializer.data)
@@ -511,7 +545,6 @@ class DomainAvailabilityViewSet(viewsets.ViewSet):
             log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
     def bulk_available(self, request, name=None):
         """
         Leave the tld away to check availability at all supported tld providers.
@@ -559,7 +592,7 @@ class DomainAvailabilityViewSet(viewsets.ViewSet):
                 check_result += i
             log.debug("Received check domain response")
             serializer = self.serializer_class(data=check_result,
-                                                      many=True)
+                                               many=True)
             if serializer.is_valid():
                 return Response(serializer.data)
             else:
@@ -589,27 +622,28 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         user = self.request.user
         return get_registered_domain_queryset(user)
 
-    def is_admin_or_owner(self, domain=None):
+    def is_admin(self):
         """
-        Determine if the current logged in user is admin or the owner of
-        the object.
-
-        :domain: Registered domain object
-        :returns: True or False
-
+        Determine if the current logged in user is admin
+        :returns: Boolean
         """
         user = self.request.user
         # Check if user is admin
         if user.groups.filter(name='admin').exists():
             return True
-        # otherwise check if user is registrant of contact for domain
+        return False
+
+    def is_owner(self, domain=None):
+        """
+        Determine if the current logged in user is the domain owner.
+        :domain: RegisteredDomain object
+        :returns: Boolean
+        """
+        user = self.request.user
         if domain:
-            if domain.registrant.filter(
-                active=True,
-                registrant__project_id=user
-            ):
+            if domain.registrant.user == user:
                 return True
-            if domain.contacts.filter(contact__project_id=user).exists():
+            if domain.contacts.filter(contact__user=user).exists():
                 return True
         return False
 
@@ -645,9 +679,14 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             info, registered_domain = query.info(domain)
             get_logzio_sender().append(info)
             log.debug("Info domain for %s" % domain)
-            if registered_domain and self.is_admin_or_owner(registered_domain):
+            serializer_class = None
+            if self.is_owner(registered_domain):
+                serializer_class = self.serializer_class
+            if self.is_admin():
+                serializer_class = AdminInfoDomainSerializer
+            if serializer_class is not None:
                 synchronise_domain(info, registered_domain.id)
-                serializer = self.serializer_class(
+                serializer = serializer_class(
                     self.get_queryset().get(pk=registered_domain.id)
                 )
                 return Response(serializer.data)
@@ -655,6 +694,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             if serializer.is_valid():
                 return Response(serializer.data)
             else:
+                log.error("Errors serializing response")
                 return Response(serializer.errors,
                                 status=status.HTTP_400_BAD_REQUEST)
         except InvalidTld as e:
@@ -746,7 +786,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
 
         registered_domain = get_object_or_404(
             queryset,
-            domain__name=parsed_domain["domain"],
+            name=parsed_domain["domain"],
             tld__zone=parsed_domain["zone"],
             active=True
         )
@@ -790,7 +830,7 @@ class AccountDetailViewSet(viewsets.ModelViewSet):
                           permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def perform_create(self, serializer):
-        serializer.save(project_id=self.request.user)
+        serializer.save(user=self.request.user)
 
     def get_queryset(self):
         """
@@ -802,7 +842,7 @@ class AccountDetailViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return AccountDetail.objects.all()
-        return AccountDetail.objects.filter(project_id=user)
+        return AccountDetail.objects.filter(user=user)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -869,7 +909,7 @@ class ContactViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return Contact.objects.all()
-        return Contact.objects.filter(project_id=user)
+        return Contact.objects.filter(user=user)
 
 
 class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
@@ -896,16 +936,7 @@ class RegistrantViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return Registrant.objects.all()
-        return Registrant.objects.filter(project_id=user)
-
-
-class DomainViewSet(viewsets.ModelViewSet):
-
-    serializer_class = DomainSerializer
-    permission_classes = (permissions.IsAuthenticated,
-                          IsAdmin,)
-    queryset = Domain.objects.all()
-    lookup_field = 'name'
+        return Registrant.objects.filter(user=user)
 
 
 class RegisteredDomainViewSet(viewsets.ModelViewSet):
@@ -914,24 +945,6 @@ class RegisteredDomainViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,
                           IsAdmin,)
     queryset = RegisteredDomain.objects.all()
-
-
-class DomainRegistrantViewSet(viewsets.ModelViewSet):
-
-    serializer_class = DomainRegistrantSerializer
-    permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissionsOrAnonReadOnly,)
-
-    def get_queryset(self):
-        """
-        Filter registered domains on request user.
-        :returns: Set of RegisteredDomain objects filtered by customer
-
-        """
-        user = self.request.user
-        if user.is_staff:
-            return DomainRegistrant.objects.all()
-        return DomainRegistrant.objects.filter(registrant__project_id=user)
 
 
 class DomainContactViewSet(viewsets.ModelViewSet):
@@ -949,7 +962,7 @@ class DomainContactViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return DomainContact.objects.all()
-        return DomainContact.objects.filter(contact__project_id=user)
+        return DomainContact.objects.filter(contact__user=user)
 
 
 class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
@@ -969,12 +982,12 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
         serializer = self.serializer_class(data=data)
         if serializer.is_valid():
             account_templates = AccountDetail.objects.filter(
-                project_id=request.user
+                user=request.user
             )
             account_template = get_object_or_404(account_templates,
                                                  pk=data["account_template"])
             serializer.save(
-                project_id=request.user,
+                user=request.user,
                 account_template=account_template,
                 provider=DomainProvider.objects.get(slug=data["provider"])
             )
@@ -990,7 +1003,7 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
                                                      default_id)
         data = request.data
         account_templates = AccountDetail.objects.filter(
-            project_id=request.user
+            user=request.user
         )
         account_template = get_object_or_404(account_templates,
                                              pk=data["account_template"])
@@ -1041,7 +1054,7 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return DefaultAccountTemplate.objects.all()
-        return DefaultAccountTemplate.objects.filter(project_id=user)
+        return DefaultAccountTemplate.objects.filter(user=user)
 
 
 class DefaultAccountContactViewSet(viewsets.ModelViewSet):
@@ -1057,4 +1070,9 @@ class DefaultAccountContactViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return DefaultAccountContact.objects.all()
-        return DefaultAccountContact.objects.filter(project_id=user)
+        return DefaultAccountContact.objects.filter(user=user)
+
+class NameserverViewSet(viewsets.ModelViewSet):
+    serializer_class = AdminNameserverSerializer
+    permission_classes = (permissions.IsAdminUser,)
+    queryset = Nameserver.objects.all()

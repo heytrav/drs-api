@@ -33,14 +33,6 @@ class DomainManager(object):
         if chg:
             registrant = chg.pop("registrant", None)
             if registrant:
-                # Deactivate current DomainRegistrant object
-                current_registrants = self._registered_domain.registrant.filter(
-                    active=True
-                )
-                if current_registrants.exists():
-                    for current_registrant in current_registrants.all():
-                        current_registrant.active = False
-                        current_registrant.save()
                 self.connect_domain_to_registrant(registrant)
 
     def manage_update_add(self, add=None):
@@ -114,10 +106,8 @@ class DomainManager(object):
         new_registrant = Registrant.objects.get(
             registry_id=registry_id
         )
-        self._registered_domain.registrant.create(
-            registrant=new_registrant,
-            active=True,
-        )
+        self._registered_domain.registrant = new_registrant
+        self._registered_domain.save()
 
     def update(self, update_data):
         """

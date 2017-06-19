@@ -1,4 +1,5 @@
 from django.db import models
+from django_mysql.models import JSONField
 import idna
 import re
 
@@ -17,17 +18,12 @@ class AccountDetail(models.Model):
 
     first_name = models.CharField(max_length=200)
     surname = models.CharField(max_length=200)
-    middle_name = models.CharField(max_length=200, blank=True)
     email = models.CharField(max_length=200)
     telephone = models.CharField(max_length=200, blank=True)
     fax = models.CharField(max_length=200, blank=True)
     company = models.CharField(max_length=200, blank=True)
-    house_number = models.CharField(max_length=10, null=True)
-    street1 = models.CharField(max_length=200)
-    street2 = models.CharField(max_length=200, blank=True)
-    street3 = models.CharField(max_length=200, blank=True)
+    street = JSONField(default=None, null=True)
     city = models.CharField(max_length=200)
-    suburb = models.CharField(max_length=200, blank=True)
     state = models.CharField(max_length=200, blank=True)
     postcode = models.CharField(max_length=20)
     # Must be a 2 letter country code.
@@ -39,19 +35,14 @@ class AccountDetail(models.Model):
         choices=POSTAL_INFO_TYPES,
         default=LOC
     )
-    disclose_name = models.BooleanField(default=False)
-    disclose_company = models.BooleanField(default=False)
-    disclose_address = models.BooleanField(default=False)
-    disclose_telephone = models.BooleanField(default=False)
-    disclose_fax = models.BooleanField(default=False)
-    disclose_email = models.BooleanField(default=False)
-    default_registrant = models.NullBooleanField(null=True)
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='personal_details',
-                                   on_delete=models.CASCADE)
+    non_disclose = JSONField(default=None, null=True)
+    default_registrant = models.NullBooleanField(null=True, )
+    user = models.ForeignKey('auth.User',
+                             related_name='personal_details',
+                             on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ('project_id', 'default_registrant',)
+        unique_together = ('user', 'default_registrant',)
 
     def __str__(self):
         return self.surname + ', ' + self.first_name
@@ -120,9 +111,9 @@ class Registrant(models.Model):
     provider = models.ForeignKey(DomainProvider)
     # Id from provider
     registry_id = models.CharField(max_length=200, unique=True)
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='registrants',
-                                   on_delete=models.CASCADE)
+    user = models.ForeignKey('auth.User',
+                             related_name='registrants',
+                             on_delete=models.CASCADE)
 
     INT = 'int'
     LOC = 'loc'
@@ -135,14 +126,10 @@ class Registrant(models.Model):
     telephone = models.CharField(max_length=200, null=True, blank=True)
     fax = models.CharField(max_length=200, null=True, blank=True)
     company = models.CharField(max_length=200, null=True, blank=True)
-    house_number = models.CharField(max_length=10, null=True, blank=True)
-    street1 = models.CharField(max_length=200, null=True)
-    street2 = models.CharField(max_length=200, null=True, blank=True)
-    street3 = models.CharField(max_length=200, null=True, blank=True)
+    street = JSONField(default=None, null=True)
     city = models.CharField(max_length=200, null=True)
-    suburb = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=200, null=True, blank=True)
-    status = models.CharField(max_length=200, null=True)
+    status = JSONField(null=True, default=None)
     postcode = models.CharField(max_length=20, null=True)
     # Must be a 2 letter country code.
     country = models.CharField(max_length=2, null=True)
@@ -153,12 +140,7 @@ class Registrant(models.Model):
     )
     authcode = models.CharField(max_length=100, null=True, blank=True)
     roid = models.CharField(max_length=100, null=True, blank=True)
-    disclose_name = models.BooleanField(default=False)
-    disclose_company = models.BooleanField(default=False)
-    disclose_address = models.BooleanField(default=False)
-    disclose_telephone = models.BooleanField(default=False)
-    disclose_fax = models.BooleanField(default=False)
-    disclose_email = models.BooleanField(default=False)
+    non_disclose = JSONField(default=None, null=True)
     account_template = models.ForeignKey(AccountDetail)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -185,12 +167,8 @@ class Contact(models.Model):
     telephone = models.CharField(max_length=200, null=True, blank=True)
     fax = models.CharField(max_length=200, null=True, blank=True)
     company = models.CharField(max_length=200, null=True, blank=True)
-    house_number = models.CharField(max_length=10, null=True, blank=True)
-    street1 = models.CharField(max_length=200, null=True)
-    street2 = models.CharField(max_length=200, null=True, blank=True)
-    street3 = models.CharField(max_length=200, null=True, blank=True)
+    street = JSONField(default=None, null=True)
     city = models.CharField(max_length=200, null=True)
-    suburb = models.CharField(max_length=200, null=True, blank=True)
     state = models.CharField(max_length=200, null=True, blank=True)
     postcode = models.CharField(max_length=20, null=True)
     # Must be a 2 letter country code.
@@ -202,19 +180,14 @@ class Contact(models.Model):
     )
     authcode = models.CharField(max_length=100, null=True, blank=True)
     roid = models.CharField(max_length=100, null=True, blank=True)
-    disclose_name = models.BooleanField(default=False)
-    disclose_company = models.BooleanField(default=False)
-    disclose_address = models.BooleanField(default=False)
-    disclose_telephone = models.BooleanField(default=False)
-    disclose_fax = models.BooleanField(default=False)
-    disclose_email = models.BooleanField(default=False)
+    non_disclose = JSONField(default=None, null=True)
     provider = models.ForeignKey(DomainProvider)
-    status = models.CharField(max_length=200, null=True)
+    status = JSONField(null=True, default=None)
     # Id from provider
     registry_id = models.CharField(max_length=200, unique=True)
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='contacts',
-                                   on_delete=models.CASCADE)
+    user = models.ForeignKey('auth.User',
+                             related_name='contacts',
+                             on_delete=models.CASCADE)
     account_template = models.ForeignKey(AccountDetail)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -242,29 +215,6 @@ class TopLevelDomainProvider(models.Model):
         return self.zone.zone + " " + self.provider.name
 
 
-class Domain(models.Model):
-    """
-    Represent a domain.
-    """
-    # The part of a domain name before the tld
-    name = models.CharField(max_length=200, unique=True)
-
-    def __str__(self):
-        return self.domain
-
-    def _get_domain(self):
-        return idna.decode(self.name)
-
-    domain = property(_get_domain)
-
-    def save(self, *args, **kwargs):
-        """
-        Override the save method
-        """
-        self.name = idna.encode(self.name, uts46=True).decode('ascii')
-        super(Domain, self).save(*args, **kwargs)
-
-
 class RegisteredDomain(models.Model):
     """
     Represent a registered domain name.
@@ -274,7 +224,7 @@ class RegisteredDomain(models.Model):
     Providers may have their own unique rules around renewal period and
     notifications.
     """
-    domain = models.ForeignKey(Domain)
+    name = models.CharField(max_length=200)
     # Needed to enforce unique constraint
     tld = models.ForeignKey(TopLevelDomain)
     tld_provider = models.ForeignKey(TopLevelDomainProvider)
@@ -286,35 +236,37 @@ class RegisteredDomain(models.Model):
     # registration period and whatever the notification buffer is for a
     # provider. The aim is to notify a customer ahead of time that their domain
     # is about to renew/expire.
+    registrant = models.ForeignKey(Registrant)
     authcode = models.CharField(max_length=100, null=True)
     roid = models.CharField(max_length=100, null=True)
-    status = models.CharField(max_length=200, null=True)
+    status = JSONField(default=None, null=True)
+    nameservers = JSONField(default=None, null=True)
     expiration = models.DateTimeField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('domain', 'tld', 'active')
 
     def __str__(self):
         """
         Represent a registered domain (i.e. name.tld).
         """
-        return self.domain.name + "." + self.tld_provider.zone.zone
+        return self.name + "." + self.tld_provider.zone.zone
 
+    def _get_domain(self):
+        return idna.decode(self.name)
 
-class DomainRegistrant(models.Model):
-    """
-    Registrant associated with a domain. A domain can typically have only one.
-    """
-    registered_domain = models.ForeignKey(RegisteredDomain,
-                                          related_name="registrant")
-    registrant = models.ForeignKey(Registrant)
-    active = models.NullBooleanField(null=True)
-    created = models.DateTimeField(auto_now_add=True)
+    domain = property(_get_domain)
+
+    def save(self, *args, **kwargs):
+        """
+        Override the save method
+        """
+        self.name = idna.encode(self.name, uts46=True).decode('ascii')
+        self.tld = self.tld_provider.zone
+        super(RegisteredDomain, self).save(*args, **kwargs)
 
     class Meta:
-        unique_together = ('registered_domain', 'registrant', 'active')
+        unique_together = ('name', 'tld', 'active',)
+
 
 
 class DomainContact(models.Model):
@@ -340,10 +292,16 @@ class Nameserver(models.Model):
     Nameserver object.
     """
     idn_host = models.CharField(max_length=255, unique=True)
-    domain_nameservers = models.ManyToManyField(
-        RegisteredDomain,
-        related_name='ns'
-    )
+    addr = JSONField(default=None, null=True)
+    tld_provider = models.ForeignKey(TopLevelDomainProvider)
+    default = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    status = JSONField(default=None, null=True)
+    roid = models.CharField(max_length=100, null=True)
+    user = models.ForeignKey('auth.User',
+                             related_name='nameservers',
+                             on_delete=models.CASCADE)
 
     def _get_nameserver(self):
         """
@@ -360,65 +318,15 @@ class Nameserver(models.Model):
         super(Nameserver, self).save(*args, **kwargs)
 
 
-class NameserverHost(models.Model):
-
-    """
-    Nameserver
-
-    i.e. ns1.something.com
-    """
-    nameserver = models.ForeignKey(Nameserver)
-    tld_provider = models.ForeignKey(TopLevelDomainProvider)
-    default = models.BooleanField(default=False)
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=200, null=True)
-    roid = models.CharField(max_length=100, null=True)
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='nameserver_hosts',
-                                   on_delete=models.CASCADE)
-
-
-class IpAddress(models.Model):
-
-    """
-    IP address.
-    """
-
-    V4 = 'v4'
-    V6 = 'v6'
-    IP_ADDRESS_TYPES = (
-        (V4, 'ipv4'),
-        (V6, 'ipv6'),
-    )
-    ip = models.CharField(max_length=255)
-    address_type = models.CharField(
-        max_length=2,
-        choices=IP_ADDRESS_TYPES,
-        default=V4
-    )
-    nameserver_host = models.ForeignKey(NameserverHost)
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='ip_addresses',
-                                   on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('ip', 'nameserver_host')
-    def __str__(self):
-        return self.ip + " - " + self.address_type
-
-
 class DefaultAccountTemplate(models.Model):
 
     """
     Store some default details for a given project.
     """
 
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='default_account',
-                                   on_delete=models.CASCADE)
+    user = models.ForeignKey('auth.User',
+                             related_name='default_account',
+                             on_delete=models.CASCADE)
     account_template = models.ForeignKey(AccountDetail)
     provider = models.ForeignKey(DomainProvider)
 
@@ -426,7 +334,7 @@ class DefaultAccountTemplate(models.Model):
         return self.account_template.first_name + " " + self.account_template.surname + " - " + self.provider.name
 
     class Meta:
-        unique_together = ('project_id', 'provider', 'account_template',)
+        unique_together = ('user', 'provider', 'account_template',)
 
 
 class DefaultRegistrant(models.Model):
@@ -434,22 +342,22 @@ class DefaultRegistrant(models.Model):
     """
     Store default registrant for project.
     """
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='default_registrant',
-                                   on_delete=models.CASCADE)
+    user = models.ForeignKey('auth.User',
+                             related_name='default_registrant',
+                             on_delete=models.CASCADE)
     registrant = models.ForeignKey(Registrant)
 
     class Meta:
-        unique_together = ('project_id', 'registrant',)
+        unique_together = ('user', 'registrant',)
 
 
 class DefaultAccountContact(models.Model):
     """
     Assign default contact for registry.
     """
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='default_account_contact',
-                                   on_delete=models.CASCADE)
+    user = models.ForeignKey('auth.User',
+                             related_name='default_account_contact',
+                             on_delete=models.CASCADE)
     account_template = models.ForeignKey(AccountDetail)
     contact_type = models.ForeignKey(ContactType)
     provider = models.ForeignKey(DomainProvider)
@@ -459,7 +367,7 @@ class DefaultAccountContact(models.Model):
         return self.provider.name + " - " + self.contact_type.name
 
     class Meta:
-        unique_together = ('project_id', 'contact_type', 'account_template',
+        unique_together = ('user', 'contact_type', 'account_template',
                            'provider', 'mandatory',)
 
 
@@ -467,13 +375,13 @@ class DefaultContact(models.Model):
     """
     Store default contact for registrars for a given project.
     """
-    project_id = models.ForeignKey('auth.User',
-                                   related_name='default_contact',
-                                   on_delete=models.CASCADE)
+    user = models.ForeignKey('auth.User',
+                             related_name='default_contact',
+                             on_delete=models.CASCADE)
     contact_type = models.ForeignKey(ContactType)
     contact = models.ForeignKey(Contact)
     provider = models.ForeignKey(DomainProvider)
     mandatory = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = ('project_id', 'contact_type', 'contact', 'provider',)
+        unique_together = ('user', 'contact_type', 'contact', 'provider',)

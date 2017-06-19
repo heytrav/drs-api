@@ -97,7 +97,7 @@ class TestCreateRegistrant(TestSetup):
             self.assertEqual('tk429',
                              processed_epp['registrant'],
                              "Registrant had handle id.")
-            contact = self.joe_user.project_id.registrants.filter(
+            contact = self.joe_user.user.registrants.filter(
                 registry_id='tk429'
             ).first()
             self.assertIsInstance(contact,
@@ -107,7 +107,7 @@ class TestCreateRegistrant(TestSetup):
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_create_registrant_epp_error(self):
         """
-        Check that an EPP error causes failure.
+        Check that an EPP error causes failure when creating a registrant.
         """
         with patch.object(EppRpcClient,
                           'call',
@@ -172,7 +172,7 @@ class TestCreateContact(TestSetup):
             self.assertEqual('tech',
                              contact_type,
                              "Added a tech contact to EPP")
-            contact = self.joe_user.project_id.contacts.filter(
+            contact = self.joe_user.user.contacts.filter(
                 registry_id='tk429'
             ).first()
             self.assertIsInstance(contact,

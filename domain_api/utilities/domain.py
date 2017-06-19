@@ -1,12 +1,9 @@
 from ..exceptions import InvalidTld, UnsupportedTld
 import idna
 from ..models import (
-    Domain,
     TopLevelDomain,
     TopLevelDomainProvider,
     RegisteredDomain,
-    NameserverHost,
-    IpAddress,
     Nameserver,
 )
 
@@ -28,11 +25,8 @@ def get_domain_registry(fqdn):
         top_level_domain = TopLevelDomain.objects.get(
             zone=parsed_domain["zone"]
         )
-        domain_obj, _ = Domain.objects.get_or_create(
-            name=parsed_domain["domain"],
-        )
         registered_domain_set = RegisteredDomain.objects.filter(
-            domain=domain_obj,
+            name=parsed_domain["domain"],
             tld=top_level_domain,
             active=True
         )
@@ -103,20 +97,15 @@ def synchronise_domain(info_data, domain_id):
     filtered_domains.update(
         authcode=info_data.get("authcode", None),
         roid=info_data.get("roid", None),
-        status=info_data.get("status", None)
+        status=info_data.get("status", None),
+        non_disclose=info_data.get("non_disclose", [])
     )
     registered_domain = filtered_domains.first()
-    current_nameservers = registered_domain.ns.all()
-    # Remove existing nameservers
-    for current_nameserver in current_nameservers:
-        registered_domain.ns.remove(current_nameserver)
-    if registered_domain and 'ns' in info_data:
-        if isinstance(info_data['ns'], list):
-            for ns in info_data['ns']:
-                synchronise_domain_nameserver(registered_domain, ns)
+    if registered_domain and 'nameservers' in info_data:
+        if isinstance(info_data['nameservers'], list):
+            filtered_domains.update(nameservers=info_data['nameservers'])
         else:
-            synchronise_domain_nameserver(registered_domain,
-                                          info_data['ns'])
+            filtered_domains.update(nameservers=[info_data['nameservers']])
 
 
 def synchronise_host(info_data, host_id):
@@ -127,20 +116,4 @@ def synchronise_host(info_data, host_id):
     :host_id: int primary key of host
 
     """
-    nshost = NameserverHost.objects.filter(pk=host_id)
-    nshost.update(
-        status=info_data["status"],
-        roid=info_data["roid"]
-    )
-    nshost_obj = nshost.get(pk=host_id)
-    for addr in info_data["addr"]:
-        address_type = addr["addr_type"]
-        ip = addr["ip"]
-        if not IpAddress.objects.filter(ip=ip,
-                                        nameserver_host=nshost_obj).exists():
-            IpAddress.objects.get_or_create(
-                ip=ip,
-                nameserver_host=nshost_obj,
-                address_type=address_type,
-                project_id=nshost_obj.project_id
-            )
+    pass

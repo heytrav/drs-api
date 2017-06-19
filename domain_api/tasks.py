@@ -6,7 +6,6 @@ import logging
 from .models import (
     Contact,
     ContactType,
-    Domain,
     DomainProvider,
     AccountDetail,
     RegisteredDomain,
@@ -280,7 +279,7 @@ def local_update_domain(update_data, user=None):
 
 
 @shared_task
-def connect_domain(create_data, user=None):
+def connect_domain(create_data, registry, user=None):
     """
     Connect the newly created domain in our database.
 
@@ -291,30 +290,24 @@ def connect_domain(create_data, user=None):
         create_data["domain"] = create_data.pop('name', None)
         contacts = create_data.pop('contact', None)
         parsed_domain = parse_domain(create_data["domain"])
-        domain_obj, _ = Domain.objects.get_or_create(
-            name=parsed_domain["domain"],
-        )
-        tld_provider = TopLevelDomainProvider.objects.get(
-            zone__zone=parsed_domain["zone"]
-        )
         tld = TopLevelDomain.objects.get(zone=parsed_domain["zone"])
+        tld_provider = TopLevelDomainProvider.objects.get(
+            zone=tld,
+            provider__slug=registry
+        )
+        registrant = Registrant.objects.get(
+            registry_id=create_data["registrant"]
+        )
         registered_domain = RegisteredDomain(
-            domain=domain_obj,
-            tld=tld,
+            name=parsed_domain["domain"],
             tld_provider=tld_provider,
             registration_period=1,
+            registrant=registrant,
             expiration=create_data["expiration_date"],
             created=create_data["create_date"],
             active=True
         )
         registered_domain.save()
-        registrant = Registrant.objects.get(
-            registry_id=create_data["registrant"]
-        )
-        registered_domain.registrant.create(
-            registrant=registrant,
-            active=True,
-        )
         if contacts:
             create_data['contacts'] = contacts
             for item in contacts:
@@ -372,7 +365,7 @@ def connect_host(host_data, user=None):
     ns = Nameserver.objects.create(idn_host=host)
     ns_host = ns.nameserverhost_set.create(
         tld_provider=tld_provider,
-        project_id=user_obj
+        user=user_obj
     )
     for i in addresses:
         address_type = 'v4'
@@ -380,5 +373,5 @@ def connect_host(host_data, user=None):
             address_type = i["addr_type"]
             ns_host.ipaddress_set.create(ip=i["ip"],
                                          address_type=address_type,
-                                         project_id=user_obj)
+                                         user=user_obj)
     return host_data

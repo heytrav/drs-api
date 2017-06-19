@@ -4,85 +4,83 @@
     "pk": 1,
     "fields": {
         "idn_host": "ns1.test-01.cx",
-        "domain_nameservers": []
+        "addr": [
+            "22.34.55.32",
+            "23.34.56.67"
+        ],
+        "tld_provider": 23,
+        "default": false,
+        "created": "2017-06-16T19:14:55.167Z",
+        "updated": "2017-06-16T19:22:12.753Z",
+        "status": null,
+        "roid": null,
+        "user": 1
     }
 },
 {
     "model": "domain_api.nameserver",
     "pk": 2,
     "fields": {
-        "idn_host": "ns3.test-02.cx",
-        "domain_nameservers": []
+        "idn_host": "ns8.test-07.cx",
+        "addr": null,
+        "tld_provider": 23,
+        "default": false,
+        "created": "2017-06-16T19:16:27.371Z",
+        "updated": "2017-06-16T19:16:27.371Z",
+        "status": null,
+        "roid": null,
+        "user": 1
     }
 },
 {
     "model": "domain_api.nameserver",
     "pk": 3,
     "fields": {
-        "idn_host": "ns4.test-03.com",
-        "domain_nameservers": []
+        "idn_host": "ns6.test-05.host",
+        "addr": [
+            "11.22.33.44"
+        ],
+        "tld_provider": 18,
+        "default": false,
+        "created": "2017-06-16T19:17:51.459Z",
+        "updated": "2017-06-16T19:25:32.403Z",
+        "status": null,
+        "roid": null,
+        "user": 1
     }
 },
 {
     "model": "domain_api.nameserver",
     "pk": 4,
     "fields": {
-        "idn_host": "ns5.test-04.net",
-        "domain_nameservers": []
-    }
-},
-{
-    "model": "domain_api.nameserver",
-    "pk": 5,
-    "fields": {
-        "idn_host": "ns6.test-05.host",
-        "domain_nameservers": []
+        "idn_host": "ns7.test-06.cx",
+        "addr": [
+            "11.22.33.44"
+        ],
+        "tld_provider": 23,
+        "default": false,
+        "created": "2017-06-16T19:19:38.736Z",
+        "updated": "2017-06-16T19:23:26.431Z",
+        "status": null,
+        "roid": null,
+        "user": 1
     }
 },
 {
     "model": "domain_api.nameserver",
     "pk": 6,
     "fields": {
-        "idn_host": "ns7.test-06.cx",
-        "domain_nameservers": []
-    }
-},
-{
-    "model": "domain_api.nameserver",
-    "pk": 7,
-    "fields": {
-        "idn_host": "ns8.test-07.cx",
-        "domain_nameservers": []
-    }
-},
-{
-    "model": "domain_api.nameserver",
-    "pk": 8,
-    "fields": {
-        "idn_host": "ns1.test-08.com",
-        "domain_nameservers": [
-            1
-        ]
-    }
-},
-{
-    "model": "domain_api.nameserver",
-    "pk": 9,
-    "fields": {
-        "idn_host": "ns1.test-09.com",
-        "domain_nameservers": [
-            1
-        ]
-    }
-},
-{
-    "model": "domain_api.nameserver",
-    "pk": 10,
-    "fields": {
-        "idn_host": "ns2.test-10.com",
-        "domain_nameservers": [
-            1
-        ]
+        "idn_host": "ns3.test-02.cx",
+        "addr": [
+            "11.22.33.44"
+        ],
+        "tld_provider": 23,
+        "default": false,
+        "created": "2017-06-16T19:20:52.253Z",
+        "updated": "2017-06-16T19:24:37.708Z",
+        "status": null,
+        "roid": null,
+        "user": 1
     }
 }
 ]

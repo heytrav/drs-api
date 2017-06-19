@@ -16,12 +16,18 @@ class ContactFactory(object):
     duplication.
     """
 
-    contact_fields = ('telephone', 'fax', 'email')
-    disclose_fields = ('disclose_name', 'disclose_company', 'disclose_address',
-                       'disclose_telephone', 'disclose_fax', 'disclose_email')
+    contact_fields = ('telephone', 'fax', 'email',)
+    disclose_fields = ('non_disclose',)
+    disclose_localised = {"name": "name",
+                          "company": "org",
+                          "address": "addr"}
+    disclose_non_localized = {"telephone": "voice",
+                              "fax": "fax",
+                              "email": "email"}
+
     postal_info_fields = ('name', 'company',)
-    address_fields = ('city', 'state', 'postcode', 'country')
-    street_fields = ('street1', 'street2', 'street3')
+    address_fields = ('city', 'state', 'postcode', 'country',)
+    street_fields = ('street',)
     contact_model = Contact
 
     def __init__(self,
@@ -43,7 +49,7 @@ class ContactFactory(object):
                 registry_id=contact
             )
             self.provider = self.contact_object.provider
-            self.user = self.contact_object.project_id
+            self.user = self.contact_object.user
 
         if self.template:
             self.related_contact_set = self.get_related_contact_set()
@@ -82,7 +88,7 @@ class ContactFactory(object):
         contact = self.related_contact_set.create(
             registry_id=registry_id,
             provider=self.provider,
-            project_id=self.user,
+            user=self.user,
             account_template=self.template
         )
         return contact
@@ -95,6 +101,42 @@ class ContactFactory(object):
         """
         return str(uuid.uuid4())[:8]
 
+    def disclose_transform(self, disclose_data, postal_info_type):
+        """
+        Transform disclose dict to registry fields
+
+        :disclose_data: list of fields to not disclose
+        :returns: dict
+
+        """
+        non_disclose = []
+        disclose = []
+        for k in ["name", "company", "address"]:
+            v = self.disclose_localised[k]
+            data = {
+                    "name": v,
+                    "type": postal_info_type
+                }
+            if k in disclose_data:
+                non_disclose.append(data)
+            else:
+                disclose.append(data)
+        for k in ["telephone", "fax", "email"]:
+            v = self.disclose_non_localized[k]
+            if k in disclose_data:
+                non_disclose.append(v)
+            else:
+                disclose.append(v)
+        if non_disclose:
+            return {
+                "flag": 0,
+                "disclosing": non_disclose
+            }
+        return {
+            "flag": 1,
+            "disclosing": disclose
+        }
+
     def process_disclose(self):
         """
         Process disclose fields and flag attributes the user does not want
@@ -105,22 +147,8 @@ class ContactFactory(object):
         """
         template = self.template
         postal_info_type = template.postal_info_type
-        non_disclose = []
-        if not template.disclose_name:
-            non_disclose.append({"name": "name", "type": postal_info_type})
-        if not template.disclose_company:
-            non_disclose.append({"name": "org", "type": postal_info_type})
-        if not template.disclose_address:
-            non_disclose.append({"name": "addr", "type": postal_info_type})
-        if not template.disclose_telephone:
-            non_disclose.append("voice")
-        if not template.disclose_fax:
-            non_disclose.append("fax")
-        if not template.disclose_email:
-            non_disclose.append("email")
-        if len(non_disclose) > 0:
-            return non_disclose
-        return None
+        template_disclose = template.non_disclose
+        return self.disclose_transform(template_disclose, postal_info_type)
 
     def create_registry_contact(self):
         """
@@ -133,12 +161,7 @@ class ContactFactory(object):
         """
         contact_id = self.get_registry_id()
         template = self.template
-        street = [template.street1]
-        if template.street2 != "":
-            street.append(template.street2)
-        if template.street3 != "":
-            street.append(template.street3)
-        non_disclose = self.process_disclose()
+        street = template.street
         company = ""
         if template.company:
             company = template.company
@@ -162,8 +185,7 @@ class ContactFactory(object):
             "email": template.email,
             "postalInfo": postal_info
         }
-        if non_disclose:
-            contact_info["disclose"] = {"flag": 0, "disclosing": non_disclose}
+        contact_info["disclose"] = self.process_disclose()
         contact = ContactAction()
         registry = self.provider.slug
         response = contact.create(registry, contact_info)
@@ -195,21 +217,12 @@ class ContactFactory(object):
                     "city": data.get('city', contact.city),
                     "cc": data.get('country', contact.country)
                 }
-                if any(k in data for k in self.street_fields):
-                    address["street"] = []
-                    street1 = data.get('street1', contact.street1)
-                    street2 = data.get('street2', contact.street2)
-                    street3 = data.get('street3', contact.street3)
-                    address["street"].append(street1)
-                    if street2:
-                        address["street"].append(street2)
-                    if street3:
-                        address["street"].append(street3)
+                if "street" in data:
+                    address["street"] = data["street"]
                 if "state" in data:
                     address["sp"] = data["state"]
                 if "postcode" in data:
                     address["pc"] = data["postcode"]
-
                 postal_info["addr"] = address
             return postal_info
         return None
@@ -222,56 +235,11 @@ class ContactFactory(object):
         :returns: dict with appropriate disclose changes
 
         """
-        if any(k in data for k in self.disclose_fields):
-            contact = self.contact_object
-            non_disclose = []
-            pro_disclose = []
-            if "disclose_name" in data and data["disclose_name"] != contact.disclose_name:
-                change_data = {
-                    "name": "name",
-                    "type": contact.postal_info_type
-                }
-                if data["disclose_name"]:
-                    pro_disclose.append(change_data)
-                else:
-                    non_disclose.append(change_data)
-            if "disclose_company" in data and data["disclose_company"] != contact.disclose_company:
-                change_data = {
-                    "name": "org",
-                    "type": contact.postal_info_type
-                }
-                if data["disclose_company"]:
-                    pro_disclose.append(change_data)
-                else:
-                    non_disclose.append(change_data)
-            if "disclose_address" in data and data["disclose_address"] != contact.disclose_address:
-                change_data = {
-                    "name": "addr",
-                    "type": contact.postal_info_type
-                }
-                if data["disclose_address"]:
-                    pro_disclose.append(change_data)
-                else:
-                    non_disclose.append(change_data)
-            if "disclose_telephone" in data and data["disclose_telephone"] != contact.disclose_telephone:
-                if data["disclose_telephone"]:
-                    pro_disclose.append("voice")
-                else:
-                    non_disclose.append("voice")
-            if "disclose_fax" in data and data["disclose_fax"] != contact.disclose_fax:
-                if data["disclose_fax"]:
-                    pro_disclose.append("fax")
-                else:
-                    non_disclose.append("fax")
-            if "disclose_email" in data and data["disclose_email"] != contact.disclose_email:
-                if data["disclose_email"]:
-                    pro_disclose.append("email")
-                else:
-                    non_disclose.append("email")
-            if len(pro_disclose) >= len(non_disclose):
-                return (pro_disclose, 1)
-            return (non_disclose, 0)
-        return (None, None)
+        disclose = data.get("non_disclose", False)
+        if disclose:
+            postal_info_type = self.contact_object.postal_info_type
+            return self.disclose_transform(disclose, postal_info_type)
+        return False
 
     def process_contact_change(self, data):
         """
@@ -298,13 +266,9 @@ class ContactFactory(object):
             if "email" in data:
                 change["email"] = data["email"]
 
-            disclose_set, flag = self.process_disclose_change(data)
-            if disclose_set:
-                change["disclose"] = {
-                    "flag": flag,
-                    "disclosing": disclose_set
-                }
-
+            disclose = self.process_disclose_change(data)
+            if disclose:
+                change["disclose"] = disclose
             return change
         return None
 
@@ -373,7 +337,6 @@ class RegistrantManager(ContactFactory):
 
     def get_related_contact_set(self):
         return  Registrant.objects.filter(
-            domainregistrant__active=True,
             account_template=self.template,
             provider=self.provider
         ).distinct()

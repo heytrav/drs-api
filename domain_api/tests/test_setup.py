@@ -17,10 +17,9 @@ class TestSetup(TestCase):
                 "default_account_contacts.json",
                 "test_contacts.json",
                 "test_registrants.json",
+                "test_nameservers.json",
                 "test_domain_contacts.json",
-                "test_domain_registrants.json",
-                "test_domains.json",
-                "registered_domain_test_update.json",
+                "test_registered_domains.json",
                 ]
 
     """

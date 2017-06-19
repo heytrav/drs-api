@@ -1,12 +1,5 @@
-from django.db.models import Q
 import logging
 from ..utilities.domain import parse_domain, get_domain_registry
-from ..exceptions import UnknownContact, UnknownRegistry
-from ..models import (
-    Contact as ContactModel,
-    Registrant as RegistrantModel,
-    RegisteredDomain
-)
 import idna
 from .entity import EppEntity
 
@@ -62,7 +55,8 @@ class Domain(EppEntity):
 
         """
         registry = get_domain_registry(args[0])
-        data = {"domain": [idna.encode(i, uts46=True).decode('ascii') for i in args]}
+        data = {"domain": [idna.encode(i, uts46=True).decode('ascii')
+                           for i in args]}
         log.debug("{!r}".format(data))
         response_data = self.rpc_client.call(registry.slug, 'checkDomain', data)
         log.debug("response data {!r}".format(response_data))
@@ -100,7 +94,6 @@ class Domain(EppEntity):
                 nameservers.append(host_obj["domain:hostObj"])
         return nameservers
 
-
     def info(self, domain, user=None):
         """
         Get info for a domain
@@ -113,7 +106,7 @@ class Domain(EppEntity):
         registry = get_domain_registry(domain)
         parsed_domain = parse_domain(domain)
         registered_domain_set = self.queryset.filter(
-            domain__name=parsed_domain["domain"],
+            name=parsed_domain["domain"],
             tld__zone=parsed_domain["zone"],
             active=True
         )
@@ -130,7 +123,7 @@ class Domain(EppEntity):
             "status": self.process_status(info_data["domain:status"])
         }
         if "domain:ns" in info_data:
-            return_data["ns"] = self.process_nameservers(info_data["domain:ns"])
+            return_data["nameservers"] = self.process_nameservers(info_data["domain:ns"])
 
         if "domain:authInfo" in info_data:
             return_data["authcode"] = info_data["domain:authInfo"]["domain:pw"]
@@ -181,7 +174,7 @@ class ContactQuery(EppEntity):
             "name": item["contact:name"],
             "company": item.get("contact:org", ""),
             "postal_info_type": item["type"],
-            "street1": " ".join(contact_street),
+            "street": contact_street[0:3],
             "country": addr["contact:cc"],
             "state": addr["contact:sp"],
             "city": addr["contact:city"],
@@ -196,26 +189,24 @@ class ContactQuery(EppEntity):
         :returns: dict processed with true/false
 
         """
-        flag = False
-        if int(raw_disclose_data["flag"]) == 1:
-            flag = True
+        log.info("Processing disclose data {!r}".format(raw_disclose_data))
+        flag = raw_disclose_data.get("flag", 1)
         contact_attributes = {
-            "contact:name": "disclose_name",
-            "contact:voice": "disclose_telephone",
-            "contact:fax": "disclose_fax",
-            "contact:email": "disclose_email",
-            "contact:addr": "disclose_address",
-            "contact:org": "disclose_company"
+            "contact:voice": "telephone",
+            "contact:fax": "fax",
+            "contact:email": "email",
+            "contact:name": "name",
+            "contact:addr": "address",
+            "contact:org": "company"
         }
-        disclose = {}
-        for epp_attr, item in contact_attributes.items():
-            if epp_attr in raw_disclose_data:
-                disclose[item] = flag
-            else:
-                # If item not in returned set, its display status is opposite
-                # everything else.
-                disclose[item] =  not flag
-        return disclose
+        processed_data = []
+        for (k, v) in contact_attributes.items():
+            if int(flag) == 0:
+                if k in raw_disclose_data:
+                    processed_data.append(v)
+            elif k not in raw_disclose_data:
+                processed_data.append(v)
+        return processed_data
 
     def info(self, contact):
         """
@@ -233,10 +224,6 @@ class ContactQuery(EppEntity):
         response_data = self.rpc_client.call(registry, 'infoContact', data)
         log.debug("Received info response")
         info_data = response_data["contact:infData"]
-        disclose_data = {}
-        if "contact:disclose" in info_data:
-            disclose_data = self.process_disclose(info_data["contact:disclose"])
-
         processed_postal_info = self.process_postal_info(
             info_data["contact:postalInfo"]
         )[0]
@@ -245,6 +232,7 @@ class ContactQuery(EppEntity):
             "fax": info_data.get("contact:fax", ""),
             "registry_id": info_data["contact:id"],
             "telephone": info_data["contact:voice"],
+
         }
         extra_fields = {}
         extra_fields["status"] = self.process_status(
@@ -253,23 +241,22 @@ class ContactQuery(EppEntity):
         extra_fields["roid"] = info_data["contact:roid"]
         if "contact:authInfo" in info_data:
             extra_fields["authcode"] = info_data["contact:authInfo"]["contact:pw"]
-        processed_info_data = {**processed_info_data, **extra_fields}
+        processed_info_data.update(extra_fields)
 
         try:
-            contact_info_data = {
-                **processed_postal_info,
-                **processed_info_data,
-                **disclose_data
-            }
+            contact_info_data = {}
+            contact_info_data.update(processed_postal_info)
+            contact_info_data.update(processed_info_data)
             for item, value in contact_info_data.items():
                 if isinstance(value, dict):
                     contact_info_data[item] = ""
-
-            self.queryset.filter(pk=contact.id).update(**contact_info_data)
+            contact_info_data["non_disclose"] = self.process_disclose(
+                info_data["contact:disclose"]
+            )
+            return contact_info_data
         except Exception as e:
-            log.error("", exc_info=True);
+            log.error("", exc_info=True)
             raise e
-        return self.queryset.get(pk=contact.id)
 
 
 class HostQuery(EppEntity):
@@ -281,7 +268,6 @@ class HostQuery(EppEntity):
     def __init__(self, queryset=None):
         super().__init__(queryset)
 
-
     def check_host(self, *args):
         """
         Send a check host request to the registry
@@ -291,8 +277,13 @@ class HostQuery(EppEntity):
 
         """
         registry = get_domain_registry(args[0])
-        data = {"host": [idna.encode(i, uts46=True).decode('ascii') for i in args]}
-        response_data = self.rpc_client.call(registry.slug, 'checkHost', data)
+        data = {"host": [idna.encode(i, uts46=True).decode('ascii')
+                         for i in args]}
+        response_data = self.rpc_client.call(
+            registry.slug,
+            'checkHost',
+            data
+        )
         check_data = response_data["host:chkData"]["host:cd"]
         results = []
         if isinstance(check_data, list):
@@ -332,7 +323,6 @@ class HostQuery(EppEntity):
             return [self.process_addr_item(i) for i in addresses]
         return [self.process_addr_item(addresses)]
 
-
     def info(self, host, user=None):
         """
         Get info for a host
@@ -355,7 +345,7 @@ class HostQuery(EppEntity):
         return_data = {
             "host": info_data["host:name"],
             "addr": self.process_addresses(info_data["host:addr"]),
-            "status": self.process_status(info_data["host:status"]),
+            "nameserver_status": self.process_status(info_data["host:status"]),
             "roid": info_data["host:roid"]
         }
         if "host:authInfo" in info_data:

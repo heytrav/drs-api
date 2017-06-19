@@ -8,7 +8,6 @@ from ..entity_management.contacts import (
 )
 from ..models import (
     RegisteredDomain,
-    DomainRegistrant
 )
 from ..entity_management.domains import DomainManager
 import domain_api
@@ -50,10 +49,10 @@ class TestContactManager(TestSetup):
                     'org': '',
                     'type': 'loc',
                     'addr': {
-                        'street': ['Evergreen Terrace'],
+                        'street': ['10 Evergreen Terrace'],
                         'city': 'Springfield',
                         'sp': 'State',
-                        'pc': '',
+                        'pc': '97835',
                         'cc': 'US'}
                 },
                 'disclose': {
@@ -80,6 +79,14 @@ class TestContactManager(TestSetup):
             "city": "Shelbeyville",
             "state": "Flyover",
             "telephone": "+1.8172221233",
+            "non_disclose": [
+                "name",
+                "address",
+                "company",
+                "telephone",
+                "email",
+                "fax"
+            ],
             "disclose_email": True,
             "status": "ok;clientHappy;linked"
         }
@@ -91,7 +98,6 @@ class TestContactManager(TestSetup):
 
             actual_data = {
                 'id': "registrant-123",
-                'add': ['clientHappy'],
                 'chg': {
                     'postalInfo': {
                         'name': 'Joe Luser',
@@ -104,13 +110,18 @@ class TestContactManager(TestSetup):
                     },
                     'voice':  '+1.8172221233',
                     'disclose': {
-                        'flag': 1,
+                        'flag': 0,
                         'disclosing': [
+                            {"name": "name", "type": "loc"},
+                            {"name": "org", "type": "loc"},
+                            {"name": "addr", "type": "loc"},
+                            'voice',
+                            'fax',
                             'email'
                         ]
                     }
                 },
-                'add': ['clientHappy', 'linked']
+                'add': ['ok', 'clientHappy', 'linked']
             }
             mocked.assert_called_with('centralnic-test', actual_data)
 
@@ -121,13 +132,12 @@ class TestDomainManager(TestSetup):
     """
 
     def setUp(self):
-        """TODO: Docstring for setUp.
-        :returns: TODO
-
+        """
+        Setup test suite
         """
         super().setUp()
         self.registered_domain = RegisteredDomain.objects.get(
-            domain__name="test-something",
+            name="test-something",
             tld__zone="bar",
             active=True
         )
@@ -161,13 +171,10 @@ class TestDomainManager(TestSetup):
             "name": "test-something.bar",
             "chg": {"registrant": "registrant-231" }
         }
-        current_registrant_id = self.registered_domain.registrant.filter(
-            active=True
-        ).first().id
-        domain_manager = DomainManager(self.registered_domain)
-        domain_manager.update(epp)
-        registrant_obj = DomainRegistrant.objects.get(pk=current_registrant_id)
-        self.assertFalse(registrant_obj.active)
+        with patch.object(DomainManager, 'connect_domain_to_registrant') as mock:
+            domain_manager = DomainManager(self.registered_domain)
+            domain_manager.update(epp)
+            mock.assert_called_with("registrant-231")
 
     def test_successful_update_domain_contacts(self):
         """

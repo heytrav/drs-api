@@ -5,34 +5,32 @@
     "fields": {
         "provider": 3,
         "registry_id": "registrant-123",
-        "project_id": 2,
+        "user": 2,
         "name": "Joe User",
         "email": "joeuser@test.com",
-        "telephone": "",
+        "telephone": "+1.8175551234",
         "fax": "",
         "company": "",
-        "house_number": "",
-        "street1": "754 Evergreen Terrace",
-        "street2": "",
-        "street3": "",
+        "street": [
+            "10 Evergreen Terrace"
+        ],
         "city": "Springfield",
-        "suburb": "",
         "state": "State",
-        "status": "ok",
-        "postcode": "93439",
+        "status": null,
+        "postcode": "97835",
         "country": "US",
         "postal_info_type": "loc",
-        "authcode": "",
-        "roid": "",
-        "disclose_name": false,
-        "disclose_company": false,
-        "disclose_address": false,
-        "disclose_telephone": false,
-        "disclose_fax": false,
-        "disclose_email": false,
+        "authcode": null,
+        "roid": null,
+        "non_disclose": [
+            "company",
+            "telephone",
+            "fax",
+            "email"
+        ],
         "account_template": 1,
-        "created": "2017-04-05T02:33:20.284Z",
-        "updated": "2017-04-05T02:33:20.284Z"
+        "created": "2017-06-14T08:30:01.048Z",
+        "updated": "2017-06-17T10:23:47.882Z"
     }
 },
 {
@@ -41,34 +39,31 @@
     "fields": {
         "provider": 3,
         "registry_id": "registrant-231",
-        "project_id": 2,
+        "user": 2,
         "name": "Bob User",
         "email": "bobuser@test.com",
-        "telephone": "",
+        "telephone": "+1.123456879",
         "fax": "",
         "company": "",
-        "house_number": "",
-        "street1": "121 Mockingbird Lane",
-        "street2": "",
-        "street3": "",
-        "city": "Spookyville",
-        "suburb": "",
-        "state": "",
-        "status": "ok",
-        "postcode": "97203",
+        "street": [
+            "754 Evergreen Terrace"
+        ],
+        "city": "Des Moines",
+        "state": "SA",
+        "status": null,
+        "postcode": "6011",
         "country": "US",
         "postal_info_type": "loc",
-        "authcode": "",
-        "roid": "",
-        "disclose_name": false,
-        "disclose_company": false,
-        "disclose_address": false,
-        "disclose_telephone": false,
-        "disclose_fax": false,
-        "disclose_email": false,
+        "authcode": null,
+        "roid": null,
+        "non_disclose": [
+            "email",
+            "telephone",
+            "fax"
+        ],
         "account_template": 2,
-        "created": "2017-04-05T02:34:20.889Z",
-        "updated": "2017-04-05T02:34:20.889Z"
+        "created": "2017-06-14T08:32:01.799Z",
+        "updated": "2017-06-17T10:24:54.445Z"
     }
 }
 ]

@@ -149,7 +149,6 @@ class TestContact(TestSetup):
         """
         Test basic info contact
         """
-        self.login_client()
         info_contact_response = {
             "contact:infData": {
                 "xmlns:contact": "urn:ietf:params:xml:ns:contact-1.0",
@@ -203,10 +202,14 @@ class TestContact(TestSetup):
                 }
             }
         }
+        jwt_header = self.api_login(username='testadmin',
+                                    password='imaadmin1')
+        print("JWT: %s" % jwt_header)
         with patch.object(EppRpcClient,
                           'call',
                           return_value=info_contact_response):
-            response = self.client.get('/v1/contacts/contact-123/')
+            response = self.client.get('/v1/contacts/contact-123/',
+                                        HTTP_AUTHORIZATION=jwt_header)
             self.assertEqual(response.status_code,
                              200,
                              "Info contact returned normal response")
@@ -216,7 +219,6 @@ class TestContact(TestSetup):
         """
         Test basic info contact for different user.
         """
-        self.login_client()
         info_contact_response = {
             "contact:infData": {
                 "xmlns:contact": "urn:ietf:params:xml:ns:contact-1.0",
@@ -270,10 +272,13 @@ class TestContact(TestSetup):
                 }
             }
         }
+        jwt_header = self.api_login(username='testadmin',
+                                    password='imaadmin1')
         with patch.object(EppRpcClient,
                           'call',
                           return_value=info_contact_response):
-            response = self.client.get('/v1/contacts/contact-321/')
+            response = self.client.get('/v1/contacts/contact-321/',
+                                        HTTP_AUTHORIZATION=jwt_header)
             self.assertEqual(response.status_code,
                              200,
                              "Info contact returned normal response")
