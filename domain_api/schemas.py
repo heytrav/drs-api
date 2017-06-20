@@ -33,8 +33,38 @@ street = {
     "type": "array"
 }
 
+ip_addr = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {},
+    "id": "http://example.com/example.json",
+    "items": {
+        "id": "/items",
+        "anyOf": [
+            {
+                "properties": {
+                    "ip": {
+                        "id": "/items/properties/ip",
+                        "type": "string"
+                    },
+                    "type": {
+                        "id": "/items/properties/type",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "ip",
+                ],
+                "type": "object"
+            },
+            {"type": "string"}
 
-ip_field = {
+        ]
+    },
+    "type": "array",
+    "minItems": 1
+}
+
+nameserver = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "definitions": {},
     "id": "http://example.com/example.json",
@@ -44,81 +74,37 @@ ip_field = {
             "items": {
                 "id": "/properties/addr/items",
                 "anyOf": [
-                {
-                    "properties": {
-                        "ip": {
-                            "id": "/properties/addr/items/properties/ip",
-                            "type": "string"
+                    {
+                        "properties": {
+                            "ip": {
+                                "id": "/properties/addr/items/properties/ip",
+                                "type": "string"
+                            },
+                            "type": {
+                                "id": "/properties/addr/items/properties/type",
+                                "type": "string"
+                            }
                         },
-                        "type": {
-                            "id": "/properties/addr/items/properties/type",
-                            "type": "string"
-                        }
+                        "required": [
+                            "ip",
+                        ],
+                        "type": "object"
                     },
-                    "required": [
-                        "ip",
-                    ],
-                    "type": "object"
-                },
                     {"type": "string"}
 
                 ]
-
-
-
             },
-            "type": "array"
+            "type": "array",
+            "minItems": 1
         },
-        "name": {
-            "id": "/properties/name",
+        "host": {
+            "id": "/properties/host",
             "type": "string"
         }
     },
     "required": [
-        "name"
+        "host",
+        "addr"
     ],
     "type": "object"
 }
-
-#{
-    #"$schema": "http://json-schema.org/draft-04/schema#",
-    #"definitions": {
-        #"ip_field": {
-            #"properties": {
-                #"ip": { "type": "string" },
-                #"type": {
-                    #"type": "string",
-                    #"enum": [
-                        #"v4",
-                        #"v6"
-                    #]
-                #}
-            #},
-            #"required": [
-                #"ip",
-            #],
-            #"type": "object"
-        #}
-    #},
-    #"id": "http://example.com/example.json",
-    #"properties": {
-        #"addr": {
-            #"id": "/properties/addr",
-            #"items": {
-                    #"anyOf": [
-                        #{"$ref": "#/definitions/ip_field"},
-                        #{"type": "string"}
-                    #]
-            #},
-            #"type": "array"
-        #},
-        #"name": {
-            #"id": "/properties/name",
-            #"type": "string"
-        #}
-    #},
-    #"required": [
-        #"name"
-    #],
-    #"type": "object"
-#}

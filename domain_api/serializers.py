@@ -40,7 +40,6 @@ class NonDiscloseField(serializers.JSONField):
         return obj
 
 
-
 class StreetField(serializers.JSONField):
     def to_internal_value(self, data):
         """
