@@ -370,7 +370,7 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         parsed_domain = parse_domain(host)
         domain_queryset = get_registered_domain_queryset(self.request.user)
         return domain_queryset.get(
-            domain__name=parsed_domain["domain"],
+            name=parsed_domain["domain"],
             tld__zone=parsed_domain["zone"],
             active=True
         )
@@ -482,14 +482,15 @@ class HostManagementViewSet(viewsets.GenericViewSet):
 
                 # See if this TLD is provided by one of our registries.
                 registry = get_domain_registry(data["host"])
+                serializer = InfoHostSerializer(data=data)
+
                 workflow_manager = workflow_factory(registry.slug)()
 
                 log.debug("About to call workflow_manager.create_host")
                 workflow = workflow_manager.create_host(data, request.user)
                 # run chained workflow and register the domain
                 chained_workflow = chain(workflow)()
-                chain_res = process_workflow_chain(chained_workflow)
-                serializer = InfoHostSerializer(data=chain_res)
+                process_workflow_chain(chained_workflow)
                 if serializer.is_valid():
                     return Response(serializer.data,
                                     status=status.HTTP_201_CREATED)

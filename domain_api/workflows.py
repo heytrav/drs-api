@@ -488,12 +488,7 @@ class Workflow(object):
 
         """
         self.append(check_host.s(data["host"]))
-        # Need to modify outgoing data slightly
-        host_data = {
-            "host": data["host"],
-            "addr": self.process_host_addresses(data["addr"])
-        }
-        self.append(create_host.si(host_data))
+        self.append(create_host.si(data))
         self.append(connect_host.si(data, user.id))
         return self.workflow
 

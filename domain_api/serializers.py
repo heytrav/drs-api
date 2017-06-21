@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from rest_framework.exceptions import ParseError, ValidationError
+from rest_framework.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from domain_api.models import (
@@ -32,8 +32,8 @@ class NonDiscloseField(serializers.JSONField):
         """
         try:
             jsonschema.validate(data, schemas.non_disclose)
-        except ValidationError:
-            raise
+        except jsonschema.exceptions.ValidationError as e:
+            raise ValidationError(detail=e.message)
         return super().to_internal_value(data)
 
     def to_representation(self, obj):
@@ -51,8 +51,27 @@ class StreetField(serializers.JSONField):
         """
         try:
             jsonschema.validate(data, schemas.street)
-        except ValidationError:
-            raise
+        except jsonschema.exceptions.ValidationError as e:
+            raise ValidationError(detail=e.message)
+        return super().to_internal_value(data)
+
+    def to_representation(self, obj):
+        return obj
+
+
+class IpAddrField(serializers.JSONField):
+    def to_internal_value(self, data):
+        """
+        Validate the representation of the ip address field
+
+        :data: list of disclose data
+        :returns: serialized data
+
+        """
+        try:
+            jsonschema.validate(data, schemas.ip_addr)
+        except jsonschema.exceptions.ValidationError as e:
+            raise ValidationError(detail=e.message)
         return super().to_internal_value(data)
 
     def to_representation(self, obj):
@@ -449,7 +468,7 @@ class AddressSetField(serializers.ListField):
 
 class InfoHostSerializer(serializers.Serializer):
     host = serializers.CharField(required=True, allow_blank=False)
-    addr = AddressSetField(min_length=1)
+    addr = IpAddrField()
 
 
 class InfoDomainListSerializer(serializers.ListField):
