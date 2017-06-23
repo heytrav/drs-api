@@ -339,12 +339,11 @@ class HostQuery(EppEntity):
         response_data = self.rpc_client.call(registry.slug, 'infoHost', data)
         info_data = response_data["host:infData"]
         return_data = {
-            "host": info_data["host:name"],
+            "idn_host": info_data["host:name"],
             "addr": self.process_addresses(info_data["host:addr"]),
             "status": self.process_status(info_data["host:status"]),
             "roid": info_data["host:roid"]
         }
         if "host:authInfo" in info_data:
             return_data["authcode"] = info_data["host:authInfo"]["host:pw"]
-            return_data["roid"] = info_data["host:roid"]
         return return_data

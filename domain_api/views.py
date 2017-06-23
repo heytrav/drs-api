@@ -453,18 +453,12 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             # Fetch registry for host
             query = HostQuery(self.get_queryset())
             info = query.info(registered_host)
-            if registered_host:
-                serializer = InfoHostSerializer(registered_host)
-                if self.is_admin():
-                    serializer = AdminInfoHostSerializer(registered_host)
-                return Response(serializer.data)
-            else:
-                serializer = QueryInfoHostSerializer(data=info)
-                if serializer.is_valid():
-                    return Response(serializer.data)
-                else:
-                    return Response(serializer.errors,
-                                    status=status.HTTP_400_BAD_REQUEST)
+            self.get_queryset().filter(pk=registered_host.id).update(**info)
+            registered_host = self.get_queryset().get(pk=registered_host.id)
+            serializer = InfoHostSerializer(registered_host)
+            if self.is_admin():
+                serializer = AdminInfoHostSerializer(registered_host)
+            return Response(serializer.data)
         except EppObjectDoesNotExist as e:
             log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_404_NOT_FOUND)
