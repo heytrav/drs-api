@@ -43,6 +43,8 @@ from domain_api.serializers import (
     AdminInfoContactSerializer,
     DefaultAccountTemplateSerializer,
     InfoHostSerializer,
+    AdminInfoHostSerializer,
+    QueryInfoHostSerializer,
     PrivateInfoRegistrantSerializer,
     AdminInfoRegistrantSerializer,
     AdminInfoDomainSerializer,
@@ -339,23 +341,28 @@ class HostManagementViewSet(viewsets.GenericViewSet):
     serializer_class = InfoHostSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def is_admin_or_owner(self, host=None):
+    def is_admin(self):
         """
-        Determine if the current logged in user is admin or the owner of
-        the object.
-
-        :domain: Contact/Registrant object
-        :returns: True or False
+        Determine whether request user is admin.
+        :returns: Boolean
 
         """
-        user = self.request.user
-        # Check if user is admin
-        if user.groups.filter(name='admin').exists():
+        if self.request.user.groups.filter(name='admin').exists():
+            log.debug("Is admin")
             return True
-        # otherwise check if user is registrant of contact for domain
-        if host:
-            if host.user == user:
-                return True
+        return False
+
+    def is_owner(self, host):
+        """
+        Determine whether request user is owner of host object.
+
+        :host: Contact object
+        :returns: Boolean
+
+        """
+        if host and host.user == self.request.user:
+            log.debug("User owns %s " % host.registry_id)
+            return True
         return False
 
     def get_registered_domain(self, host):
@@ -438,22 +445,26 @@ class HostManagementViewSet(viewsets.GenericViewSet):
         :host: str host name to check
         :returns: JSON response with details about a host
         """
+        registered_host = get_object_or_404(
+            self.get_queryset(),
+            idn_host=idna.encode(host, uts46=True).decode('ascii'),
+        )
         try:
             # Fetch registry for host
             query = HostQuery(self.get_queryset())
-            info, registered_host = query.info(host)
-            if registered_host and self.is_admin_or_owner(registered_host):
-                synchronise_host(info, registered_host.id)
-                serializer = InfoHostSerializer(
-                    self.get_queryset().get(pk=registered_host.id)
-                )
-                return Response(serializer.data)
-            serializer = InfoHostSerializer(data=info)
-            if serializer.is_valid():
+            info = query.info(registered_host)
+            if registered_host:
+                serializer = InfoHostSerializer(registered_host)
+                if self.is_admin():
+                    serializer = AdminInfoHostSerializer(registered_host)
                 return Response(serializer.data)
             else:
-                return Response(serializer.errors,
-                                status=status.HTTP_400_BAD_REQUEST)
+                serializer = QueryInfoHostSerializer(data=info)
+                if serializer.is_valid():
+                    return Response(serializer.data)
+                else:
+                    return Response(serializer.errors,
+                                    status=status.HTTP_400_BAD_REQUEST)
         except EppObjectDoesNotExist as e:
             log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -478,10 +489,10 @@ class HostManagementViewSet(viewsets.GenericViewSet):
             chain_res = None
             try:
                 # Check that the domain parent exists and user has access to it.
-                self.get_registered_domain(data["host"])
+                self.get_registered_domain(data["idn_host"])
 
                 # See if this TLD is provided by one of our registries.
-                registry = get_domain_registry(data["host"])
+                registry = get_domain_registry(data["idn_host"])
                 serializer = InfoHostSerializer(data=data)
 
                 workflow_manager = workflow_factory(registry.slug)()

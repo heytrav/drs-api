@@ -25,8 +25,8 @@ class Host(EppEntity):
         :returns: Result from EPP client
 
         """
-        registry = get_domain_registry(host_data["host"])
-        host_data["name"] = host_data["host"]
+        registry = get_domain_registry(host_data["idn_host"])
+        host_data["name"] = host_data["idn_host"]
         result = self.rpc_client.call(registry.slug, 'createHost', host_data)
 
         create_data = result["host:creData"]

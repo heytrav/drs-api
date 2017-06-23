@@ -487,7 +487,7 @@ class Workflow(object):
         :returns: dict response returned by registry
 
         """
-        self.append(check_host.s(data["host"]))
+        self.append(check_host.s(data["idn_host"]))
         self.append(create_host.si(data))
         self.append(connect_host.si(data, user.id))
         return self.workflow

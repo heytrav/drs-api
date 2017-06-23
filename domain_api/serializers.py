@@ -466,7 +466,22 @@ class AddressSetField(serializers.ListField):
     child = IpAddressSerializer()
 
 
-class InfoHostSerializer(serializers.Serializer):
+class InfoHostSerializer(serializers.ModelSerializer):
+
+    addr = IpAddrField()
+
+    class Meta:
+        model = Nameserver
+        fields = ('host', 'idn_host', 'addr')
+
+class AdminInfoHostSerializer(InfoHostSerializer):
+
+    class Meta:
+        model = Nameserver
+        fields = ('host', 'idn_host', 'tld_provider', 'default', 'addr',
+                  'created', 'updated', 'status', 'roid', 'user')
+
+class QueryInfoHostSerializer(serializers.Serializer):
     host = serializers.CharField(required=True, allow_blank=False)
     addr = IpAddrField()
 

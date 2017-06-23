@@ -42,11 +42,9 @@ class TestDomainViewMethods(TestSetup):
         Test bugfix for exception thrown in admin or owner check function
         """
         def call_code(view_obj, domain):
-            print("Executing call code")
             try:
                 return any([view_obj.is_owner(domain), view_obj.is_admin()])
-            except Exception as e:
-                print("Code threw an exception" + str(e))
+            except Exception:
                 return False
 
         view = MockeDomainRegistryManagementViewSet()

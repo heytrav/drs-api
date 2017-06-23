@@ -52,7 +52,7 @@ class TestHostApi(TestSetup):
         Test a nameserver creation
         """
         create_host_data = {
-            "host": "ns1.test-something.bar",
+            "idn_host": "ns1.test-something.bar",
             "addr": [
                 "11.22.33.44",
                 {

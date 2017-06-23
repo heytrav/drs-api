@@ -123,7 +123,9 @@ class Domain(EppEntity):
             "status": self.process_status(info_data["domain:status"])
         }
         if "domain:ns" in info_data:
-            return_data["nameservers"] = self.process_nameservers(info_data["domain:ns"])
+            return_data["nameservers"] = self.process_nameservers(
+                info_data["domain:ns"]
+            )
 
         if "domain:authInfo" in info_data:
             return_data["authcode"] = info_data["domain:authInfo"]["domain:pw"]
@@ -323,7 +325,7 @@ class HostQuery(EppEntity):
             return [self.process_addr_item(i) for i in addresses]
         return [self.process_addr_item(addresses)]
 
-    def info(self, host, user=None):
+    def info(self, registered_host, user=None):
         """
         Get info for a host
 
@@ -331,24 +333,18 @@ class HostQuery(EppEntity):
         :returns: dict with info about host
 
         """
-        registry = get_domain_registry(host)
-        registered_hosts = self.queryset.filter(
-            nameserver__idn_host=idna.encode(host, uts46=True).decode('ascii'),
-        )
-        registered_host = None
-        if registered_hosts.exists():
-            registered_host = registered_hosts.first()
 
-        data = {"name": host}
+        data = {"name": registered_host.host}
+        registry = registered_host.tld_provider.provider
         response_data = self.rpc_client.call(registry.slug, 'infoHost', data)
         info_data = response_data["host:infData"]
         return_data = {
             "host": info_data["host:name"],
             "addr": self.process_addresses(info_data["host:addr"]),
-            "nameserver_status": self.process_status(info_data["host:status"]),
+            "status": self.process_status(info_data["host:status"]),
             "roid": info_data["host:roid"]
         }
         if "host:authInfo" in info_data:
             return_data["authcode"] = info_data["host:authInfo"]["host:pw"]
             return_data["roid"] = info_data["host:roid"]
-        return (return_data, registered_host)
+        return return_data
