@@ -30,6 +30,13 @@ class NonDiscloseField(serializers.JSONField):
         :returns: serialized data
 
         """
+        if data is None:
+            data = ["name",
+                    "address",
+                    "company",
+                    "telephone",
+                    "fax",
+                    "email"]
         try:
             jsonschema.validate(data, schemas.non_disclose)
         except jsonschema.exceptions.ValidationError as e:
@@ -37,6 +44,8 @@ class NonDiscloseField(serializers.JSONField):
         return super().to_internal_value(data)
 
     def to_representation(self, obj):
+        if obj is None:
+            obj = []
         return obj
 
 
@@ -92,8 +101,22 @@ class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
         view_name="domain_api:account-detail",
         lookup_field="pk"
     )
-    non_disclose = NonDiscloseField()
-    street = StreetField()
+    def default_non_disclose():
+        """
+        Set default values for non_disclose.
+        """
+        return ["name", "address", "company", "telephone", "fax", "email"]
+
+    def default_street_name():
+        """
+        Set default street name
+        :returns: list with default street.
+
+        """
+        return ["Street Name"]
+
+    non_disclose = NonDiscloseField(default=default_non_disclose)
+    street = StreetField(default=default_street_name)
 
     class Meta:
         model = AccountDetail

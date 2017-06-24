@@ -15,7 +15,7 @@ non_disclose = {
         "type": "string"
     },
     "maxItems": 6,
-    "minItems": 1,
+    "minItems": 0,
     "type": "array",
     "uniqueItems": True
 }
