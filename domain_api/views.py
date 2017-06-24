@@ -675,7 +675,7 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             # run chained workflow and register the domain
             chained_workflow = chain(workflow)()
             chain_res = process_workflow_chain(chained_workflow)
-            registered_domain = self.get_queryset().objects.get(
+            registered_domain = self.get_queryset().get(
                 name=parsed_domain["domain"],
                 tld__zone=parsed_domain["zone"],
                 active=True

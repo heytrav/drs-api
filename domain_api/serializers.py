@@ -516,7 +516,6 @@ class PrivateInfoContactSerializer(serializers.ModelSerializer):
         """
         return obj.provider.slug
 
-        import pdb; pdb.set_trace()  # XXX BREAKPOINT
 
 class AdminInfoContactSerializer(PrivateInfoContactSerializer):
 
