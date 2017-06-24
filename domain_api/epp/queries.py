@@ -309,7 +309,7 @@ class HostQuery(EppEntity):
         """
         processed = {}
         if "$t" in item:
-            processed["addr_type"] = item["ip"]
+            processed["type"] = item["ip"]
             processed["ip"] = item["$t"]
         return processed
 
@@ -317,7 +317,7 @@ class HostQuery(EppEntity):
         """
         Process of a set host addresses
 
-        :addresses: TODO
+        :addresses: list of dict items
         :returns: TODO
 
         """
