@@ -252,9 +252,10 @@ class ContactQuery(EppEntity):
             for item, value in contact_info_data.items():
                 if isinstance(value, dict):
                     contact_info_data[item] = ""
-            contact_info_data["non_disclose"] = self.process_disclose(
-                info_data["contact:disclose"]
-            )
+            if "contact:disclose" in contact_info_data:
+                contact_info_data["non_disclose"] = self.process_disclose(
+                    info_data["contact:disclose"]
+                )
             return contact_info_data
         except Exception as e:
             log.error("", exc_info=True)
