@@ -1,39 +1,110 @@
-disclose = {
-    "$schema": "http://drs/disclose.json",
+non_disclose = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
     "definitions": {},
-    "id": "http://drs/disclose.json",
-    "required": [
-        "flag",
-        "fields"
-    ],
-    "properties": {
-        "fields": {
-            "id": "/properties/fields",
-            "items": {
-                "enum": [
-                    "name",
-                    "address",
-                    "company",
-                    "telephone",
-                    "fax",
-                    "email"
+    "id": "http://drs.drs/non_disclose.json",
+    "items": {
+        "enum": [
+            "name",
+            "company",
+            "address",
+            "telephone",
+            "fax",
+            "email"
+        ],
+        "id": "/items",
+        "type": "string"
+    },
+    "maxItems": 6,
+    "minItems": 1,
+    "type": "array",
+    "uniqueItems": True
+}
+
+street = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {},
+    "id": "http://drs.drs/street.json",
+    "items": {
+        "id": "/items",
+        "type": "string"
+    },
+    "maxItems": 3,
+    "minItems": 1,
+    "type": "array"
+}
+
+ip_addr = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {},
+    "id": "http://example.com/example.json",
+    "items": {
+        "id": "/items",
+        "anyOf": [
+            {
+                "properties": {
+                    "ip": {
+                        "id": "/items/properties/ip",
+                        "type": "string"
+                    },
+                    "type": {
+                        "id": "/items/properties/type",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "ip",
                 ],
-                "id": "/properties/fields/items",
-                "type": "string"
+                "type": "object"
             },
-            "maxItems": 6,
-            "minItems": 1,
+            {"type": "string"}
+
+        ]
+    },
+    "type": "array",
+    "minItems": 1
+}
+
+nameserver = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {},
+    "id": "http://example.com/example.json",
+    "properties": {
+        "addr": {
+            "id": "/properties/addr",
+            "items": {
+                "id": "/properties/addr/items",
+                "anyOf": [
+                    {
+                        "properties": {
+                            "ip": {
+                                "id": "/properties/addr/items/properties/ip",
+                                "type": "string"
+                            },
+                            "type": {
+                                "id": "/properties/addr/items/properties/type",
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "ip",
+                        ],
+                        "type": "object"
+                    },
+                    {"type": "string"}
+
+                ]
+            },
             "type": "array",
-            "uniqueItems": True
+            "minItems": 1
         },
-        "flag": {
-            "enum": [
-                1,
-                0
-            ],
-            "id": "/properties/flag",
-            "type": "integer"
+        "host": {
+            "id": "/properties/host",
+            "type": "string"
         }
     },
+    "required": [
+        "host",
+        "addr"
+    ],
     "type": "object"
 }

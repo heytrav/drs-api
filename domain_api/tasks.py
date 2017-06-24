@@ -155,6 +155,7 @@ def _create_registry_contact(person_id=None,
     contact[contact_type] = contact_obj.registry_id
     return contact
 
+
 @shared_task
 def init_update_domain(epp):
     """
@@ -168,6 +169,7 @@ def init_update_domain(epp):
 
     """
     return epp
+
 
 @shared_task
 def update_domain_registry_contact(epp,
@@ -339,7 +341,7 @@ def check_host(host):
         idna.encode(host, uts46=True).decode('ascii')
     )
     available = availability["result"][0]["available"]
-    log.info("host=%s available=%s" (host, available))
+    log.info("host=%s available=%s" % (host, available))
     if str(available) == "1" or str(available) == "true" or available is True:
         return True
     raise DomainNotAvailable("%s not available" % host)
@@ -355,23 +357,17 @@ def create_host(epp):
 @shared_task
 def connect_host(host_data, user=None):
     user_obj = User.objects.get(pk=user)
-    host = host_data["host"]
+    host = host_data["idn_host"]
     addresses = host_data["addr"]
 
     parsed_domain = parse_domain(host)
     tld_provider = TopLevelDomainProvider.objects.get(
         zone__zone=parsed_domain["zone"]
     )
-    ns = Nameserver.objects.create(idn_host=host)
-    ns_host = ns.nameserverhost_set.create(
+    Nameserver.objects.create(
+        idn_host=host,
         tld_provider=tld_provider,
+        addr=addresses,
         user=user_obj
     )
-    for i in addresses:
-        address_type = 'v4'
-        if 'addr_type' in i:
-            address_type = i["addr_type"]
-            ns_host.ipaddress_set.create(ip=i["ip"],
-                                         address_type=address_type,
-                                         user=user_obj)
     return host_data

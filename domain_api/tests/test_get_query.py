@@ -29,7 +29,7 @@ class TestCheckDomain(TestSetup):
 
         with patch.object(EppRpcClient, 'call', side_effect=EppError("FAIL")):
             response = self.client.get(
-                '/v1/domains/whatever.ote/'
+                '/v1/domains/test-something.bar/'
             )
             self.assertEqual(response.status_code,
                              400,
@@ -97,11 +97,12 @@ class TestInfoDomain(TestSetup):
         }
         with patch.object(EppRpcClient, 'call', return_value=return_value):
             response = self.client.get(
-                '/v1/domains/whatever.ote/'
+                '/v1/domains/test-something.bar/'
             )
             self.assertEqual(response.status_code,
                              200,
                              "Epp returned normally")
+
 
 class TestUpdateDomain(TestSetup):
 
@@ -137,9 +138,6 @@ class TestUpdateDomain(TestSetup):
         self.assertEqual(data["msg"],
                          "No change to domain",
                          "Received a 'no change' response")
-
-
-
 
 
 class TestContact(TestSetup):
@@ -209,7 +207,7 @@ class TestContact(TestSetup):
                           'call',
                           return_value=info_contact_response):
             response = self.client.get('/v1/contacts/contact-123/',
-                                        HTTP_AUTHORIZATION=jwt_header)
+                                       HTTP_AUTHORIZATION=jwt_header)
             self.assertEqual(response.status_code,
                              200,
                              "Info contact returned normal response")
@@ -278,15 +276,13 @@ class TestContact(TestSetup):
                           'call',
                           return_value=info_contact_response):
             response = self.client.get('/v1/contacts/contact-321/',
-                                        HTTP_AUTHORIZATION=jwt_header)
+                                       HTTP_AUTHORIZATION=jwt_header)
             self.assertEqual(response.status_code,
                              200,
                              "Info contact returned normal response")
 
 
-
 class TestRegistrant(TestSetup):
-
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_info_registrant(self):
@@ -421,41 +417,3 @@ class TestBasicQueries(TestSetup):
             data = response.data
             self.assertTrue(data["available"],
                             "Serialised a check_domain response")
-
-
-class TestHostApi(TestSetup):
-
-    """
-    Test api interaction to manage host objects
-    """
-
-    def setUp(self):
-        """
-        Setup test suite
-
-        """
-        super().setUp()
-
-    def test_create_incorrect_data(self):
-        """
-        Should get an error when incorrectly structured host request sent to
-        api.
-
-        """
-        bad_create_host = {
-            "host": "ns1.somehost.com",
-            "addr": [
-                {"ip_addr": "23.34.45.67"},
-            ]
-        }
-        jwt_header = self.api_login()
-        response = self.client.post('/v1/hosts/',
-                                    data=json.dumps(bad_create_host),
-                                    content_type="application/json",
-                                    HTTP_AUTHORIZATION=jwt_header)
-        self.assertEqual(response.status_code,
-                         400,
-                         "incorrect create host datastructure returns 400")
-        self.assertEqual('This field is required.',
-                         response.data['addr']['ip'][0],
-                         "ip field is required")

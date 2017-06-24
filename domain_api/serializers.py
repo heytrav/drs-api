@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from domain_api.models import (
@@ -14,8 +15,67 @@ from domain_api.models import (
     DefaultAccountTemplate,
     Nameserver,
 )
+from . import schemas
+import jsonschema
 
 UserModel = get_user_model()
+
+
+class NonDiscloseField(serializers.JSONField):
+    def to_internal_value(self, data):
+        """
+        Validate the representation of the non_disclose field
+
+        :data: list of disclose data
+        :returns: serialized data
+
+        """
+        try:
+            jsonschema.validate(data, schemas.non_disclose)
+        except jsonschema.exceptions.ValidationError as e:
+            raise ValidationError(detail=e.message)
+        return super().to_internal_value(data)
+
+    def to_representation(self, obj):
+        return obj
+
+
+class StreetField(serializers.JSONField):
+    def to_internal_value(self, data):
+        """
+        Validate the representation of the non_disclose field
+
+        :data: list of disclose data
+        :returns: serialized data
+
+        """
+        try:
+            jsonschema.validate(data, schemas.street)
+        except jsonschema.exceptions.ValidationError as e:
+            raise ValidationError(detail=e.message)
+        return super().to_internal_value(data)
+
+    def to_representation(self, obj):
+        return obj
+
+
+class IpAddrField(serializers.JSONField):
+    def to_internal_value(self, data):
+        """
+        Validate the representation of the ip address field
+
+        :data: list of disclose data
+        :returns: serialized data
+
+        """
+        try:
+            jsonschema.validate(data, schemas.ip_addr)
+        except jsonschema.exceptions.ValidationError as e:
+            raise ValidationError(detail=e.message)
+        return super().to_internal_value(data)
+
+    def to_representation(self, obj):
+        return obj
 
 
 class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
@@ -32,13 +92,13 @@ class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
         view_name="domain_api:account-detail",
         lookup_field="pk"
     )
+    non_disclose = NonDiscloseField()
+    street = StreetField()
 
     class Meta:
         model = AccountDetail
         fields = ('url', 'first_name', 'surname', 'email',
-                  'telephone', 'fax', 'company',
-                  'street',
-                   'city',
+                  'telephone', 'fax', 'company', 'street', 'city',
                   'state', 'postcode', 'country', 'postal_info_type',
                   'created', 'updated', 'user', 'default_registrant',
                   'non_disclose',)
@@ -406,9 +466,24 @@ class AddressSetField(serializers.ListField):
     child = IpAddressSerializer()
 
 
-class InfoHostSerializer(serializers.Serializer):
+class InfoHostSerializer(serializers.ModelSerializer):
+
+    addr = IpAddrField()
+
+    class Meta:
+        model = Nameserver
+        fields = ('host', 'idn_host', 'addr')
+
+class AdminInfoHostSerializer(InfoHostSerializer):
+
+    class Meta:
+        model = Nameserver
+        fields = ('host', 'idn_host', 'tld_provider', 'default', 'addr',
+                  'created', 'updated', 'status', 'roid', 'user')
+
+class QueryInfoHostSerializer(serializers.Serializer):
     host = serializers.CharField(required=True, allow_blank=False)
-    addr = AddressSetField(min_length=1)
+    addr = IpAddrField()
 
 
 class InfoDomainListSerializer(serializers.ListField):
@@ -421,14 +496,27 @@ class InfoDomainListSerializer(serializers.ListField):
 
 class PrivateInfoContactSerializer(serializers.ModelSerializer):
 
+    provider = serializers.SerializerMethodField()
+
     class Meta:
         model = Contact
         fields = ('registry_id', 'name', 'email', 'company', 'street',
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
                   'postal_info_type', 'non_disclose',
-                  'authcode',)
+                  'authcode', 'provider',)
 
+    def get_provider(self, obj):
+        """
+        Return the provider for this contact
+
+        :obj: Contact object
+        :returns: str registry slug
+
+        """
+        return obj.provider.slug
+
+        import pdb; pdb.set_trace()  # XXX BREAKPOINT
 
 class AdminInfoContactSerializer(PrivateInfoContactSerializer):
 
@@ -438,7 +526,7 @@ class AdminInfoContactSerializer(PrivateInfoContactSerializer):
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
                   'postal_info_type', 'non_disclose',
-                  'status', 'authcode', 'roid')
+                  'status', 'authcode', 'roid', 'user', 'provider',)
 
 
 class PrivateInfoRegistrantSerializer(serializers.ModelSerializer):
@@ -461,7 +549,7 @@ class AdminInfoRegistrantSerializer(serializers.ModelSerializer):
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
                   'postal_info_type', 'non_disclose',
-                  'status', 'authcode', 'roid')
+                  'status', 'authcode', 'roid', 'user',)
 
 
 class InfoContactSerializer(serializers.Serializer):

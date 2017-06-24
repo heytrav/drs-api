@@ -7,7 +7,8 @@ from domain_api.epp.queries import (
 from domain_api.epp.entity import EppRpcClient
 from domain_api.models import (
     Contact,
-    RegisteredDomain
+    RegisteredDomain,
+    Nameserver,
 )
 import domain_api
 from .test_setup import TestSetup
@@ -138,6 +139,23 @@ class TestNameserver(TestSetup):
 
         """
         super().setUp()
+        self.info_host_response = {
+            "host:infData": {
+                "xmlns:host": "urn:ietf:params:xml:ns:host-1.0",
+                "host:name": "ns3.test-18-06-02.xyz",
+                "host:roid": "H266917-CNIC",
+                "host:status": {
+                    "s": "ok"
+                },
+                "host:addr": {
+                    "ip": "v4",
+                    "$t": "22.33.44.55"
+                },
+                "host:clID": "H93060719",
+                "host:crID": "H93060719",
+                "host:crDate": "2017-06-23T07:16:52.0Z"
+            }
+        }
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     def test_check_host_query(self):
@@ -164,6 +182,25 @@ class TestNameserver(TestSetup):
             results = processed["result"]
             self.assertTrue(results[0]["available"],
                             "Processed response from check host command")
+
+    @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
+    @patch.object(HostQuery, 'process_status')
+    @patch.object(HostQuery, 'process_addresses')
+    def test_info_host_helper_functions(self, proc_addresses, proc_status):
+        """
+        Test helper functions are called for info host.
+        """
+        registered_host = Nameserver.objects.get(idn_host='ns1.test-01.cx')
+        host_query = HostQuery()
+        with patch.object(EppRpcClient,
+                          'call',
+                          return_value=self.info_host_response):
+            host_query.info(registered_host)
+            proc_status.assert_called_with({ "s": "ok" })
+            proc_addresses.assert_called_with({
+                "ip": "v4",
+                "$t": "22.33.44.55"
+            })
 
 
 class TestDomain(TestSetup):
@@ -234,7 +271,7 @@ class TestDomain(TestSetup):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=self.info_domain_response):
-            return_data, registered_domain = domain_query.info('test-something.bar')
+            return_data = domain_query.info('test-something.bar')
             self.assertIn("nameservers",
                           return_data,
                           "Return data contains nameservers")

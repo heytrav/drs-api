@@ -16,7 +16,7 @@ class TestSerialization(TestCase):
         Test handling of info host data
         """
         sample_data  = {
-            "host": "ns.somehost.tld",
+            "idn_host": "ns.somehost.tld",
             "addr": [
                 {"ip": "22.45.67.89"},
                 {"addr_type": "v4", "ip": "23.45.68.89"},
@@ -25,6 +25,7 @@ class TestSerialization(TestCase):
         }
         serializer = InfoHostSerializer(data=sample_data)
         valid = serializer.is_valid()
+        print("Errors {!r}".format(serializer.errors))
         self.assertTrue(valid)
 
     def test_info_host_no_ip_fail(self):
