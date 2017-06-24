@@ -16,7 +16,7 @@ RUN apt-get update && apt-get -y install \
 
 
 WORKDIR /usr/local/domain-api
-COPY requirements.txt /usr/local/domain-api
+COPY requirements.txt /usr/local/domain-api/
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY . /usr/local/domain-api/
