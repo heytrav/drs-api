@@ -190,7 +190,7 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
         try:
             queryset.get(registry_id=registry_id)
             serializer_class = self.serializer_class
-            if self.is_admin:
+            if self.is_admin():
                 serializer_class = self.admin_serializer_class
 
             log.debug("Performing info for %s as owner." % registry_id)
@@ -422,24 +422,19 @@ class HostManagementViewSet(viewsets.GenericViewSet):
 
                 # See if this TLD is provided by one of our registries.
                 registry = get_domain_registry(data["idn_host"])
-                serializer = InfoHostSerializer(data=data)
-
                 workflow_manager = workflow_factory(registry.slug)()
-
                 log.debug("About to call workflow_manager.create_host")
                 workflow = workflow_manager.create_host(data, request.user)
                 # run chained workflow and register the domain
                 chained_workflow = chain(workflow)()
                 process_workflow_chain(chained_workflow)
-                if serializer.is_valid():
-                    return Response(serializer.data,
-                                    status=status.HTTP_201_CREATED)
-                else:
-                    log.error("Error serializing data")
-                    return Response(
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                    )
-                return Response(chain_res)
+                registered_host = self.get_queryset().get(
+                    idn_host=idna.encode(data["idn_host"],
+                                         uts46=True).decode('ascii'),
+                )
+                serializer = InfoHostSerializer(registered_host)
+                return Response(serializer.data,
+                                status=status.HTTP_201_CREATED)
             except InvalidTld as e:
                 log.error(str(e), exc_info=True)
                 return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -561,7 +556,30 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         :returns: RegisteredDomain set
         """
         user = self.request.user
-        return get_registered_domain_queryset(user)
+        queryset = get_registered_domain_queryset(user)
+        registrant = self.request.query_params.get("registrant", None)
+        if registrant is not None:
+            queryset = queryset.filter(
+                registrant__registry_id=registrant
+            )
+        admin = self.request.query_params.get("admin", None)
+        if admin is not None:
+            queryset = queryset.filter(
+                contacts__contact__registry_id=admin,
+                contacts__active=True
+            )
+        tech = self.request.query_params.get("tech", None)
+        if tech is not None:
+            queryset = queryset.filter(
+                contacts__contact__registry_id=tech,
+                contacts__active=True
+            )
+        nameserver = self.request.query_params.get("nameserver", None)
+        if nameserver is not None:
+            queryset = queryset.filter(
+                nameservers__contains=nameserver
+            )
+        return queryset
 
     def is_admin(self):
         """

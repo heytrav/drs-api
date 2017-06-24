@@ -378,11 +378,12 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
     registrant = serializers.SerializerMethodField()
     contacts = serializers.SerializerMethodField()
     nameservers = serializers.JSONField()
+    provider = serializers.SerializerMethodField()
 
     class Meta:
         model = RegisteredDomain
         fields = ('domain', 'contacts', 'registrant', 'nameservers',
-                  'authcode', 'created', 'expiration')
+                  'provider', 'authcode', 'created', 'expiration')
         read_only_fields = ('expiration', 'created', 'authcode', 'status')
 
     def get_registrant(self, obj):
@@ -395,6 +396,16 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
         active_contacts = obj.contacts.filter(active=True)
         return [{i.contact_type.name: i.contact.registry_id}
                 for i in active_contacts]
+
+    def get_provider(self, obj):
+        """
+        Return provider for domain
+
+        :obj: TODO
+        :returns: TODO
+
+        """
+        return obj.tld_provider.provider.slug
 
 
 class AdminInfoDomainSerializer(PrivateInfoDomainSerializer):
@@ -485,13 +496,6 @@ class QueryInfoHostSerializer(serializers.Serializer):
     host = serializers.CharField(required=True, allow_blank=False)
     addr = IpAddrField()
 
-
-class InfoDomainListSerializer(serializers.ListField):
-
-    """
-    Serialise a set of domains into respective info description.
-    """
-    child = InfoDomainSerializer()
 
 
 class PrivateInfoContactSerializer(serializers.ModelSerializer):
