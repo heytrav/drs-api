@@ -110,6 +110,8 @@ class ContactFactory(object):
 
         """
         non_disclose = []
+        if disclose_data is None:
+            disclose_data = []
         disclose = []
         for k in ["name", "company", "address"]:
             v = self.disclose_localised[k]
