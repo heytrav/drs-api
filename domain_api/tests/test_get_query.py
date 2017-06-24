@@ -29,7 +29,7 @@ class TestCheckDomain(TestSetup):
 
         with patch.object(EppRpcClient, 'call', side_effect=EppError("FAIL")):
             response = self.client.get(
-                '/v1/domains/whatever.ote/'
+                '/v1/domains/test-something.bar/'
             )
             self.assertEqual(response.status_code,
                              400,
@@ -97,7 +97,7 @@ class TestInfoDomain(TestSetup):
         }
         with patch.object(EppRpcClient, 'call', return_value=return_value):
             response = self.client.get(
-                '/v1/domains/whatever.ote/'
+                '/v1/domains/test-something.bar/'
             )
             self.assertEqual(response.status_code,
                              200,

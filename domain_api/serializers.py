@@ -496,14 +496,27 @@ class InfoDomainListSerializer(serializers.ListField):
 
 class PrivateInfoContactSerializer(serializers.ModelSerializer):
 
+    provider = serializers.SerializerMethodField()
+
     class Meta:
         model = Contact
         fields = ('registry_id', 'name', 'email', 'company', 'street',
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
                   'postal_info_type', 'non_disclose',
-                  'authcode',)
+                  'authcode', 'provider',)
 
+    def get_provider(self, obj):
+        """
+        Return the provider for this contact
+
+        :obj: Contact object
+        :returns: str registry slug
+
+        """
+        return obj.provider.slug
+
+        import pdb; pdb.set_trace()  # XXX BREAKPOINT
 
 class AdminInfoContactSerializer(PrivateInfoContactSerializer):
 
@@ -513,7 +526,7 @@ class AdminInfoContactSerializer(PrivateInfoContactSerializer):
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
                   'postal_info_type', 'non_disclose',
-                  'status', 'authcode', 'roid')
+                  'status', 'authcode', 'roid', 'user', 'provider',)
 
 
 class PrivateInfoRegistrantSerializer(serializers.ModelSerializer):
@@ -536,7 +549,7 @@ class AdminInfoRegistrantSerializer(serializers.ModelSerializer):
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
                   'postal_info_type', 'non_disclose',
-                  'status', 'authcode', 'roid')
+                  'status', 'authcode', 'roid', 'user',)
 
 
 class InfoContactSerializer(serializers.Serializer):

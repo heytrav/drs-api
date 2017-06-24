@@ -23,6 +23,23 @@ class TestHostApi(TestSetup):
 
         """
         super().setUp()
+        self.info_host_response = {
+            "host:infData": {
+                "xmlns:host": "urn:ietf:params:xml:ns:host-1.0",
+                "host:name": "ns3.test-18-06-02.xyz",
+                "host:roid": "H266917-CNIC",
+                "host:status": {
+                    "s": "ok"
+                },
+                "host:addr": {
+                    "ip": "v4",
+                    "$t": "22.33.44.55"
+                },
+                "host:clID": "H93060719",
+                "host:crID": "H93060719",
+                "host:crDate": "2017-06-23T07:16:52.0Z"
+            }
+        }
 
     def test_create_incorrect_data(self):
         """
@@ -47,7 +64,7 @@ class TestHostApi(TestSetup):
 
     @patch('domain_api.epp.entity.EppRpcClient', new=MockRpcClient)
     @patch.object(CentralNic, 'create_host')
-    def test_post_nameserver(self, mock_create_host):
+    def test_create_new_nameserver(self, mock_create_host):
         """
         Test a nameserver creation
         """

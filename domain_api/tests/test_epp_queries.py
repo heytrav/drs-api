@@ -271,7 +271,7 @@ class TestDomain(TestSetup):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=self.info_domain_response):
-            return_data, registered_domain = domain_query.info('test-something.bar')
+            return_data = domain_query.info('test-something.bar')
             self.assertIn("nameservers",
                           return_data,
                           "Return data contains nameservers")

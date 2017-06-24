@@ -176,52 +176,6 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
             return True
         return False
 
-    def is_owner(self, contact):
-        """
-        Determine whether request user is owner of contact object.
-
-        :contact: Contact object
-        :returns: Boolean
-
-        """
-        if contact and contact.user == self.request.user:
-            log.debug("User owns %s " % contact.registry_id)
-            return True
-        return False
-
-    def get_disclosed_contact_data(self, contact):
-        """
-        Prepare data to be returned with request. Check if dislosure is allowed.
-
-        :contact: Contact object
-        :returns: dict containing contact attributes allowed for disclosure
-
-        """
-        contact_data = {
-            "registry_id": contact.registry_id,
-        }
-        if contact.disclose_name:
-            contact_data["name"] = contact.name
-        if contact.disclose_email:
-            contact_data["email"] = contact.email
-        if contact.disclose_telephone:
-            contact_data["telephone"] = contact.telephone
-        if contact.disclose_fax:
-            contact_data["fax"] = contact.fax
-        if contact.disclose_company:
-            contact_data["company"] = contact.company
-        if contact.disclose_address:
-            contact_data["street1"] = contact.street1
-            contact_data["street2"] = contact.street2
-            contact_data["street3"] = contact.street3
-            contact_data["city"] = contact.city
-            contact_data["house_number"] = contact.house_number
-            contact_data["country"] = contact.country
-            contact_data["state"] = contact.state
-            contact_data["postcode"] = contact.postcode
-            contact_data["postal_info_type"] = contact.postal_info_type
-        return contact_data
-
     def info(self, request, registry_id, registry=None):
         """
         Retrieve info about a contact
@@ -235,36 +189,17 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
         contact = get_object_or_404(queryset, registry_id=registry_id)
         try:
             queryset.get(registry_id=registry_id)
-            serializer_class = None
+            serializer_class = self.serializer_class
             if self.is_admin:
                 serializer_class = self.admin_serializer_class
-            if self.is_owner(contact):
-                serializer_class = self.serializer_class
 
-            if serializer_class:
-                log.debug("Performing info for %s as owner." % registry_id)
-                query = ContactQuery(queryset)
-                contact_data = query.info(contact)
-                queryset.filter(pk=contact.id).update(**contact_data)
-                contact = queryset.get(pk=contact.id)
-                serializer = serializer_class(contact)
-                return Response(serializer.data)
-            else:
-                log.debug("Basic contact query for %s" % registry_id)
-                contact_data = self.get_disclosed_contact_data(contact)
-                serializer = InfoContactSerializer(data=contact_data)
-                if serializer.is_valid():
-                    log.debug("Serialized data is valid.")
-                    return Response(serializer.data)
-                else:
-                    return_data = {
-                        "message": "Serialized data is not valid.",
-                        "data": contact_data
-                    }
-                    get_logzio_sender().append(return_data)
-                    log.warning("Serialized data is not valid.")
-                    return Response(serializer.errors)
-
+            log.debug("Performing info for %s as owner." % registry_id)
+            query = ContactQuery(queryset)
+            contact_data = query.info(contact)
+            queryset.filter(pk=contact.id).update(**contact_data)
+            contact = queryset.get(pk=contact.id)
+            serializer = serializer_class(contact)
+            return Response(serializer.data)
         except UnknownRegistry as e:
             log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -303,11 +238,11 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
         :returns: InfoContactSerializer response
 
         """
+        serializer_class = self.serializer_class
+        if  self.is_admin():
+            serializer_class = self.admin_serializer_class
         contacts = self.get_queryset()
-        if not self.is_admin():
-            contacts = contacts.filter(user=self.request.user)
-
-        serializer = InfoContactSerializer(contacts, many=True)
+        serializer = serializer_class(contacts, many=True)
         return Response(serializer.data)
 
 
@@ -322,9 +257,9 @@ class RegistrantManagementViewSet(ContactManagementViewSet):
 
     def get_queryset(self):
         """
-        Return the contact queryset
+        Return the registrant queryset
 
-        :returns: Contact queryset
+        :returns: Registrant queryset
         """
         if self.is_admin():
             return Registrant.objects.all()
@@ -679,30 +614,28 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         :returns: JSON response with details about a domain
 
         """
+        registry = get_domain_registry(domain)
+        parsed_domain = parse_domain(domain)
+        registered_domain = get_object_or_404(
+            self.get_queryset(),
+            name=parsed_domain["domain"],
+            tld__zone=parsed_domain["zone"],
+            active=True
+        )
         try:
             # Fetch registry for domain
             query = DomainQuery(self.get_queryset())
-            info, registered_domain = query.info(domain)
+            info = query.info(domain)
             get_logzio_sender().append(info)
             log.debug("Info domain for %s" % domain)
-            serializer_class = None
-            if self.is_owner(registered_domain):
-                serializer_class = self.serializer_class
+            serializer_class = self.serializer_class
             if self.is_admin():
                 serializer_class = AdminInfoDomainSerializer
-            if serializer_class is not None:
-                synchronise_domain(info, registered_domain.id)
-                serializer = serializer_class(
-                    self.get_queryset().get(pk=registered_domain.id)
-                )
-                return Response(serializer.data)
-            serializer = InfoDomainSerializer(data=info)
-            if serializer.is_valid():
-                return Response(serializer.data)
-            else:
-                log.error("Errors serializing response")
-                return Response(serializer.errors,
-                                status=status.HTTP_400_BAD_REQUEST)
+            synchronise_domain(info, registered_domain.id)
+            serializer = serializer_class(
+                self.get_queryset().get(pk=registered_domain.id)
+            )
+            return Response(serializer.data)
         except InvalidTld as e:
             log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -742,13 +675,14 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
             # run chained workflow and register the domain
             chained_workflow = chain(workflow)()
             chain_res = process_workflow_chain(chained_workflow)
-            serializer = InfoDomainSerializer(data=chain_res)
-            if serializer.is_valid():
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                log.error(serializer.errors)
-                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            return Response(chain_res)
+            registered_domain = self.get_queryset().objects.get(
+                name=parsed_domain["domain"],
+                tld__zone=parsed_domain["zone"],
+                active=True
+            )
+
+            serializer = PrivateInfoDomainSerializer(registered_domain)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         except EppError as e:
             log.error(str(e), exc_info=True)
             return Response("Registration error",

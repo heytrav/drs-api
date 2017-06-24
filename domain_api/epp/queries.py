@@ -131,7 +131,7 @@ class Domain(EppEntity):
             return_data["authcode"] = info_data["domain:authInfo"]["domain:pw"]
             return_data["roid"] = info_data["domain:roid"]
         log.info("Returning registered domain info")
-        return (return_data, registered_domain)
+        return return_data
 
 
 class ContactQuery(EppEntity):
