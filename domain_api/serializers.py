@@ -227,13 +227,9 @@ class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
         model = Registrant
         fields = ('url', 'provider', 'registry_id', 'name',
                   'email', 'telephone', 'fax', 'company',
-                  'street', 'city',
-                  'state',
-                  'postcode', 'country', 'postal_info_type',
-                  'non_disclose',
-                   'created', 'updated',
-                  'status',
-                  'user',)
+                  'street', 'city', 'state',
+                  'postcode', 'country', 'postal_info_type', 'non_disclose',
+                   'created', 'updated', 'status', 'user',)
 
 
 class ContactSerializer(serializers.HyperlinkedModelSerializer):
@@ -257,13 +253,10 @@ class ContactSerializer(serializers.HyperlinkedModelSerializer):
         model = Contact
         fields = ('url', 'provider', 'registry_id', 'name',
                   'email', 'telephone', 'fax', 'company',
-                  'street', 'city',
-                  'state',
+                  'street', 'city', 'state',
                   'postcode', 'country', 'postal_info_type',
-                  'non_disclose',
-                  'created', 'updated',
-                  'status',
-                  'user',)
+                  'non_disclose', 'created', 'updated',
+                  'status', 'user',)
 
 
 class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
