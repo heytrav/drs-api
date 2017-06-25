@@ -337,20 +337,6 @@ class DefaultAccountTemplate(models.Model):
         unique_together = ('user', 'provider', 'account_template',)
 
 
-class DefaultRegistrant(models.Model):
-
-    """
-    Store default registrant for project.
-    """
-    user = models.ForeignKey('auth.User',
-                             related_name='default_registrant',
-                             on_delete=models.CASCADE)
-    registrant = models.ForeignKey(Registrant)
-
-    class Meta:
-        unique_together = ('user', 'registrant',)
-
-
 class DefaultAccountContact(models.Model):
     """
     Assign default contact for registry.
@@ -369,19 +355,3 @@ class DefaultAccountContact(models.Model):
     class Meta:
         unique_together = ('user', 'contact_type', 'account_template',
                            'provider', 'mandatory',)
-
-
-class DefaultContact(models.Model):
-    """
-    Store default contact for registrars for a given project.
-    """
-    user = models.ForeignKey('auth.User',
-                             related_name='default_contact',
-                             on_delete=models.CASCADE)
-    contact_type = models.ForeignKey(ContactType)
-    contact = models.ForeignKey(Contact)
-    provider = models.ForeignKey(DomainProvider)
-    mandatory = models.BooleanField(default=False)
-
-    class Meta:
-        unique_together = ('user', 'contact_type', 'contact', 'provider',)

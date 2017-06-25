@@ -11,10 +11,7 @@ from .models import (
     ContactType,
     DomainContact,
     DefaultAccountTemplate,
-    DefaultRegistrant,
-    DefaultContact,
     DefaultAccountContact,
-    Nameserver
 )
 
 
@@ -45,8 +42,6 @@ class TopLevelDomainAdmin(admin.ModelAdmin):
 
 admin.site.register(DefaultAccountTemplate)
 admin.site.register(DefaultAccountContact)
-admin.site.register(DefaultRegistrant)
-admin.site.register(DefaultContact)
 admin.site.register(AccountDetail)
 admin.site.register(TopLevelDomain, TopLevelDomainAdmin)
 admin.site.register(DomainProvider, DomainProviderAdmin)

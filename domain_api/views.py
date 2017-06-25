@@ -36,12 +36,11 @@ from domain_api.serializers import (
     DomainAvailabilitySerializer,
     HostAvailabilitySerializer,
     DomainContactSerializer,
-    InfoDomainSerializer,
     PrivateInfoDomainSerializer,
-    InfoContactSerializer,
     PrivateInfoContactSerializer,
     AdminInfoContactSerializer,
     DefaultAccountTemplateSerializer,
+    DefaultAccountContactSerializer,
     InfoHostSerializer,
     AdminInfoHostSerializer,
     QueryInfoHostSerializer,
@@ -50,7 +49,6 @@ from domain_api.serializers import (
     AdminInfoDomainSerializer,
     NameserverSerializer,
     AdminNameserverSerializer,
-    DefaultContactSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
@@ -1028,7 +1026,7 @@ class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
 
 
 class DefaultAccountContactViewSet(viewsets.ModelViewSet):
-    serializer_class = DefaultAccountTemplateSerializer
+    serializer_class = DefaultAccountContactSerializer
     permission_classes = (permissions.IsAdminUser,)
 
     def get_queryset(self):
@@ -1041,11 +1039,6 @@ class DefaultAccountContactViewSet(viewsets.ModelViewSet):
         if user.is_staff:
             return DefaultAccountContact.objects.all()
         return DefaultAccountContact.objects.filter(user=user)
-
-class DefaultContactViewSet(viewsets.ModelViewSet):
-    serialzer_class = DefaultContactSerializer
-    permission_classes = (permissions.IsAdminUser,)
-    queryset = DefaultContact.objects.all()
 
 
 class NameserverViewSet(viewsets.ModelViewSet):
