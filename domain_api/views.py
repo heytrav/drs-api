@@ -50,6 +50,7 @@ from domain_api.serializers import (
     AdminInfoDomainSerializer,
     NameserverSerializer,
     AdminNameserverSerializer,
+    DefaultContactSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
@@ -161,9 +162,15 @@ class ContactManagementViewSet(viewsets.GenericViewSet):
 
         :returns: Contact queryset
         """
+        queryset = Contact.objects.filter(user=self.request.user)
         if self.is_admin():
-            return Contact.objects.all()
-        return Contact.objects.filter(user=self.request.user)
+            queryset = Contact.objects.all()
+        provider = self.request.query_params.get('provider', None)
+        if provider is not None:
+            queryset = queryset.filter(
+                tld_provider__provider__slug=provider
+            )
+        return queryset
 
     def is_admin(self):
         """
@@ -578,6 +585,11 @@ class DomainRegistryManagementViewSet(viewsets.GenericViewSet):
         if nameserver is not None:
             queryset = queryset.filter(
                 nameservers__contains=nameserver
+            )
+        provider = self.request.query_params.get('provider', None)
+        if provider is not None:
+            queryset = queryset.filter(
+                tld_provider__provider__slug=provider
             )
         return queryset
 
@@ -1029,6 +1041,12 @@ class DefaultAccountContactViewSet(viewsets.ModelViewSet):
         if user.is_staff:
             return DefaultAccountContact.objects.all()
         return DefaultAccountContact.objects.filter(user=user)
+
+class DefaultContactViewSet(viewsets.ModelViewSet):
+    serialzer_class = DefaultContactSerializer
+    permission_classes = (permissions.IsAdminUser,)
+    queryset = DefaultContact.objects.all()
+
 
 class NameserverViewSet(viewsets.ModelViewSet):
     serializer_class = AdminNameserverSerializer

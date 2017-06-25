@@ -13,6 +13,7 @@ from domain_api.models import (
     RegisteredDomain,
     DomainContact,
     DefaultAccountTemplate,
+    DefaultContact,
     Nameserver,
 )
 from . import schemas
@@ -362,6 +363,36 @@ class DefaultAccountContactSerializer(serializers.ModelSerializer):
         fields = ('user', 'account_template', 'contact_type', 'provider',
                   'mandatory')
         read_only_fields = ('user',)
+
+class DefaultContactSerializer(models.HyperlinkedModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name="domain_api:defaultcontact-detail",
+        lookup_field="pk"
+    )
+    provider = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:domainprovider-detail",
+        lookup_field="slug",
+        read_only=True
+    )
+    contact_type = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:contacttype-detail",
+        lookup_field="name",
+        read_only=True
+    )
+    contact = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:contact-detail",
+        lookup_field="registry_id",
+        read_only=True
+    )
+    user = serializers.HyperlinkedRelatedField(
+        view_name="domain_api:user-detail",
+        lookup_field="pk",
+        read_only=True
+    )
+
+    class Meta:
+        model = DefaultContact
+        fields = ('contact_type', 'contact', 'provider', 'mandatory', 'user',)
 
 
 class DomainAvailabilitySerializer(serializers.Serializer):

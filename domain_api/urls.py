@@ -18,6 +18,9 @@ router.register(
 router.register('nameservers', views.NameserverViewSet, 'nameserver')
 router.register(r'domain-contacts', views.DomainContactViewSet, "domaincontact")
 router.register(r'users', views.UserViewSet)
+router.register('default-contacts',
+                views.DefaultContactViewSet,
+                'defaultcontact')
 
 default_account = views.DefaultAccountTemplateViewSet.as_view({
     'get': 'list_accounts',
