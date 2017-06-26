@@ -933,112 +933,16 @@ class DomainContactViewSet(viewsets.ModelViewSet):
         return DomainContact.objects.filter(contact__user=user)
 
 
-class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
-    serializer_class = DefaultAccountTemplateSerializer
-    permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissionsOrAnonReadOnly)
-
-    def create(self, request):
-        """
-        Create a new default template
-
-        :request: HTTP request object
-        :returns: HTTP response
-
-        """
-        data = request.data
-        serializer = self.serializer_class(data=data)
-        if serializer.is_valid():
-            account_templates = AccountDetail.objects.filter(
-                user=request.user
-            )
-            account_template = get_object_or_404(account_templates,
-                                                 pk=data["account_template"])
-            serializer.save(
-                user=request.user,
-                account_template=account_template,
-                provider=DomainProvider.objects.get(slug=data["provider"])
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, default_id):
-        """
-        Update a default account template
-
-        """
-        default_account_template = get_object_or_404(self.get_queryset(),
-                                                     default_id)
-        data = request.data
-        account_templates = AccountDetail.objects.filter(
-            user=request.user
-        )
-        account_template = get_object_or_404(account_templates,
-                                             pk=data["account_template"])
-        default_account_template.update(account_template=account_template,
-                                        provider=data["provider"])
-
-    def delete_account(self, request, default_id):
-        """
-        Delete a default template
-
-        """
-        default_account_template = get_object_or_404(self.get_queryset(),
-                                                     pk=default_id)
-        default_account_template.delete()
-
-    def detail(self, request, default_id):
-        """
-        Retrieve single object
-
-        """
-        log.debug({"default_id": default_id})
-        default_account_template = get_object_or_404(self.get_queryset(),
-                                                     pk=default_id)
-        serializer = self.serializer_class(default_account_template,
-                                           context={"request": request})
-        return Response(serializer.data)
-
-    def list_accounts(self, request):
-        """
-        Return list of default accounts
-
-        :request: HTTP request object
-        :returns: DefaultAccountTemplateSerializer
-
-        """
-        account_templates = self.get_queryset()
-        serializer = self.serializer_class(account_templates,
-                                           context={"request": request},
-                                           many=True)
-        return Response(serializer.data)
-
-    def get_queryset(self):
-        """
-        Filter domain handles on logged in user.
-        :returns: Set of DomainContact objects filtered by customer
-
-        """
-        user = self.request.user
-        if user.is_staff:
-            return DefaultAccountTemplate.objects.all()
-        return DefaultAccountTemplate.objects.filter(user=user)
-
-
 class DefaultAccountContactViewSet(viewsets.ModelViewSet):
     serializer_class = DefaultAccountContactSerializer
     permission_classes = (permissions.IsAdminUser,)
+    queryset = DefaultAccountContact.objects.all()
 
-    def get_queryset(self):
-        """
-        Filter domain handles on logged in user.
-        :returns: Set of DomainContact objects filtered by customer
 
-        """
-        user = self.request.user
-        if user.is_staff:
-            return DefaultAccountContact.objects.all()
-        return DefaultAccountContact.objects.filter(user=user)
+class DefaultAccountTemplateViewSet(viewsets.ModelViewSet):
+    serializer_class = DefaultAccountTemplateSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = DefaultAccountTemplate.objects.all()
 
 
 class NameserverViewSet(viewsets.ModelViewSet):
