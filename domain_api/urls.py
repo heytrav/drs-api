@@ -15,19 +15,13 @@ router.register(
     views.RegisteredDomainViewSet,
     "registereddomain"
 )
-router.register('nameservers', views.NameserverViewSet, 'nameserver')
+router.register(r'nameservers', views.NameserverViewSet, 'nameserver')
 router.register(r'domain-contacts', views.DomainContactViewSet, "domaincontact")
 router.register(r'users', views.UserViewSet)
-
-default_account = views.DefaultAccountTemplateViewSet.as_view({
-    'get': 'list_accounts',
-    'post': 'create',
-})
-default_account_manage = views.DefaultAccountTemplateViewSet.as_view({
-    'delete': 'delete_account',
-    'put': 'update',
-    'get': 'detail'
-})
+router.register(r'default-templates', views.DefaultAccountTemplateViewSet,
+                'defaultaccounttemplate')
+router.register(r'default-contacts', views.DefaultAccountContactViewSet,
+                'defaultaccountcontact')
 domain_list = views.DomainRegistryManagementViewSet.as_view({
     'get': 'domain_set',
     'post': 'create'
@@ -92,9 +86,6 @@ urlpatterns = [
         registrant_detail,
         name='registrant-info'),
     url('^registrants/$', registrant_list, name='contact-list'),
-    url(r'^account/default/$', default_account, name='default-account'),
-    url(r'^account/default/(?P<default_id>.*)/$', default_account_manage,
-        name='default-account-manage'),
     url(
         r'^hosts/available/(?P<host>.*)/$',
         host_single_check, name='check-host'

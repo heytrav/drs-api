@@ -13,6 +13,7 @@ from domain_api.models import (
     RegisteredDomain,
     DomainContact,
     DefaultAccountTemplate,
+    DefaultAccountContact,
     Nameserver,
 )
 from . import schemas
@@ -226,13 +227,9 @@ class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
         model = Registrant
         fields = ('url', 'provider', 'registry_id', 'name',
                   'email', 'telephone', 'fax', 'company',
-                  'street', 'city',
-                  'state',
-                  'postcode', 'country', 'postal_info_type',
-                  'non_disclose',
-                   'created', 'updated',
-                  'status',
-                  'user',)
+                  'street', 'city', 'state',
+                  'postcode', 'country', 'postal_info_type', 'non_disclose',
+                   'created', 'updated', 'status', 'user',)
 
 
 class ContactSerializer(serializers.HyperlinkedModelSerializer):
@@ -256,13 +253,10 @@ class ContactSerializer(serializers.HyperlinkedModelSerializer):
         model = Contact
         fields = ('url', 'provider', 'registry_id', 'name',
                   'email', 'telephone', 'fax', 'company',
-                  'street', 'city',
-                  'state',
+                  'street', 'city', 'state',
                   'postcode', 'country', 'postal_info_type',
-                  'non_disclose',
-                  'created', 'updated',
-                  'status',
-                  'user',)
+                  'non_disclose', 'created', 'updated',
+                  'status', 'user',)
 
 
 class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
@@ -344,24 +338,26 @@ class DomainContactSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class DefaultAccountTemplateSerializer(serializers.ModelSerializer):
-    provider = serializers.SlugRelatedField(slug_field='slug', read_only=True)
+    url = serializers.HyperlinkedIdentityField(
+        view_name="domain_api:defaultaccounttemplate-detail",
+        lookup_field="pk"
+    )
 
     class Meta:
         model = DefaultAccountTemplate
-        fields = ('id', 'account_template', 'provider', 'user')
-        read_only_fields = ('id', 'user',)
+        fields = ('url', 'account_template', 'provider', 'user')
 
 
 class DefaultAccountContactSerializer(serializers.ModelSerializer):
-    provider = serializers.SlugRelatedField(slug_field='slug', read_only=True)
-    contact_type = serializers.SlugRelatedField(slug_field='name',
-                                                read_only=True)
+    url = serializers.HyperlinkedIdentityField(
+        view_name="domain_api:defaultaccountcontact-detail",
+        lookup_field="pk"
+    )
 
     class Meta:
-        model = DefaultAccountTemplate
-        fields = ('user', 'account_template', 'contact_type', 'provider',
+        model = DefaultAccountContact
+        fields = ('url', 'user', 'account_template', 'contact_type', 'provider',
                   'mandatory')
-        read_only_fields = ('user',)
 
 
 class DomainAvailabilitySerializer(serializers.Serializer):
@@ -378,22 +374,6 @@ class HostAvailabilitySerializer(serializers.Serializer):
 
 class CheckDomainResponseSerializer(serializers.Serializer):
     result = DomainAvailabilitySerializer(many=True)
-
-
-class HandleTypeSerializer(serializers.Serializer):
-    contact = serializers.CharField(required=True, allow_blank=False)
-    contact_type = serializers.CharField(required=True, allow_blank=False)
-
-
-class NsHostObjectListSerializer(serializers.ListField):
-    child = serializers.CharField()
-
-
-class HandleSetSerializer(serializers.ListField):
-    admin = serializers.CharField(required=False)
-    tech = serializers.CharField(required=False)
-    billing = serializers.CharField(required=False)
-    zone = serializers.CharField(required=False)
 
 
 class PrivateInfoDomainSerializer(serializers.ModelSerializer):
@@ -424,8 +404,8 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
         """
         Return provider for domain
 
-        :obj: TODO
-        :returns: TODO
+        :obj: RegisteredDomain object
+        :returns: str abbreviation for registry
 
         """
         return obj.tld_provider.provider.slug
@@ -441,16 +421,6 @@ class AdminInfoDomainSerializer(PrivateInfoDomainSerializer):
         read_only_fields = ('roid', 'expiration', 'created', 'authcode',
                             'status')
 
-
-class InfoDomainSerializer(serializers.Serializer):
-    domain = serializers.CharField(required=True, allow_blank=False)
-    contacts = HandleSetSerializer()
-    registrant = serializers.CharField(required=True, allow_blank=False)
-    roid = serializers.CharField(required=False)
-    nameservers = serializers.JSONField(required=False)
-    status = serializers.JSONField(required=False)
-    created = serializers.DateTimeField(required=False)
-    expiration = serializers.DateTimeField(required=False)
 
 class NameserverSerializer(serializers.HyperlinkedModelSerializer):
 
@@ -491,15 +461,6 @@ class AdminNameserverSerializer(NameserverSerializer):
                   'created', 'updated', 'status', 'roid', 'user')
 
 
-class IpAddressSerializer(serializers.Serializer):
-    ip = serializers.CharField(required=True)
-    addr_type = serializers.CharField(required=False)
-
-
-class AddressSetField(serializers.ListField):
-    child = IpAddressSerializer()
-
-
 class InfoHostSerializer(serializers.ModelSerializer):
 
     addr = IpAddrField()
@@ -515,10 +476,10 @@ class AdminInfoHostSerializer(InfoHostSerializer):
         fields = ('host', 'idn_host', 'tld_provider', 'default', 'addr',
                   'created', 'updated', 'status', 'roid', 'user')
 
+
 class QueryInfoHostSerializer(serializers.Serializer):
     host = serializers.CharField(required=True, allow_blank=False)
     addr = IpAddrField()
-
 
 
 class PrivateInfoContactSerializer(serializers.ModelSerializer):
@@ -576,39 +537,3 @@ class AdminInfoRegistrantSerializer(serializers.ModelSerializer):
                   'state', 'country', 'postcode',
                   'postal_info_type', 'non_disclose',
                   'status', 'authcode', 'roid', 'user',)
-
-
-class InfoContactSerializer(serializers.Serializer):
-
-    registry_id = serializers.CharField()
-    name = serializers.CharField(required=False)
-    email = serializers.CharField(required=False)
-    company = serializers.CharField(required=False)
-    street = serializers.JSONField()
-    city = serializers.CharField(required=False)
-    state = serializers.CharField(required=False)
-    country = serializers.CharField(required=False)
-    postcode = serializers.CharField(required=False)
-    postal_info_type = serializers.CharField(required=False)
-
-    class Meta:
-        model = Contact
-        fields = ('registry_id', 'name', 'email', 'company', 'street',
-                   'city', 'telephone', 'fax',
-                  'state', 'country', 'postcode',
-                  'postal_info_type',)
-        read_only_fields = ('registry_id', 'postal_info_type')
-
-
-class ContactDomainSerializer(serializers.Serializer):
-    domain = serializers.CharField(required=True)
-    created = serializers.DateTimeField(required=True)
-    expiration = serializers.DateTimeField(required=True)
-
-
-class ContactDomainSetSerializer(serializers.ListField):
-    child = ContactDomainSerializer()
-
-
-class ContactDomainResultSerializer(serializers.Serializer):
-    result = ContactDomainSetSerializer(required=True)

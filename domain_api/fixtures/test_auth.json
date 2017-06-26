@@ -621,60 +621,6 @@
     }
 },
 {
-    "model": "auth.permission",
-    "pk": 70,
-    "fields": {
-        "name": "Can add email address",
-        "content_type": 24,
-        "codename": "add_emailaddress"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 71,
-    "fields": {
-        "name": "Can change email address",
-        "content_type": 24,
-        "codename": "change_emailaddress"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 72,
-    "fields": {
-        "name": "Can delete email address",
-        "content_type": 24,
-        "codename": "delete_emailaddress"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 73,
-    "fields": {
-        "name": "Can add task result",
-        "content_type": 25,
-        "codename": "add_taskresult"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 74,
-    "fields": {
-        "name": "Can change task result",
-        "content_type": 25,
-        "codename": "change_taskresult"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 75,
-    "fields": {
-        "name": "Can delete task result",
-        "content_type": 25,
-        "codename": "delete_taskresult"
-    }
-},
-{
     "model": "auth.group",
     "pk": 1,
     "fields": {
