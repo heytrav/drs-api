@@ -909,10 +909,214 @@ class RegistrantViewSet(viewsets.ModelViewSet):
 
 class RegisteredDomainViewSet(viewsets.ModelViewSet):
 
-    serializer_class = RegisteredDomainSerializer
-    permission_classes = (permissions.IsAuthenticated,
-                          IsAdmin,)
-    queryset = RegisteredDomain.objects.all()
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def is_admin(self):
+        """
+        Determine if the current logged in user is admin
+        :returns: Boolean
+        """
+        user = self.request.user
+        # Check if user is admin
+        if user.groups.filter(name='admin').exists():
+            return True
+        return False
+
+    def get_serializer_class(self):
+        """
+        Return serializer based on whether user is admin
+        :returns: serializer object
+
+        """
+        if self.is_admin():
+            return AdminInfoDomainSerializer
+        return PrivateInfoDomainSerializer
+
+    def get_queryset(self):
+        """
+        Return queryset
+        :returns: RegisteredDomain set
+        """
+        user = self.request.user
+        queryset = get_registered_domain_queryset(user)
+        registrant = self.request.query_params.get("registrant", None)
+        if registrant is not None:
+            queryset = queryset.filter(
+                registrant__registry_id=registrant
+            )
+        admin = self.request.query_params.get("admin", None)
+        if admin is not None:
+            queryset = queryset.filter(
+                contacts__contact__registry_id=admin,
+                contacts__active=True
+            )
+        tech = self.request.query_params.get("tech", None)
+        if tech is not None:
+            queryset = queryset.filter(
+                contacts__contact__registry_id=tech,
+                contacts__active=True
+            )
+        nameserver = self.request.query_params.get("nameserver", None)
+        if nameserver is not None:
+            queryset = queryset.filter(
+                nameservers__contains=nameserver
+            )
+        provider = self.request.query_params.get('provider', None)
+        if provider is not None:
+            queryset = queryset.filter(
+                tld_provider__provider__slug=provider
+            )
+        return queryset
+
+    def retrieve(self, request, pk=None):
+        """
+        Query EPP with a infoDomain request.
+
+
+        :request: HTTP request
+        :domain: str domain name to check
+        :returns: JSON response with details about a domain
+
+        """
+
+        #registry = get_domain_registry(domain)
+        #parsed_domain = parse_domain(domain)
+        log.info("Looking for domain %s" % pk)
+        queryset = self.get_queryset()
+        registered_domain = get_object_or_404(
+            queryset,
+            pk=pk,
+        )
+        domain = str(registered_domain)
+
+        try:
+            # Fetch registry for domain
+            query = DomainQuery(self.get_queryset())
+            info = query.info(domain)
+            get_logzio_sender().append(info)
+            log.debug("Info domain for %s" % domain)
+            serializer_class = self.get_serializer_class()
+            synchronise_domain(info, registered_domain.id)
+            serializer = serializer_class(
+                queryset.get(pk=registered_domain.id)
+            )
+            return Response(serializer.data)
+        except InvalidTld as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except UnsupportedTld as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except EppObjectDoesNotExist as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except EppError as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def create(self, request):
+        """
+        Register a domain name.
+
+        :request: Request object with JSON payload
+        :returns: Response from registry
+        """
+        data = request.data
+        parsed_domain = parse_domain(data["domain"])
+        chain_res = None
+        try:
+            # See if this TLD is provided by one of our registries.
+            tld_provider = TopLevelDomainProvider.objects.get(
+                zone__zone=parsed_domain["zone"]
+            )
+            registry = tld_provider.provider.slug
+            workflow_manager = workflow_factory(registry)()
+
+            log.debug({"msg": "About to call workflow_manager.create_domain"})
+            workflow = workflow_manager.create_domain(data, request.user)
+            # run chained workflow and register the domain
+            chained_workflow = chain(workflow)()
+            chain_res = process_workflow_chain(chained_workflow)
+            registered_domain = self.get_queryset().get(
+                name=parsed_domain["domain"],
+                tld__zone=parsed_domain["zone"],
+                active=True
+            )
+            serializer = PrivateInfoDomainSerializer(registered_domain)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except EppError as e:
+            log.error(str(e), exc_info=True)
+            return Response("Registration error",
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except DomainNotAvailable as e:
+            log.error(str(e), exc_info=True)
+            return Response("Domain not available",
+                            status=status.HTTP_400_BAD_REQUEST)
+        except NotObjectOwner as e:
+            log.error(str(e), exc_info=True)
+            return Response("Not owner of object",
+                            status=status.HTTP_400_BAD_REQUEST)
+        except KeyError as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except TopLevelDomainProvider.DoesNotExist as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def partial_update(self, request, pk=None):
+        """
+        Partial update of domain
+
+        :request: HTTP request object
+        :pk: int primary key of domain
+        :returns: Response object
+
+        """
+        queryset = self.get_queryset()
+        registered_domain = get_object_or_404(
+            queryset,
+            pk=pk
+        )
+        domain = str(registered_domain)
+        parsed_domain = parse_domain(domain)
+
+        try:
+            registry = registered_domain.tld_provider.provider.slug
+            workflow_manager = workflow_factory(registry)()
+            update_domain = request.data
+            update_domain["domain"] = domain
+
+            log.debug({"msg": "About to call workflow_manager.update_domain"})
+            workflow = workflow_manager.update_domain(request.data,
+                                                      registered_domain,
+                                                      request.user)
+            # run chained workflow and register the domain
+            raw_workflow = chain(workflow)
+            if not raw_workflow:
+                return Response({"msg": "No change to domain"})
+            chained_workflow = raw_workflow()
+            chain_res = process_workflow_chain(chained_workflow)
+            get_logzio_sender().append(chain_res)
+            if registered_domain and self.is_admin_or_owner(registered_domain):
+                serializer = self.serializer_class(
+                    self.get_queryset().get(pk=registered_domain.id)
+                )
+                return Response(serializer.data)
+        except EppObjectDoesNotExist as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except EppError as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            log.error(str(e), exc_info=True)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DomainContactViewSet(viewsets.ModelViewSet):

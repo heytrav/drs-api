@@ -385,7 +385,7 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RegisteredDomain
-        fields = ('domain', 'contacts', 'registrant', 'nameservers',
+        fields = ('id', 'domain', 'contacts', 'registrant', 'nameservers',
                   'provider', 'authcode', 'created', 'expiration')
         read_only_fields = ('expiration', 'created', 'authcode', 'status')
 
@@ -415,7 +415,7 @@ class AdminInfoDomainSerializer(PrivateInfoDomainSerializer):
 
     class Meta:
         model = RegisteredDomain
-        fields = ('domain', 'contacts', 'registrant', 'roid',
+        fields = ('id', 'domain', 'contacts', 'registrant', 'roid',
                   'status', 'authcode',
                   'created', 'expiration')
         read_only_fields = ('roid', 'expiration', 'created', 'authcode',
