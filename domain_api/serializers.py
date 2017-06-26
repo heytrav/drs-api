@@ -337,51 +337,27 @@ class DomainContactSerializer(serializers.HyperlinkedModelSerializer):
                   'created')
 
 
-class DefaultAccountTemplateSerializer(serializers.HyperlinkedModelSerializer):
-    user = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:user-detail",
-        lookup_field="pk",
-        read_only=True
-    )
+class DefaultAccountTemplateSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:defaultaccounttemplate-detail",
         lookup_field="pk"
     )
-    account_template = serializers.HyperlinkedIdentityField(
-        view_name="domain_api:account-detail",
-        lookup_field="pk"
-    )
-    provider = serializers.SlugRelatedField(slug_field='slug', read_only=True)
 
     class Meta:
         model = DefaultAccountTemplate
         fields = ('url', 'account_template', 'provider', 'user')
-        read_only_fields = ('id', 'user',)
 
 
-class DefaultAccountContactSerializer(serializers.HyperlinkedModelSerializer):
-    user = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:user-detail",
-        lookup_field="pk",
-        read_only=True
-    )
+class DefaultAccountContactSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="domain_api:defaultaccountcontact-detail",
         lookup_field="pk"
     )
-    account_template = serializers.HyperlinkedIdentityField(
-        view_name="domain_api:account-detail",
-        lookup_field="pk"
-    )
-    provider = serializers.SlugRelatedField(slug_field='slug', read_only=True)
-    contact_type = serializers.SlugRelatedField(slug_field='name',
-                                                read_only=True)
 
     class Meta:
         model = DefaultAccountContact
         fields = ('url', 'user', 'account_template', 'contact_type', 'provider',
                   'mandatory')
-        read_only_fields = ('user',)
 
 
 class DomainAvailabilitySerializer(serializers.Serializer):
