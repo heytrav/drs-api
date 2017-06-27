@@ -225,6 +225,7 @@ class RegisteredDomain(models.Model):
     notifications.
     """
     name = models.CharField(max_length=200)
+    fqdn = models.CharField(unique=False, max_length=200)
     # Needed to enforce unique constraint
     tld = models.ForeignKey(TopLevelDomain)
     tld_provider = models.ForeignKey(TopLevelDomainProvider)
@@ -249,7 +250,7 @@ class RegisteredDomain(models.Model):
         """
         Represent a registered domain (i.e. name.tld).
         """
-        return self.name + "." + self.tld_provider.zone.zone
+        return self.name + "." + self.tld.zone
 
     def _get_domain(self):
         return idna.decode(self.name)
@@ -262,6 +263,7 @@ class RegisteredDomain(models.Model):
         """
         self.name = idna.encode(self.name, uts46=True).decode('ascii')
         self.tld = self.tld_provider.zone
+        self.fqdn = self.name + "." + self.tld.zone
         super(RegisteredDomain, self).save(*args, **kwargs)
 
     class Meta:

@@ -1,14 +1,7 @@
 from unittest.mock import patch
 import json
-import domain_api
 from ..workflows import CentralNic
-from domain_api.epp.entity import EppRpcClient
 from .test_setup import TestSetup
-
-
-class MockRpcClient(domain_api.epp.entity.EppRpcClient):
-    def __init__(self, host=None):
-        pass
 
 
 class TestDomainApi(TestSetup):
@@ -40,7 +33,7 @@ class TestDomainApi(TestSetup):
             "nameservers": ["ns1.nameserver.com", "ns2.nameserver.com"]
         }
         jwt_header = self.api_login()
-        self.client.post('/v1/registered-domains/',
+        self.client.post('/v1/domains/',
                          data=json.dumps(create_domain_data),
                          content_type='application/json',
                          HTTP_AUTHORIZATION=jwt_header)
@@ -57,7 +50,7 @@ class TestDomainApi(TestSetup):
             "nameservers": ["ns1.nameserver.com", "ns2.nameserver.com"]
         }
         jwt_header = self.api_login()
-        self.client.post('/v1/registered-domains/',
+        self.client.post('/v1/domains/',
                          data=json.dumps(create_domain_data),
                          content_type='application/json',
                          HTTP_AUTHORIZATION=jwt_header)
