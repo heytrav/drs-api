@@ -2,6 +2,7 @@ from django.db import models
 from django_mysql.models import JSONField
 import idna
 import re
+import uuid
 
 
 class AccountDetail(models.Model):
@@ -225,7 +226,10 @@ class RegisteredDomain(models.Model):
     notifications.
     """
     name = models.CharField(max_length=200)
-    fqdn = models.CharField(unique=False, max_length=200)
+    fqdn = models.CharField(null=True,
+                            unique=False,
+                            default=uuid.uuid4,
+                            max_length=200)
     # Needed to enforce unique constraint
     tld = models.ForeignKey(TopLevelDomain)
     tld_provider = models.ForeignKey(TopLevelDomainProvider)

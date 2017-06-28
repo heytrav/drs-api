@@ -4,6 +4,7 @@
     "pk": 1,
     "fields": {
         "name": "test-something",
+        "fqdn": "test-something.bar",
         "tld": 1,
         "tld_provider": 13,
         "active": true,
@@ -28,6 +29,7 @@
     "pk": 2,
     "fields": {
         "name": "test-something-2",
+        "fqdn": "test-something-2.bar",
         "tld": 12,
         "tld_provider": 23,
         "active": true,
@@ -48,6 +50,7 @@
     "pk": 3,
     "fields": {
         "name": "test-something-3",
+        "fqdn": "test-something-3.ote",
         "tld": 11,
         "tld_provider": 24,
         "active": true,

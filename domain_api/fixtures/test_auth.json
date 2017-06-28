@@ -687,7 +687,7 @@
     "model": "auth.user",
     "pk": 1,
     "fields": {
-        "password": "pbkdf2_sha256$30000$sHGo9HF8w39x$vcaJ0IcnMuNltdu/uvL499zx9HedkgB1NLu0tZEt/Eg=",
+        "password": "pbkdf2_sha256$30000$ZVF3OurZHan2$5M1PXiYuySqOwm9/dy58DMTXARZwcD5gGb90PLLHxb0=",
         "last_login": null,
         "is_superuser": false,
         "username": "testadmin",

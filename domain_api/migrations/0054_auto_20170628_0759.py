@@ -9,11 +9,11 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('domain_api', '0051_auto_20170625_2038'),
+        ('domain_api', '0053_auto_20170628_0759'),
     ]
 
     operations = [
-        migrations.AddField(
+        migrations.AlterField(
             model_name='registereddomain',
             name='fqdn',
             field=models.CharField(default=uuid.uuid4, max_length=200, null=True),

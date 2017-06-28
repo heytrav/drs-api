@@ -380,7 +380,7 @@ class ContactViewSet(BaseViewSet):
     Contact handles.
     """
 
-    permission_classes = (permissions.IsAdminUser,
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,
                           permissions.IsAuthenticated)
     filter_backends = (IsPersonFilterBackend,)
     lookup_field = 'registry_id'
@@ -444,7 +444,7 @@ class ContactViewSet(BaseViewSet):
 class RegistrantViewSet(ContactViewSet):
 
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.IsAdminUser)
+                          permissions.DjangoModelPermissionsOrAnonReadOnly,)
     lookup_field = 'registry_id'
     serializer_class = PrivateInfoRegistrantSerializer
     admin_serializer_class = AdminInfoRegistrantSerializer
@@ -456,6 +456,8 @@ class RegisteredDomainViewSet(BaseViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = PrivateInfoDomainSerializer
     admin_serializer_class = AdminInfoDomainSerializer
+    lookup_value_regex = '[^/]+'
+    lookup_field = 'fqdn'
 
     def get_queryset(self):
         """
@@ -493,7 +495,7 @@ class RegisteredDomainViewSet(BaseViewSet):
             )
         return queryset
 
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, fqdn=None):
         """
         Query EPP with a infoDomain request.
 
@@ -506,11 +508,11 @@ class RegisteredDomainViewSet(BaseViewSet):
 
         #registry = get_domain_registry(domain)
         #parsed_domain = parse_domain(domain)
-        log.info("Looking for domain %s" % pk)
+        log.info("Looking for domain %s" % fqdn)
         queryset = self.get_queryset()
         registered_domain = get_object_or_404(
             queryset,
-            pk=pk,
+            fqdn=fqdn,
         )
         domain = registered_domain.name + "." + registered_domain.tld.zone
 
@@ -594,7 +596,7 @@ class RegisteredDomainViewSet(BaseViewSet):
             log.error(str(e), exc_info=True)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def partial_update(self, request, pk=None):
+    def partial_update(self, request, fqdn=None):
         """
         Partial update of domain
 
@@ -606,7 +608,7 @@ class RegisteredDomainViewSet(BaseViewSet):
         queryset = self.get_queryset()
         registered_domain = get_object_or_404(
             queryset,
-            pk=pk
+            fqdn=fqdn
         )
         domain = str(registered_domain)
         parsed_domain = parse_domain(domain)
@@ -672,7 +674,8 @@ class NameserverViewSet(BaseViewSet):
     lookup_value_regex = '[^/]+'
     serializer_class = InfoHostSerializer
     admin_serializer_class = AdminInfoHostSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,
+                          permissions.IsAuthenticated,)
     queryset = Nameserver.objects.all()
     lookup_field = 'idn_host'
 

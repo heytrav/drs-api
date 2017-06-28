@@ -201,7 +201,7 @@ class TestContact(TestSetup):
             }
         }
         jwt_header = self.api_login(username='testadmin',
-                                    password='imaadmin1')
+                                    password='1nn0vation')
         print("JWT: %s" % jwt_header)
         with patch.object(EppRpcClient,
                           'call',
@@ -271,7 +271,7 @@ class TestContact(TestSetup):
             }
         }
         jwt_header = self.api_login(username='testadmin',
-                                    password='imaadmin1')
+                                    password='1nn0vation')
         with patch.object(EppRpcClient,
                           'call',
                           return_value=info_contact_response):
@@ -346,7 +346,10 @@ class TestRegistrant(TestSetup):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=info_contact_response):
-            response = self.client.get('/v1/registrants/registrant-123/')
+            jwt_header = self.api_login()
+            response = self.client.get('/v1/registrants/registrant-123/',
+                                       content_type="application/json",
+                                       HTTP_AUTHORIZATION=jwt_header)
             self.assertEqual(response.status_code,
                              200,
                              "Info contact returned normal response")
