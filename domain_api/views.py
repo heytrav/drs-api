@@ -661,6 +661,7 @@ class RegisteredDomainViewSet(BaseViewSet):
 
 
 class DomainContactViewSet(BaseViewSet):
+    admin_serializer_class = DomainContactSerializer
     serializer_class = DomainContactSerializer
     permission_classes = (permissions.IsAuthenticated,
                           permissions.DjangoModelPermissionsOrAnonReadOnly,)
