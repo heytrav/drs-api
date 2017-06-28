@@ -1,3 +1,4 @@
+import logging
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth import get_user_model
@@ -16,8 +17,10 @@ from domain_api.models import (
     DefaultAccountContact,
     Nameserver,
 )
+import uuid
 from . import schemas
 import jsonschema
+log = logging.getLogger(__name__)
 
 UserModel = get_user_model()
 
@@ -377,7 +380,7 @@ class CheckDomainResponseSerializer(serializers.Serializer):
 
 
 class PrivateInfoDomainSerializer(serializers.ModelSerializer):
-    domain = serializers.SerializerMethodField('get_fqdn')
+    domain = serializers.SerializerMethodField("get_fqdn")
     registrant = serializers.SerializerMethodField()
     contacts = serializers.SerializerMethodField()
     nameservers = serializers.JSONField()
@@ -387,13 +390,25 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
         model = RegisteredDomain
         fields = ('domain', 'contacts', 'registrant', 'nameservers',
                   'provider', 'authcode', 'created', 'expiration')
-        read_only_fields = ('expiration', 'created', 'authcode', 'status')
+        read_only_fields = ('fqdn', 'expiration', 'created', 'authcode', 'status')
+
+    def get_fqdn(self, obj):
+        """
+        Return the fqdn
+
+        :obj: TODO
+        :returns: TODO
+
+        """
+        fqdn = str(uuid.uuid4())[:8]
+        try:
+            fqdn = obj.fqdn
+        except Exception as e:
+            log.error(e.message)
+        return obj.fqdn
 
     def get_registrant(self, obj):
         return obj.registrant.registry_id
-
-    def get_fqdn(self, obj):
-        return ".".join([obj.domain, obj.tld.tld])
 
     def get_contacts(self, obj):
         active_contacts = obj.contacts.filter(active=True)
@@ -412,7 +427,6 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
 
 
 class AdminInfoDomainSerializer(PrivateInfoDomainSerializer):
-
     class Meta:
         model = RegisteredDomain
         fields = ('domain', 'contacts', 'registrant', 'roid',
@@ -475,6 +489,7 @@ class AdminInfoHostSerializer(InfoHostSerializer):
         model = Nameserver
         fields = ('host', 'idn_host', 'tld_provider', 'default', 'addr',
                   'created', 'updated', 'status', 'roid', 'user')
+        read_only_fields = ('user', 'tld_provider')
 
 
 class QueryInfoHostSerializer(serializers.Serializer):

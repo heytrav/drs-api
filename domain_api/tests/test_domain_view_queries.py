@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from domain_api.views import DomainRegistryManagementViewSet
+from domain_api.views import RegisteredDomainViewSet
 from domain_api.models import (
     RegisteredDomain,
     TopLevelDomainProvider,
@@ -13,9 +13,10 @@ class MockRequest(object):
         self.user = User.objects.get(pk=2)
 
 
-class MockeDomainRegistryManagementViewSet(DomainRegistryManagementViewSet):
+class MockeDomainRegistryManagementViewSet(RegisteredDomainViewSet):
 
     def __init__(self):
+        super().__init__()
         self.request = MockRequest()
 
 
@@ -44,7 +45,8 @@ class TestDomainViewMethods(TestSetup):
         def call_code(view_obj, domain):
             try:
                 return any([view_obj.is_owner(domain), view_obj.is_admin()])
-            except Exception:
+            except Exception as e:
+                print("Exception {!r}".format(e))
                 return False
 
         view = MockeDomainRegistryManagementViewSet()

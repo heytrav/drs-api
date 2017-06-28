@@ -43,8 +43,7 @@ class TestHostApi(TestSetup):
 
     def test_create_incorrect_data(self):
         """
-        Should get an error when incorrectly structured host request sent to
-        api.
+        Should get an error when incorrectly structured host request sent to api.
 
         """
         bad_create_host = {
@@ -53,8 +52,9 @@ class TestHostApi(TestSetup):
                 {"ip_addr": "23.34.45.67"},
             ]
         }
-        jwt_header = self.api_login()
-        response = self.client.post('/v1/hosts/',
+        jwt_header = self.api_login(username='testadmin',
+                                    password='1nn0vation')
+        response = self.client.post('/v1/nameservers/',
                                     data=json.dumps(bad_create_host),
                                     content_type="application/json",
                                     HTTP_AUTHORIZATION=jwt_header)
@@ -85,7 +85,7 @@ class TestHostApi(TestSetup):
                           'call',
                           return_value=return_value):
             jwt_header = self.api_login()
-            self.client.post('/v1/hosts/',
+            self.client.post('/v1/nameservers/',
                              data=json.dumps(create_host_data),
                              content_type="application/json",
                              HTTP_AUTHORIZATION=jwt_header)
