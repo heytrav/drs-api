@@ -84,8 +84,7 @@ class TestHostApi(TestSetup):
         with patch.object(EppRpcClient,
                           'call',
                           return_value=return_value):
-            jwt_header = self.api_login(username='testadmin',
-                                        password='1nn0vation')
+            jwt_header = self.api_login()
             self.client.post('/v1/nameservers/',
                              data=json.dumps(create_host_data),
                              content_type="application/json",

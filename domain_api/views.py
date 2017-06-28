@@ -495,6 +495,20 @@ class RegisteredDomainViewSet(BaseViewSet):
             )
         return queryset
 
+    def is_owner(self, domain=None):
+        """
+        Determine if the current logged in user is the domain owner.
+        :domain: RegisteredDomain object
+        :returns: Boolean
+        """
+        user = self.request.user
+        if domain:
+            if domain.registrant.user == user:
+                return True
+            if domain.contacts.filter(contact__user=user).exists():
+                return True
+        return False
+
     def retrieve(self, request, fqdn=None):
         """
         Query EPP with a infoDomain request.
