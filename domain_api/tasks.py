@@ -271,7 +271,7 @@ def local_update_domain(update_data, user=None):
     domain = update_data.pop("name", update_data.pop("domain", None))
     parsed_domain = parse_domain(domain)
     registered_domain = RegisteredDomain.objects.get(
-        domain__name=parsed_domain["domain"],
+        name=parsed_domain["domain"],
         tld__zone=parsed_domain["zone"],
         active=True
     )

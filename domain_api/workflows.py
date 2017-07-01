@@ -453,6 +453,8 @@ class Workflow(object):
 
         """
         current_nameservers = domain.nameservers
+        if current_nameservers is None:
+            current_nameservers = []
         for ns_host in ns:
             idn = idna.encode(ns_host, uts46=True).decode('ascii')
             if idn not in current_nameservers:
@@ -499,8 +501,8 @@ class Workflow(object):
                                               epp,
                                               domain,
                                               user)
-        if "ns" in data:
-            self.check_update_domain_nameservers(data["ns"],
+        if "nameservers" in data:
+            self.check_update_domain_nameservers(data["nameservers"],
                                                  epp,
                                                  domain,
                                                  user)
