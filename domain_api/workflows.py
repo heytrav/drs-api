@@ -135,10 +135,7 @@ class Workflow(object):
             epp_contacts.append(contact)
         epp["contact"] = epp_contacts
 
-    def append_contact_workflow(self,
-                                epp,
-                                contacts,
-                                user_id):
+    def append_contact_workflow(self, epp, contacts, user_id):
         """
         Append item to create contact workflow.
 
@@ -260,12 +257,7 @@ class Workflow(object):
 
         """
         for contact in contact_set:
-            self.process_add_contact(
-                contact,
-                current_contacts,
-                epp,
-                user
-            )
+            self.process_add_contact(contact, current_contacts, epp, user)
 
     def check_remove_contacts(self, contact_set, current_contacts, epp, user):
         """
@@ -324,12 +316,7 @@ class Workflow(object):
             user=user
         )
 
-    def process_add_contact(self,
-                            contact,
-                            current_contacts,
-                            epp,
-                            user):
-
+    def process_add_contact(self, contact, current_contacts, epp, user):
         """
         Prepare to create a new contact to be added
         """

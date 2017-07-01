@@ -57,3 +57,30 @@ class TestDomainApi(TestSetup):
         self.assertEqual(3,
                          len(mock_append.mock_calls),
                          "Expected number of calls to append")
+
+    @patch.object(CentralNic, 'append')
+    @patch.object(CentralNic, 'append_contacts_to_epp')
+    def test_assert_create_domain_workflow_prefills_epp(self,
+                                                        mock_append_epp,
+                                                        mock_append):
+        """
+        Test that the append function is called a expected number of times.
+        """
+        create_domain_data = {
+            "domain": "test-new-domain.xyz",
+        }
+        jwt_header = self.api_login()
+        self.client.post('/v1/domains/',
+                         data=json.dumps(create_domain_data),
+                         content_type='application/json',
+                         HTTP_AUTHORIZATION=jwt_header)
+        mock_append_epp.assert_called_with(
+            {
+                "name": "test-new-domain.xyz",
+                "registrant": "registrant-123",
+            },
+            [{"admin": "contact-123"}, {"tech": "contact-321"}]
+        )
+
+        self.assertEqual(3, len(mock_append.mock_calls),
+                         "Assert appends() called a few times")
