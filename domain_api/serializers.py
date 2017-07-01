@@ -17,7 +17,6 @@ from domain_api.models import (
     DefaultAccountContact,
     Nameserver,
 )
-import uuid
 from . import schemas
 import jsonschema
 log = logging.getLogger(__name__)
@@ -105,6 +104,7 @@ class AccountDetailSerializer(serializers.HyperlinkedModelSerializer):
         view_name="domain_api:account-detail",
         lookup_field="pk"
     )
+
     def default_non_disclose():
         """
         Set default values for non_disclose.
@@ -210,58 +210,6 @@ class DomainProviderSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('name', 'description', 'slug', 'url', 'active',)
 
 
-class RegistrantSerializer(serializers.HyperlinkedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        view_name="domain_api:registrant-detail",
-        lookup_field="registry_id",
-    )
-    provider = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:domainprovider-detail",
-        lookup_field="slug",
-        read_only=True
-    )
-    user = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:user-detail",
-        lookup_field="pk",
-        read_only=True
-    )
-
-    class Meta:
-        model = Registrant
-        fields = ('url', 'provider', 'registry_id', 'name',
-                  'email', 'telephone', 'fax', 'company',
-                  'street', 'city', 'state',
-                  'postcode', 'country', 'postal_info_type', 'non_disclose',
-                   'created', 'updated', 'status', 'user',)
-
-
-class ContactSerializer(serializers.HyperlinkedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        view_name="domain_api:contact-detail",
-        lookup_field="registry_id",
-        read_only=True
-    )
-    provider = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:domainprovider-detail",
-        lookup_field="slug",
-        read_only=True
-    )
-    user = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:user-detail",
-        lookup_field="pk",
-        read_only=True
-    )
-
-    class Meta:
-        model = Contact
-        fields = ('url', 'provider', 'registry_id', 'name',
-                  'email', 'telephone', 'fax', 'company',
-                  'street', 'city', 'state',
-                  'postcode', 'country', 'postal_info_type',
-                  'non_disclose', 'created', 'updated',
-                  'status', 'user',)
-
-
 class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
     provider = serializers.HyperlinkedRelatedField(
         view_name="domain_api:domainprovider-detail",
@@ -283,38 +231,6 @@ class TopLevelDomainProviderSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('zone', 'provider', 'expiration_notification_period_days',
                   'active',
                   'renewal_period', 'grace_period_days', 'url')
-
-
-class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        view_name="domain_api:registereddomain-detail",
-        lookup_field="pk"
-    )
-    tld = serializers.SlugRelatedField(many=False,
-                                       read_only=True,
-                                       slug_field='zone')
-    tld_provider = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:topleveldomainprovider-detail",
-        lookup_field="pk",
-        read_only=True
-    )
-    registrant = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:registrant-detail",
-        lookup_field="registry_id",
-        read_only=True
-    )
-    contacts = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:domaincontact-detail",
-        many=True,
-        read_only=True
-    )
-
-    class Meta:
-        model = RegisteredDomain
-        fields = ('domain', 'name', 'tld', 'tld_provider', 'active', 'auto_renew',
-                  'status', 'nameservers',
-                  'registration_period', 'expiration', 'created',
-                  'updated', 'registrant', 'contacts', 'url',)
 
 
 class DomainContactSerializer(serializers.HyperlinkedModelSerializer):
@@ -390,7 +306,8 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
         model = RegisteredDomain
         fields = ('domain', 'contacts', 'registrant', 'nameservers',
                   'provider', 'authcode', 'created', 'expiration')
-        read_only_fields = ('fqdn', 'expiration', 'created', 'authcode', 'status')
+        read_only_fields = ('fqdn', 'expiration', 'created', 'authcode',
+                            'status')
 
     def get_fqdn(self, obj):
         """
@@ -400,11 +317,6 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
         :returns: TODO
 
         """
-        fqdn = str(uuid.uuid4())[:8]
-        try:
-            fqdn = obj.fqdn
-        except Exception as e:
-            log.error(e.message)
         return obj.fqdn
 
     def get_registrant(self, obj):
@@ -436,45 +348,6 @@ class AdminInfoDomainSerializer(PrivateInfoDomainSerializer):
                             'status')
 
 
-class NameserverSerializer(serializers.HyperlinkedModelSerializer):
-
-    """
-    Serialize nameserver objects.
-    """
-    url = serializers.HyperlinkedIdentityField(
-        view_name="domain_api:nameserver-detail",
-        lookup_field="pk"
-    )
-
-    class Meta:
-        model = Nameserver
-        fields = ('url', 'idn_host', 'host', 'addr',
-                  'created', 'updated')
-
-class AdminNameserverSerializer(NameserverSerializer):
-
-    """
-    Serialize nameserver objects.
-    """
-
-    tld_provider = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:topleveldomainprovider-detail",
-        lookup_field="pk",
-        read_only=True,
-    )
-    user = serializers.HyperlinkedRelatedField(
-        view_name="domain_api:user-detail",
-        lookup_field="pk",
-        read_only=True
-    )
-
-    class Meta:
-        model = Nameserver
-        fields = ('url', 'idn_host', 'host', 'addr',
-                  'tld_provider', 'default',
-                  'created', 'updated', 'status', 'roid', 'user')
-
-
 class InfoHostSerializer(serializers.ModelSerializer):
 
     addr = IpAddrField()
@@ -483,6 +356,7 @@ class InfoHostSerializer(serializers.ModelSerializer):
         model = Nameserver
         fields = ('host', 'idn_host', 'addr')
 
+
 class AdminInfoHostSerializer(InfoHostSerializer):
 
     class Meta:
@@ -490,11 +364,6 @@ class AdminInfoHostSerializer(InfoHostSerializer):
         fields = ('host', 'idn_host', 'tld_provider', 'default', 'addr',
                   'created', 'updated', 'status', 'roid', 'user')
         read_only_fields = ('user', 'tld_provider')
-
-
-class QueryInfoHostSerializer(serializers.Serializer):
-    host = serializers.CharField(required=True, allow_blank=False)
-    addr = IpAddrField()
 
 
 class PrivateInfoContactSerializer(serializers.ModelSerializer):

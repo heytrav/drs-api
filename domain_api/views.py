@@ -27,12 +27,9 @@ from domain_api.serializers import (
     UserSerializer,
     AccountDetailSerializer,
     ContactTypeSerializer,
-    ContactSerializer,
     TopLevelDomainSerializer,
     TopLevelDomainProviderSerializer,
     DomainProviderSerializer,
-    RegistrantSerializer,
-    RegisteredDomainSerializer,
     DomainAvailabilitySerializer,
     HostAvailabilitySerializer,
     DomainContactSerializer,
@@ -43,12 +40,9 @@ from domain_api.serializers import (
     DefaultAccountContactSerializer,
     InfoHostSerializer,
     AdminInfoHostSerializer,
-    QueryInfoHostSerializer,
     PrivateInfoRegistrantSerializer,
     AdminInfoRegistrantSerializer,
     AdminInfoDomainSerializer,
-    NameserverSerializer,
-    AdminNameserverSerializer,
 )
 from domain_api.filters import (
     IsPersonFilterBackend
@@ -63,18 +57,12 @@ from .exceptions import (
     NotObjectOwner,
     EppObjectDoesNotExist,
 )
-from domain_api.entity_management.contacts import (
-    RegistrantManager,
-    ContactManager
-)
 from domain_api.utilities.domain import (
     parse_domain,
     synchronise_domain,
     get_domain_registry,
-    synchronise_host,
 )
 from .workflows import workflow_factory
-from .permissions import IsAdmin
 from application.settings import get_logzio_sender
 
 log = logging.getLogger(__name__)
@@ -143,6 +131,7 @@ class CreateUserView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny, ]
     serializer_class = UserSerializer
 
+
 class BaseViewSet(viewsets.ModelViewSet):
 
     def is_admin(self):
@@ -163,7 +152,6 @@ class BaseViewSet(viewsets.ModelViewSet):
         if self.is_admin():
             return self.admin_serializer_class
         return self.serializer_class
-
 
     def is_owner(self, obj):
         """
@@ -525,8 +513,6 @@ class RegisteredDomainViewSet(BaseViewSet):
 
         """
 
-        #registry = get_domain_registry(domain)
-        #parsed_domain = parse_domain(domain)
         log.info("Looking for domain %s" % fqdn)
         queryset = self.get_queryset()
         registered_domain = get_object_or_404(
@@ -572,7 +558,6 @@ class RegisteredDomainViewSet(BaseViewSet):
         """
         data = request.data
         parsed_domain = parse_domain(data["domain"])
-        chain_res = None
         try:
             # See if this TLD is provided by one of our registries.
             tld_provider = TopLevelDomainProvider.objects.get(
@@ -585,7 +570,7 @@ class RegisteredDomainViewSet(BaseViewSet):
             workflow = workflow_manager.create_domain(data, request.user)
             # run chained workflow and register the domain
             chained_workflow = chain(workflow)()
-            chain_res = process_workflow_chain(chained_workflow)
+            process_workflow_chain(chained_workflow)
             registered_domain = self.get_queryset().get(
                 name=parsed_domain["domain"],
                 tld__zone=parsed_domain["zone"],
@@ -630,7 +615,6 @@ class RegisteredDomainViewSet(BaseViewSet):
             fqdn=fqdn
         )
         domain = str(registered_domain)
-        parsed_domain = parse_domain(domain)
 
         try:
             registry = registered_domain.tld_provider.provider.slug
@@ -678,6 +662,7 @@ class TopLevelDomainProviderViewSet(viewsets.ModelViewSet):
     serializer_class = TopLevelDomainProviderSerializer
     permission_classes = (permissions.IsAdminUser,)
 
+
 class DefaultAccountContactViewSet(viewsets.ModelViewSet):
     serializer_class = DefaultAccountContactSerializer
     permission_classes = (permissions.IsAdminUser,)
@@ -698,7 +683,6 @@ class NameserverViewSet(BaseViewSet):
                           permissions.IsAuthenticated,)
     queryset = Nameserver.objects.all()
     lookup_field = 'idn_host'
-
 
     def get_registered_domain(self, host):
         """
@@ -761,7 +745,6 @@ class NameserverViewSet(BaseViewSet):
         serializer = serializer_class(data=data)
         get_logzio_sender().append(data)
         if serializer.is_valid():
-            chain_res = None
             try:
                 # Check that the domain parent exists and user has access to it.
                 self.get_registered_domain(data["idn_host"])
