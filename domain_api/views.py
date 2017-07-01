@@ -380,8 +380,8 @@ class ContactViewSet(BaseViewSet):
     Contact handles.
     """
 
-    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,
-                          permissions.IsAuthenticated)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissionsOrAnonReadOnly,)
     filter_backends = (IsPersonFilterBackend,)
     lookup_field = 'registry_id'
     serializer_class = PrivateInfoContactSerializer
@@ -660,7 +660,7 @@ class RegisteredDomainViewSet(BaseViewSet):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class DomainContactViewSet(BaseViewSet):
+class DomainContactViewSet(viewsets.ModelViewSet):
     admin_serializer_class = DomainContactSerializer
     serializer_class = DomainContactSerializer
     permission_classes = (permissions.IsAuthenticated,

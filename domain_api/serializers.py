@@ -320,7 +320,7 @@ class RegisteredDomainSerializer(serializers.HyperlinkedModelSerializer):
 class DomainContactSerializer(serializers.HyperlinkedModelSerializer):
     registered_domain = serializers.HyperlinkedRelatedField(
         view_name="domain_api:registereddomain-detail",
-        lookup_field="pk",
+        lookup_field="fqdn",
         read_only=True
     )
     contact = serializers.HyperlinkedRelatedField(

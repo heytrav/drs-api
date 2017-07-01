@@ -85,42 +85,113 @@ class Workflow(object):
         )
         return default_registrant.account_template.id
 
-    def append_contact_obj_to_workflow(self,
-                                       contact,
-                                       user_obj,
-                                       mandatory=False):
+    def create_registrant_workflow(self, epp, data, user):
+        """
+        Return an active registrant if one exists.
+
+        :account_detail: account detail id
+        :registry_id: str representing registry id
+        :returns:
+
+        """
+        account_detail_id = self.fetch_registrant(data, user)
+        by_registry = Registrant.objects.filter(
+            provider__slug=self.registry,
+            user=user.id
+        )
+        if by_registry.exists():
+            # Check to see if the registrant submitted is actually
+            # the registry id. It will need to match with the user
+            # and registry.
+            registrant_set = by_registry.filter(
+                registry_id=account_detail_id,
+            )
+            if not registrant_set.exists():
+                registrant_set = by_registry.filter(
+                    account_template=account_detail_id
+                )
+            if registrant_set.exists():
+                existing_registrant = registrant_set.first()
+                epp["registrant"] = existing_registrant.registry_id
+                return epp
+        self.append(
+            create_registrant.si(
+                epp,
+                person_id=account_detail_id,
+                registry=self.registry,
+                user=user.id
+            )
+        )
+        return None
+
+    def append_contacts_to_epp(self, epp, contacts):
         """
         Append DefaultAccountDetail object to create contact workflow.
 
         :template_id: int id of an AccountDetail object
         """
-        contact_type = contact.contact_type.name
-        template_id = contact.account_template.id
-        user = user_obj.id
-        contact_dict = {contact_type: template_id}
-        if mandatory:
-            user = contact.user.id
-        self.append_contact_workflow(contact_dict, user)
+        epp_contacts = epp.get("contact", [])
+        for contact in contacts:
+            epp_contacts.append(contact)
+        epp["contact"] = epp_contacts
 
-    def append_contact_workflow(self,
-                                contact,
-                                user_id):
+    def append_contact_workflow(self, epp, contacts, user_id):
         """
         Append item to create contact workflow.
 
-        :template_id: int id of an AccountDetail object
+        :epp: dict with epp data
+        :contact: Contact object
         """
-        (contact_type, person_id), = contact.items()
-        self.append(
-            create_registry_contact.s(
-                person_id=person_id,
-                registry=self.registry,
-                contact_type=contact_type,
-                user=user_id
-            )
+        existing_contacts = []
+        by_registry = Contact.objects.filter(
+            provider__slug=self.registry,
         )
+        for contact in contacts:
+            (contact_type, person_id), = contact.items()
+            log.info("Checking if %s contact exists for %s" % (contact_type,
+                                                               person_id))
+            # Check if user sent registry_id as contact id field.
+            by_registry_id = by_registry.filter(registry_id=person_id)
+            by_account_template = by_registry.filter(
+                account_template__id=person_id
+            )
+            if by_registry_id.exists():
+                contact_obj = by_registry_id.get(registry_id=person_id)
+                contact_dict = {contact_type: contact_obj.registry_id}
+                existing_contacts.append(contact_dict)
+            elif by_account_template.exists():
+                # Otherwise assume it was an account_id
+                contact_obj = by_account_template.first()
+                contact_dict = {contact_type: contact_obj.registry_id}
+                existing_contacts.append(contact_dict)
+            else:
+                log.info(
+                    "Adding workflow to create %s contact: %s" % (contact_type,
+                                                                  person_id)
+                )
+                if len(self.workflow) == 1:
+                    self.append(
+                        create_registry_contact.si(
+                            epp,
+                            person_id=person_id,
+                            registry=self.registry,
+                            contact_type=contact_type,
+                            user=user_id
+                        )
+                    )
+                else:
+                    self.append(
+                        create_registry_contact.s(
+                            person_id=person_id,
+                            registry=self.registry,
+                            contact_type=contact_type,
+                            user=user_id
+                        )
+                    )
+            if len(existing_contacts) > 0:
+                self.append_contacts_to_epp(epp, existing_contacts)
 
-    def create_contact_workflow(self, data, user):
+    def create_contact_workflow(self, epp, data, user):
         """
         Append create contact commands to workflow. Preferentially append
         mandatory default contacts if there are any, followed by contacts
@@ -134,14 +205,19 @@ class Workflow(object):
             provider__slug=self.registry
         )
         mandatory_contacts = default_contacts.filter(mandatory=True)
+        contacts = []
         if mandatory_contacts.exists():
-            [self.append_contact_obj_to_workflow(i, user, True)
-                for i in mandatory_contacts.all()]
+            log.info("Using mandatory contacts for %s registration" % self.registry)
+            contacts = [{i.contact_type.name: i.account_template.id}
+                        for i in mandatory_contacts]
         elif "contacts" in data:
-            [self.append_contact_workflow(i, user.id) for i in data["contacts"]]
+            log.info("Using submitted contacts for %s registration" % self.registry)
+            contacts = data["contacts"]
         elif default_contacts.exists():
-            [self.append_contact_obj_to_workflow(i, user, False)
-             for i in default_contacts.all()]
+            log.info("Using default contacts for %s registration" % self.registry)
+            contacts = [{i.contact_type.name: i.account_template.id}
+                        for i in default_contacts]
+        self.append_contact_workflow(epp, contacts, user.id)
 
     def create_domain(self, data, user):
         """
@@ -159,21 +235,15 @@ class Workflow(object):
 
         if "period" in data:
             epp["period"] = data["period"]
-        registrant = self.fetch_registrant(data, user)
 
         self.append(check_domain.s(data["domain"]))
-        log.debug({"default_contact": registrant})
-        self.append(
-            create_registrant.si(
-                epp,
-                person_id=registrant,
-                registry=self.registry,
-                user=user.id
-            )
-        )
-        self.create_contact_workflow(data, user)
+        self.create_registrant_workflow(epp, data, user)
+        self.create_contact_workflow(epp, data, user)
 
-        self.append(create_domain.s(self.registry))
+        if len(self.workflow) == 1:
+            self.append(create_domain.si(epp, self.registry))
+        else:
+            self.append(create_domain.s(self.registry))
         self.append(connect_domain.s(self.registry))
         return self.workflow
 
@@ -187,12 +257,7 @@ class Workflow(object):
 
         """
         for contact in contact_set:
-            self.process_add_contact(
-                contact,
-                current_contacts,
-                epp,
-                user
-            )
+            self.process_add_contact(contact, current_contacts, epp, user)
 
     def check_remove_contacts(self, contact_set, current_contacts, epp, user):
         """
@@ -251,11 +316,7 @@ class Workflow(object):
             user=user
         )
 
-    def process_add_contact(self,
-                            contact,
-                            current_contacts,
-                            epp,
-                            user):
+    def process_add_contact(self, contact, current_contacts, epp, user):
         """
         Prepare to create a new contact to be added
         """
