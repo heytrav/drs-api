@@ -634,7 +634,8 @@ class RegisteredDomainViewSet(BaseViewSet):
             chained_workflow = raw_workflow()
             chain_res = process_workflow_chain(chained_workflow)
             get_logzio_sender().append(chain_res)
-            if registered_domain and self.is_admin_or_owner(registered_domain):
+            if registered_domain and any([self.is_admin(),
+                                          self.is_owner(registered_domain)]):
                 serializer = self.serializer_class(
                     self.get_queryset().get(pk=registered_domain.id)
                 )
