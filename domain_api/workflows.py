@@ -189,8 +189,8 @@ class Workflow(object):
                             user=user_id
                         )
                     )
-            if len(existing_contacts) > 0:
-                self.append_contacts_to_epp(epp, existing_contacts)
+        if len(existing_contacts) > 0:
+            self.append_contacts_to_epp(epp, existing_contacts)
 
     def create_contact_workflow(self, epp, data, user):
         """
