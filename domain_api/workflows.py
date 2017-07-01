@@ -132,6 +132,7 @@ class Workflow(object):
         """
         epp_contacts = epp.get("contact", [])
         for contact in contacts:
+            log.info("Adding contact {!r}".format(contact))
             epp_contacts.append(contact)
         epp["contact"] = epp_contacts
 
@@ -151,10 +152,10 @@ class Workflow(object):
             log.info("Checking if %s contact exists for %s" % (contact_type,
                                                                person_id))
             # Check if user sent registry_id as contact id field.
-            by_registry_id = by_registry.filter(registry_id=person_id)
+            by_registry_id = by_registry.filter(registry_id=person_id).distinct()
             by_account_template = by_registry.filter(
                 account_template__id=person_id
-            )
+            ).distinct()
             if by_registry_id.exists():
                 contact_obj = by_registry_id.get(registry_id=person_id)
                 contact_dict = {contact_type: contact_obj.registry_id}
