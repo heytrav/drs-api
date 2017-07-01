@@ -24,9 +24,10 @@ class TestCreateDomainNonDefaultContacts(TestSetup):
         """
         super().setUp()
 
+    @patch.object(Workflow, 'append')
     @patch.object(Workflow, 'append_contact_workflow')
-    @patch.object(Workflow, 'append_contact_obj_to_workflow')
-    def test_create_with_custom_contacts(self, mock1, mock2):
+    @patch.object(Workflow, 'append_contacts_to_epp')
+    def test_create_with_custom_contacts(self, mock1, mock2, mock3):
         """
         Test that creating contacts with custom account detail object works
 
@@ -36,14 +37,29 @@ class TestCreateDomainNonDefaultContacts(TestSetup):
         }
         workflow_class = workflow_factory('centralnic-test')
         workflow = workflow_class()
-        workflow.create_contact_workflow(epp_request,
-                                            self.test_customer_user)
-        mock2.mock_calls == [
-            call(
-                {"admin": 2},
-                self.test_customer_user.id),
-            call(
-                {"tech": 1},
-                self.test_customer_user.id
-        )]
+        epp = {}
+        workflow.create_contact_workflow(epp,
+                                         epp_request,
+                                         self.test_customer_user)
+        mock2.assert_called_with(epp,
+                                 [{"admin": 2}, {"tech": 1}],
+                                 self.test_customer_user.id)
+
+    @patch.object(Workflow, 'append')
+    @patch.object(Workflow, 'append_contacts_to_epp')
+    def test_calls_to_append_workflow(self, mock1, mock2):
+        """
+        Test that creating contacts with custom account detail object works
+
+        """
+        epp_request = {
+            "contacts": [{"admin": 2}, {"tech": 1}]
+        }
+        workflow_class = workflow_factory('centralnic-test')
+        workflow = workflow_class()
+        epp = {}
+        workflow.create_contact_workflow(epp,
+                                         epp_request,
+                                         self.test_customer_user)
+        self.assertEqual(2, len(mock2.mock_calls), "2 orders appended")
         mock1.assert_not_called()

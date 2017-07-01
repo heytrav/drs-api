@@ -54,6 +54,6 @@ class TestDomainApi(TestSetup):
                          data=json.dumps(create_domain_data),
                          content_type='application/json',
                          HTTP_AUTHORIZATION=jwt_header)
-        self.assertEqual(6,
+        self.assertEqual(3,
                          len(mock_append.mock_calls),
                          "Expected number of calls to append")
