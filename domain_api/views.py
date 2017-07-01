@@ -493,6 +493,11 @@ class RegisteredDomainViewSet(BaseViewSet):
             queryset = queryset.filter(
                 tld_provider__provider__slug=provider
             )
+        active = self.request.query_params.get('active', True)
+        if str(active) in ["false", "0"]:
+            active = False
+        queryset = queryset.filter(active=active)
+
         return queryset
 
     def is_owner(self, domain=None):
