@@ -481,8 +481,9 @@ class RegisteredDomainViewSet(BaseViewSet):
             queryset = queryset.filter(
                 tld_provider__provider__slug=provider
             )
-        active = self.request.query_params.get('active', True)
-        if str(active) in ["false", "0"]:
+        active = True
+        active_param = self.request.query_params.get('active', None)
+        if str(active_param) in ["false", "0"]:
             active = False
         queryset = queryset.filter(active=active)
 
