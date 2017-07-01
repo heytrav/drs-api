@@ -145,7 +145,6 @@ class Workflow(object):
         :epp: dict with epp data
         :contact: Contact object
         """
-        new_contacts = []
         existing_contacts = []
         by_registry = Contact.objects.filter(
             provider__slug=self.registry,
@@ -155,50 +154,45 @@ class Workflow(object):
             log.info("Checking if %s contact exists for %s" % (contact_type,
                                                                person_id))
             # Check if user sent registry_id as contact id field.
-            if by_registry.filter(registry_id=person_id).exists():
-                contact_obj = by_registry.get(registry_id=person_id)
-                existing_contacts.append(
-                    {
-                        contact_type: contact_obj.registry_id
-                    }
-                )
-            # Otherwise assume it was an account_id
-            elif by_registry.filter(account_template__id=person_id).exists():
-                contact_obj = by_registry.filter(
-                    account_template__id=person_id
-                ).first()
-                existing_contacts.append(
-                    {
-                        contact_type: contact_obj.registry_id
-                    }
-                )
+            by_registry_id = by_registry.filter(registry_id=person_id)
+            by_account_template = by_registry.filter(
+                account_template__id=person_id
+            )
+            if by_registry_id.exists():
+                contact_obj = by_registry_id.get(registry_id=person_id)
+                contact_dict = {contact_type: contact_obj.registry_id}
+                existing_contacts.append(contact_dict)
+            elif by_account_template.exists():
+                # Otherwise assume it was an account_id
+                contact_obj = by_account_template.first()
+                contact_dict = {contact_type: contact_obj.registry_id}
+                existing_contacts.append(contact_dict)
             else:
-                new_contacts.append(contact)
-
-        self.append_contacts_to_epp(epp, existing_contacts)
-        for contact in new_contacts:
-            (contact_type, person_id), = contact.items()
-            log.info("Adding workflow to create %s contact: %s" % (contact_type,
-                                                                   person_id))
-            if len(self.workflow) == 1:
-                self.append(
-                    create_registry_contact.si(
-                        epp,
-                        person_id=person_id,
-                        registry=self.registry,
-                        contact_type=contact_type,
-                        user=user_id
-                    )
+                log.info(
+                    "Adding workflow to create %s contact: %s" % (contact_type,
+                                                                  person_id)
                 )
-            else:
-                self.append(
-                    create_registry_contact.s(
-                        person_id=person_id,
-                        registry=self.registry,
-                        contact_type=contact_type,
-                        user=user_id
+                if len(self.workflow) == 1:
+                    self.append(
+                        create_registry_contact.si(
+                            epp,
+                            person_id=person_id,
+                            registry=self.registry,
+                            contact_type=contact_type,
+                            user=user_id
+                        )
                     )
-                )
+                else:
+                    self.append(
+                        create_registry_contact.s(
+                            person_id=person_id,
+                            registry=self.registry,
+                            contact_type=contact_type,
+                            user=user_id
+                        )
+                    )
+            if len(existing_contacts) > 0:
+                self.append_contacts_to_epp(epp, existing_contacts)
 
     def create_contact_workflow(self, epp, data, user):
         """
