@@ -203,10 +203,10 @@ class TestUpdateWorkflow(TestSetup):
         """
         epp = {
             "domain": str(self.registered_domain),
-            "ns": ["ns1.test-08.com",
-                   "ns1.test-09.com",
-                   "ns2.test-10.com",
-                   "ns1.newnameserver.com"]
+            "nameservers": ["ns1.test-08.com",
+                            "ns1.test-09.com",
+                            "ns2.test-10.com",
+                            "ns1.newnameserver.com"]
         }
         with patch.object(Workflow,
                           'append') as mock:
