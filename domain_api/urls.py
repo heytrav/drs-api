@@ -13,7 +13,7 @@ router.register(r'registrants', views.RegistrantViewSet, "registrant")
 router.register(
     r'domains',
     views.RegisteredDomainViewSet,
-    "registereddomain"
+    "domain"
 )
 router.register(r'nameservers', views.NameserverViewSet, 'nameserver')
 router.register(r'domain-contacts', views.DomainContactViewSet, "domaincontact")

@@ -296,6 +296,10 @@ class CheckDomainResponseSerializer(serializers.Serializer):
 
 
 class PrivateInfoDomainSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name="domain_api:domain-detail",
+        lookup_field="fqdn"
+    )
     domain = serializers.SerializerMethodField("get_fqdn")
     registrant = serializers.SerializerMethodField()
     contacts = serializers.SerializerMethodField()
@@ -304,7 +308,7 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RegisteredDomain
-        fields = ('domain', 'contacts', 'registrant', 'nameservers',
+        fields = ('url', 'domain', 'contacts', 'registrant', 'nameservers',
                   'provider', 'authcode', 'created', 'expiration')
         read_only_fields = ('fqdn', 'expiration', 'created', 'authcode',
                             'status')
@@ -313,8 +317,8 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
         """
         Return the fqdn
 
-        :obj: TODO
-        :returns: TODO
+        :obj: RegisteredDomain object
+        :returns: str fully qualified domain name
 
         """
         return obj.fqdn
@@ -341,9 +345,8 @@ class PrivateInfoDomainSerializer(serializers.ModelSerializer):
 class AdminInfoDomainSerializer(PrivateInfoDomainSerializer):
     class Meta:
         model = RegisteredDomain
-        fields = ('domain', 'contacts', 'registrant', 'roid',
-                  'status', 'authcode',
-                  'created', 'expiration')
+        fields = ('url', 'domain', 'contacts', 'registrant', 'roid',
+                  'status', 'authcode', 'created', 'expiration', 'provider')
         read_only_fields = ('roid', 'expiration', 'created', 'authcode',
                             'status')
 
@@ -367,12 +370,16 @@ class AdminInfoHostSerializer(InfoHostSerializer):
 
 
 class PrivateInfoContactSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name="domain_api:contact-detail",
+        lookup_field="registry_id"
+    )
 
     provider = serializers.SerializerMethodField()
 
     class Meta:
         model = Contact
-        fields = ('registry_id', 'name', 'email', 'company', 'street',
+        fields = ('url', 'registry_id', 'name', 'email', 'company', 'street',
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
                   'postal_info_type', 'non_disclose',
@@ -393,31 +400,35 @@ class AdminInfoContactSerializer(PrivateInfoContactSerializer):
 
     class Meta:
         model = Contact
-        fields = ('registry_id', 'name', 'email', 'company', 'street',
+        fields = ('url', 'registry_id', 'name', 'email', 'company', 'street',
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
                   'postal_info_type', 'non_disclose',
                   'status', 'authcode', 'roid', 'user', 'provider',)
 
 
-class PrivateInfoRegistrantSerializer(serializers.ModelSerializer):
+class PrivateInfoRegistrantSerializer(PrivateInfoContactSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name="domain_api:registrant-detail",
+        lookup_field="registry_id"
+    )
 
     class Meta:
         model = Registrant
-        fields = ('registry_id', 'name', 'email', 'company', 'street',
+        fields = ('url', 'registry_id', 'name', 'email', 'company', 'street',
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
                   'postal_info_type', 'non_disclose',
-                  'authcode',)
+                  'authcode', 'provider')
 
 
-class AdminInfoRegistrantSerializer(serializers.ModelSerializer):
+class AdminInfoRegistrantSerializer(PrivateInfoRegistrantSerializer):
 
     class Meta:
         model = Registrant
-        fields = ('registry_id', 'name', 'email', 'company', 'street',
+        fields = ('url', 'registry_id', 'name', 'email', 'company', 'street',
 
                   'city', 'telephone', 'fax',
                   'state', 'country', 'postcode',
                   'postal_info_type', 'non_disclose',
-                  'status', 'authcode', 'roid', 'user',)
+                  'status', 'authcode', 'roid', 'user', 'provider')

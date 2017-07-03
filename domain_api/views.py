@@ -376,6 +376,23 @@ class ContactViewSet(BaseViewSet):
     admin_serializer_class = AdminInfoContactSerializer
     queryset = Contact.objects.all()
 
+    def get_queryset(self):
+        """
+        Return queryset
+        :returns: Contact or registrant set
+        """
+        user = self.request.user
+        queryset = self.queryset
+        if not user.groups.filter(name='admin').exists():
+            queryset = queryset.filter(user=user)
+
+        provider = self.request.query_params.get('provider', None)
+        if provider is not None:
+            queryset = queryset.filter(
+                provider__slug=provider
+            )
+        return queryset
+
     def retrieve(self, request, registry_id=None):
         """
         Return a contact object.
@@ -395,7 +412,7 @@ class ContactViewSet(BaseViewSet):
             contact_data = query.info(contact)
             queryset.filter(pk=contact.id).update(**contact_data)
             contact = queryset.get(pk=contact.id)
-            serializer = serializer_class(contact)
+            serializer = serializer_class(contact, context={"request": request})
             return Response(serializer.data)
         except UnknownRegistry as e:
             log.error(str(e), exc_info=True)
@@ -531,7 +548,8 @@ class RegisteredDomainViewSet(BaseViewSet):
             serializer_class = self.get_serializer_class()
             synchronise_domain(info, registered_domain.id)
             serializer = serializer_class(
-                queryset.get(pk=registered_domain.id)
+                queryset.get(pk=registered_domain.id),
+                context={"request": request}
             )
             return Response(serializer.data)
         except InvalidTld as e:
