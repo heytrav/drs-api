@@ -267,8 +267,10 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 REST_USE_JWT = True
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'localhost')
 RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', 5672)
-RABBITMQ_USER = os.environ.get('RABBITMQ_DEFAULT_USER', 'guest')
-RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_DEFAULT_PASS', 'guest')
+RABBITMQ_USER = read_secret_file(os.environ.get('RABBITMQ_DEFAULT_USER_FILE', None),
+                                 os.environ.get('RABBITMQ_DEFAULT_USER', 'guest'))
+RABBITMQ_PASSWORD = read_secret_file(os.environ.get('RABBITMQ_DEFAULT_PASS_FILE', None),
+                                 os.environ.get('RABBITMQ_DEFAULT_PASS', 'guest'))
 RABBITMQ_VHOST = os.environ.get('RABBITMQ_DEFAULT_VHOST', '/')
 CELERY_BROKER_URL = 'amqp://' + RABBITMQ_USER + ':' + RABBITMQ_PASSWORD + '@' + RABBITMQ_HOST + '/' + RABBITMQ_VHOST
 CELERY_TASK_SERIALIZER = 'json'
