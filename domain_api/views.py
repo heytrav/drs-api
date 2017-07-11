@@ -596,7 +596,7 @@ class RegisteredDomainViewSet(BaseViewSet):
                 active=True
             )
             serializer = PrivateInfoDomainSerializer(
-                registered_domain
+                registered_domain,
                 context={"request": request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
