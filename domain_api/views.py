@@ -595,7 +595,10 @@ class RegisteredDomainViewSet(BaseViewSet):
                 tld__zone=parsed_domain["zone"],
                 active=True
             )
-            serializer = PrivateInfoDomainSerializer(registered_domain)
+            serializer = PrivateInfoDomainSerializer(
+                registered_domain
+                context={"request": request}
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except EppError as e:
             log.error(str(e), exc_info=True)
