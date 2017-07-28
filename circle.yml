@@ -11,4 +11,4 @@ machine:
 
 notify:
   webhooks:
-    - url: https://rocketchat.catalyst-au.net/hooks/ae8CYLLs9cYR5PZTe/bkAXoCavHHAF53wwh3rd6pR98BHHihyAg97Yyk3pZMwrcivy
+    - url: https://rocketchat.catalyst.net.nz/hooks/oxWrnGe2tru8o9ANM/9zhwrE42QEdFM9BuCDDegKCsRoYGGhRXDFjQLeNSeSCWggag
