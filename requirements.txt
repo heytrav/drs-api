@@ -31,7 +31,7 @@ idna==2.5
 ipython==5.2.2
 ipython-genutils==0.1.0
 itypes==1.1.0
-Jinja2==2.9.6
+Jinja2==2.11.3
 jsonschema==2.6.0
 kombu==4.0.2
 logzio-python-handler==2.0.0
