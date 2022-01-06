@@ -3,7 +3,7 @@ appdirs==1.4.3
 appnope==0.1.0
 behave==1.2.5
 billiard==3.5.0.2
-celery==4.0.2
+celery==5.2.2
 click==6.7
 configparser==3.5.0
 contextlib2==0.5.4
